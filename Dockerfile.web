@@ -1,0 +1,25 @@
+FROM node:24-alpine AS dependencies
+RUN corepack enable
+WORKDIR /workspace
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/package.json
+RUN pnpm install --filter @portfolio/web... --frozen-lockfile
+
+FROM dependencies AS development
+COPY apps/web apps/web
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@portfolio/web", "dev", "--hostname", "0.0.0.0"]
+
+FROM dependencies AS build
+COPY apps/web apps/web
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+RUN pnpm --filter @portfolio/web build
+
+FROM dependencies AS production
+ENV NODE_ENV=production
+COPY --from=build /workspace/apps/web/.next apps/web/.next
+COPY --from=build /workspace/apps/web/public apps/web/public
+COPY --from=build /workspace/apps/web/next.config.ts apps/web/next.config.ts
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@portfolio/web", "start", "--hostname", "0.0.0.0"]

@@ -1,0 +1,33 @@
+{
+  "name": "ai-portfolio-research-assistant",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @portfolio/web build",
+    "dev": "pnpm --filter @portfolio/web dev",
+    "format": "pnpm --filter @portfolio/web format",
+    "format:check": "pnpm --filter @portfolio/web format:check",
+    "lint": "pnpm --filter @portfolio/web lint",
+    "typecheck": "pnpm --filter @portfolio/web typecheck",
+    "test": "pnpm --filter @portfolio/web test",
+    "test:e2e": "pnpm --filter @portfolio/web test:e2e",
+    "contract:lint": "redocly lint packages/api-contracts/openapi/v1.yaml",
+    "contract:generate": "openapi-typescript packages/api-contracts/openapi/v1.yaml -o packages/api-contracts/generated/api.ts",
+    "contract:check": "pnpm contract:lint && pnpm contract:generate && git diff --exit-code -- packages/api-contracts/generated/api.ts"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.1.5",
+    "openapi-typescript": "^7.10.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"],
+    "overrides": {
+      "postcss": ">=8.5.18",
+      "sharp": ">=0.35.0"
+    }
+  }
+}

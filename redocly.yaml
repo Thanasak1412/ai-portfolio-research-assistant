@@ -1,0 +1,6 @@
+extends:
+  - recommended
+rules:
+  no-server-example.com: off
+  no-unused-components: off # DecimalString and Timestamp are governed bootstrap conventions reserved for M1+.
+  operation-4xx-response: off

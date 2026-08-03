@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: Portfolio Research Assistant API
+  version: 1.0.0-bootstrap
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+  description: >-
+    Bootstrap-only API contract. It intentionally exposes operational health and
+    readiness endpoints only; product and authentication operations are deferred.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+security: []
+tags:
+  - name: Operations
+    description: Restricted operational checks.
+paths:
+  /health/live:
+    get:
+      operationId: getLiveness
+      tags: [Operations]
+      summary: Report process liveness
+      responses:
+        "200":
+          description: The API process is alive.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /health/ready:
+    get:
+      operationId: getReadiness
+      tags: [Operations]
+      summary: Report required dependency readiness
+      responses:
+        "200":
+          description: The API can reach required dependencies.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: A required dependency is unavailable.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+components:
+  headers:
+    CorrelationId:
+      description: Request correlation identifier, accepted from or generated for the request.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: "^[A-Za-z0-9._-]+$"
+  schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [alive, ready]
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [code, message, correlationId]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        correlationId:
+          type: string
+    DecimalString:
+      type: string
+      description: Future financial decimal transport. Binary floating-point JSON numbers are prohibited.
+      pattern: "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    Timestamp:
+      type: string
+      format: date-time
+      description: ISO-8601 UTC instant.

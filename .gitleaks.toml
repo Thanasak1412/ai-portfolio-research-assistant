@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated dependencies and build/test artifacts are excluded; source and lockfiles remain scanned."
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)\.next/''',
+  '''(^|/)coverage/''',
+  '''(^|/)playwright-report/''',
+  '''(^|/)test-results/''',
+]
+
