@@ -159,3 +159,27 @@ Docker recovered sufficiently to pull/build images and create containers. The fo
 | `docker compose stop api worker web postgres postgres-test` | Passed; every service exited `0`; API and worker logged graceful shutdown. |
 
 This resolves B-M0-01. It does not resolve the dedicated GitHub repository/CI merge-gate blocker.
+
+## 12. Dedicated Repository and Remote CI Verification
+
+**Verification date:** 2026-08-03 (Asia/Bangkok)  
+**Repository:** `https://github.com/Thanasak1412/ai-portfolio-research-assistant`  
+**Visibility / default branch:** Public / `main`
+
+The product is now an independent Git repository. It contains only the Bootstrap workspace and approved documentation; the unrelated parent application was neither rewritten nor included. The initial Bootstrap commit is `c77cf70`, followed by `03c182e` (`Stabilize Compose smoke readiness checks`). No local `.env`, build output, or credentials were committed.
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Dedicated repository and remote | Passed | `origin` points to the repository above and `main` is the remote default branch. |
+| Remote CI | Passed | GitHub Actions run `30827592615` completed successfully for commit `03c182e`. |
+| Required checks | Passed | `frontend`, `backend`, `contracts-and-generation`, `database-integration`, `browser-e2e`, `compose-smoke`, and `secrets` all succeeded. |
+| Compose smoke in CI | Passed | The job used `docker compose up --build -d --wait --wait-timeout 120 ...`; API readiness and web requests succeeded. |
+| Secret scanning | Passed | The remote `secrets` job using Gitleaks succeeded; ignored local environment files were not committed. |
+| Enforceable merge gate | Passed | GitHub branch protection for `main` requires pull requests, one approving review, dismissal of stale approvals, strict success for all seven checks, administrator enforcement, no force pushes, and no deletion. |
+| Failed-check enforcement evidence | Passed | The earlier remote run `30827056787` recorded a real `compose-smoke` failure. `compose-smoke` is now a strict required context in the active protection rule, so a pull request with that result cannot satisfy the merge gate. |
+
+The active approval rule prevents the author from merging this closure-report branch without an independent review. That is an intentional governance control, not a technical Bootstrap failure. On merge of the accompanying pull request, the following M0 status is effective:
+
+**M0 Status: Closed.**
+
+Authentication has not been implemented. The recommended next step is **Create Authentication Phase 1 Execution Plan only. Do not implement Authentication automatically.**
