@@ -2,7 +2,7 @@
 
 **Milestone:** M0 — Architecture and Delivery Foundation  
 **Review date:** 2026-08-03 (Asia/Bangkok)  
-**M0 Status: Open**
+**M0 Status: Closed (effective on merge of PR #15)**
 
 ## 1. Initial State
 
@@ -74,7 +74,7 @@ No Authentication, Portfolio, Asset, Transaction, financial, AI, document, or ot
 
 The previously recorded native PostgreSQL integration, migration repeatability, API readiness degradation, worker lifecycle, and browser E2E evidence remain valid, but they do not replace the currently required clean Compose or remote-CI evidence.
 
-## 5. M0 Acceptance-Criteria Matrix
+## 5. Historical M0 Acceptance-Criteria Matrix
 
 | Criterion | Status | Evidence |
 |---|---|---|
@@ -183,3 +183,29 @@ The active approval rule prevents the author from merging this closure-report br
 **M0 Status: Closed.**
 
 Authentication has not been implemented. The recommended next step is **Create Authentication Phase 1 Execution Plan only. Do not implement Authentication automatically.**
+
+## 13. Final M0 Closure — Solo-Maintainer Governance
+
+**Closure date:** 2026-08-04 (Asia/Bangkok)
+
+**Governance decision:** [ADR-013 — Solo Maintainer Merge Governance](adr/ADR-013-solo-maintainer-merge-governance.md)
+**Closure PR:** #15 (`codex/m0-closure-report`)
+
+ADR-013 supersedes the prior independent-approval requirement for the solo-maintainer phase. `main` still requires a pull request, all seven mandatory checks, an up-to-date branch, and resolved conversations. GitHub branch protection requires zero approvals, has no latest-push approval requirement, applies to administrators, and blocks force pushes and deletion.
+
+### Authoritative acceptance-criteria matrix
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Dedicated repository strategy and repository identity | Passed | Public repository `Thanasak1412/ai-portfolio-research-assistant`, default branch `main`. |
+| Pull request and mandatory CI governance | Passed | ADR-013 and protected `main`; all seven named required contexts remain strict. |
+| Compose smoke and container health | Passed | Local runtime recovery checks and remote Compose smoke job passed. |
+| Health/readiness semantics | Passed | Liveness stayed healthy during deliberate PostgreSQL outage; readiness returned `503` then recovered. |
+| Frontend, backend, worker, PostgreSQL, migrations, sqlc, OpenAPI, and test foundations | Passed | Local and remote bootstrap verification evidence in this report and the successful CI workflow. |
+| Structured logging and correlation IDs | Passed | Runtime verification and platform tests recorded in the Bootstrap evidence. |
+| Secret handling | Passed | Gitleaks `secrets` check passes; `.env` is ignored; no credentials are tracked. |
+| Required CI checks remain enforced | Passed | `frontend`, `backend`, `contracts-and-generation`, `database-integration`, `browser-e2e`, `compose-smoke`, and `secrets` are strict branch-protection requirements. |
+| No Authentication or business functionality implemented | Passed | Scope inspection confirms only Bootstrap platform code and documentation; Authentication remains deferred. |
+| No critical Bootstrap blocker remains | Passed | B-M0-01 and B-M0-02 are resolved with Compose, repository, CI, and governance evidence. |
+
+**M0 Status: Closed.** Authentication is permitted to begin only as planning: **Create Authentication Phase 1 Execution Plan only. Do not implement Authentication automatically.**
