@@ -17,14 +17,21 @@
     "test:e2e": "pnpm --filter @portfolio/web test:e2e",
     "contract:lint": "redocly lint packages/api-contracts/openapi/v1.yaml",
     "contract:generate": "openapi-typescript packages/api-contracts/openapi/v1.yaml -o packages/api-contracts/generated/api.ts",
-    "contract:check": "pnpm contract:lint && pnpm contract:generate && git diff --exit-code -- packages/api-contracts/generated/api.ts"
+    "contract:test": "node --test packages/api-contracts/tests/*.test.mjs",
+    "contract:typecheck": "pnpm --filter @portfolio/web exec tsc --noEmit --skipLibCheck --target ES2022 ../../packages/api-contracts/generated/api.ts",
+    "contract:check": "pnpm contract:lint && pnpm contract:test && pnpm contract:generate && pnpm contract:typecheck && git diff --exit-code -- packages/api-contracts/generated/api.ts"
   },
   "devDependencies": {
     "@redocly/cli": "^2.1.5",
-    "openapi-typescript": "^7.10.1"
+    "openapi-typescript": "^7.10.1",
+    "yaml": "^2.8.1"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"],
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
       "postcss": ">=8.5.18",
       "sharp": ">=0.35.0"

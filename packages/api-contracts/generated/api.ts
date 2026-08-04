@@ -38,10 +38,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register with email and password
+         * @description Creates an active user and refresh session. On success, sets the host-only pra_rt_v1 cookie with Secure, HttpOnly, SameSite=Lax, and Path=/api/v1/auth. The raw refresh token is never returned in JSON. Production requires HTTPS. A rejection never confirms whether the normalized email is already registered.
+         */
+        post: operations["registerUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Authenticate with email and password
+         * @description On success, establishes a refresh session and sets the host-only pra_rt_v1 cookie with Secure, HttpOnly, SameSite=Lax, and Path=/api/v1/auth. Unknown email, disabled account, and incorrect password all return the same AUTHENTICATION_FAILED response.
+         */
+        post: operations["loginUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate the refresh session
+         * @description Accepts the opaque refresh token only through the Secure HttpOnly pra_rt_v1 cookie. The request must use same-origin HTTPS, an Origin exactly matching AUTH_PUBLIC_ORIGIN, and X-Requested-With: portfolio-web. Successful rotation replaces the cookie using the same host-only attributes and never returns refresh/session internals.
+         */
+        post: operations["refreshSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke the current Authentication session
+         * @description Accepts the refresh token only through the Secure HttpOnly pra_rt_v1 cookie. Requires same-origin HTTPS, an Origin exactly matching AUTH_PUBLIC_ORIGIN, and X-Requested-With: portfolio-web. Revokes the current session and clears the cookie using the same host-only, Secure, HttpOnly, SameSite=Lax, and Path=/api/v1/auth attributes. No token value is returned.
+         */
+        post: operations["logoutSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Return the current authenticated user
+         * @description Uses a Bearer access JWT. The backend response is authoritative for authenticated identity; clients must not treat parsed JWT claims as authoritative permissions.
+         */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CredentialsRequest: {
+            /**
+             * Format: email
+             * @description Login email; the backend trims surrounding whitespace and lowercases it.
+             */
+            email: string;
+            /** @description Password with no composition rule. The backend enforces a maximum UTF-8 encoded input size of 1,024 bytes; JSON Schema maxLength is an additional character-count bound. */
+            password: string;
+        };
+        AuthenticatedUser: {
+            /** @description Immutable opaque user identifier. */
+            id: string;
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            createdAt: components["schemas"]["Timestamp"];
+            updatedAt: components["schemas"]["Timestamp"];
+        };
+        AccessTokenFields: {
+            /** @description Fifteen-minute Ed25519-signed JWT. Never contains a refresh token. */
+            accessToken: string;
+            /** @constant */
+            tokenType: "Bearer";
+            /**
+             * @description Access-token lifetime in seconds.
+             * @constant
+             */
+            expiresIn: 900;
+        };
+        /** @description Access-token result. Browser clients must keep accessToken in memory only and must never persist it or derive authoritative permissions from it. */
+        AccessTokenResponse: components["schemas"]["AccessTokenFields"];
+        AuthenticatedSessionResponse: components["schemas"]["AccessTokenFields"] & {
+            user: components["schemas"]["AuthenticatedUser"];
+        };
         HealthStatus: {
             /** @enum {string} */
             status: "alive" | "ready";
@@ -50,10 +185,13 @@ export interface components {
             error: components["schemas"]["ErrorDetail"];
         };
         ErrorDetail: {
-            code: string;
+            code: components["schemas"]["ErrorCode"];
             message: string;
-            correlationId: string;
+            correlationId: components["schemas"]["CorrelationIdValue"];
         };
+        /** @enum {string} */
+        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND";
+        CorrelationIdValue: string;
         /** @description Future financial decimal transport. Binary floating-point JSON numbers are prohibited. */
         DecimalString: string;
         /**
@@ -62,12 +200,118 @@ export interface components {
          */
         Timestamp: string;
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description Request validation failed. Public code is INVALID_REQUEST. */
+        InvalidRequest: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Registration could not be completed. Public code is REGISTRATION_REJECTED and does not confirm whether an account exists. */
+        RegistrationRejected: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Authentication failed. Public code is AUTHENTICATION_FAILED for unknown email, disabled account, and incorrect password without distinction. */
+        AuthenticationFailed: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Refresh was rejected. Public code is SESSION_REFRESH_REJECTED for missing, expired, revoked, replaced, or replayed refresh credentials; security internals are not disclosed. */
+        RefreshRejected: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                "Set-Cookie": components["headers"]["ClearRefreshCookie"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Access token is absent or invalid. Public code is ACCESS_TOKEN_INVALID. */
+        AccessTokenUnauthorized: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Browser security validation failed. Public code is BROWSER_SECURITY_REJECTED; origin or CSRF internals are not disclosed. */
+        BrowserSecurityRejected: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Rate limit exceeded. Public code is RATE_LIMIT_EXCEEDED. */
+        RateLimited: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                "Retry-After": components["headers"]["RetryAfter"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Internal failure. Public code is INTERNAL_ERROR. */
+        InternalFailure: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Authentication dependency is unavailable. Public code is AUTH_SERVICE_UNAVAILABLE. */
+        AuthServiceUnavailable: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+    };
+    parameters: {
+        /** @description Optional caller correlation identifier; the API validates or generates it. */
+        RequestCorrelationId: components["schemas"]["CorrelationIdValue"];
+        /** @description Must exactly equal the configured AUTH_PUBLIC_ORIGIN HTTPS origin. */
+        RequiredOrigin: string;
+        /** @description Required custom request header for refresh and logout CSRF protection. */
+        RequestedWith: "portfolio-web";
+    };
     requestBodies: never;
     headers: {
         /** @description Request correlation identifier, accepted from or generated for the request. */
-        CorrelationId: string;
+        CorrelationId: components["schemas"]["CorrelationIdValue"];
+        /** @description Sets or rotates pra_rt_v1 with Secure, HttpOnly, SameSite=Lax, Path=/api/v1/auth, and no Domain attribute. Max-Age is the lesser of the 30-day idle lifetime and remaining 90-day family lifetime. */
+        SetRefreshCookie: string;
+        /** @description Clears pra_rt_v1 with Max-Age=0 and the same Secure, HttpOnly, SameSite=Lax, host-only, and Path=/api/v1/auth attributes used to set it. */
+        ClearRefreshCookie: string;
+        /** @description Seconds until the current rate-limit window permits another attempt. */
+        RetryAfter: number;
     };
     pathItems: never;
 }
@@ -123,6 +367,165 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+        };
+    };
+    registerUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CredentialsRequest"];
+            };
+        };
+        responses: {
+            /** @description User registered and Authentication session established. */
+            201: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    "Set-Cookie": components["headers"]["SetRefreshCookie"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthenticatedSessionResponse"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            409: components["responses"]["RegistrationRejected"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalFailure"];
+            503: components["responses"]["AuthServiceUnavailable"];
+        };
+    };
+    loginUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CredentialsRequest"];
+            };
+        };
+        responses: {
+            /** @description Authentication succeeded and a session was established. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    "Set-Cookie": components["headers"]["SetRefreshCookie"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthenticatedSessionResponse"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            401: components["responses"]["AuthenticationFailed"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalFailure"];
+            503: components["responses"]["AuthServiceUnavailable"];
+        };
+    };
+    refreshSession: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+                /** @description Must exactly equal the configured AUTH_PUBLIC_ORIGIN HTTPS origin. */
+                Origin: components["parameters"]["RequiredOrigin"];
+                /** @description Required custom request header for refresh and logout CSRF protection. */
+                "X-Requested-With": components["parameters"]["RequestedWith"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refresh token rotated and a new access token issued. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    "Set-Cookie": components["headers"]["SetRefreshCookie"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessTokenResponse"];
+                };
+            };
+            401: components["responses"]["RefreshRejected"];
+            403: components["responses"]["BrowserSecurityRejected"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalFailure"];
+            503: components["responses"]["AuthServiceUnavailable"];
+        };
+    };
+    logoutSession: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+                /** @description Must exactly equal the configured AUTH_PUBLIC_ORIGIN HTTPS origin. */
+                Origin: components["parameters"]["RequiredOrigin"];
+                /** @description Required custom request header for refresh and logout CSRF protection. */
+                "X-Requested-With": components["parameters"]["RequestedWith"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current Authentication session revoked; no response body. */
+            204: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    "Set-Cookie": components["headers"]["ClearRefreshCookie"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["RefreshRejected"];
+            403: components["responses"]["BrowserSecurityRejected"];
+            500: components["responses"]["InternalFailure"];
+            503: components["responses"]["AuthServiceUnavailable"];
+        };
+    };
+    getCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe authenticated-user representation. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthenticatedUser"];
+                };
+            };
+            401: components["responses"]["AccessTokenUnauthorized"];
+            500: components["responses"]["InternalFailure"];
         };
     };
 }
