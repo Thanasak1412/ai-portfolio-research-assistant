@@ -27,6 +27,7 @@
 
 ## Operational contracts
 
+- [Authentication Database Ownership](architecture/authentication-database.md)
 - [Authentication Local HTTPS](engineering/authentication-local-https.md)
 - [Authentication Deployment Contract](engineering/authentication-deployment-contract.md)
 - [M0 Closure Report](m0-blocker-resolution-and-closure-report-2026-08-03.md)

@@ -43,7 +43,7 @@ test:
 	pnpm test
 
 test-integration:
-	TEST_DATABASE_URL="$(PRODUCT_TEST_DATABASE_URL)" go test -tags=integration ./backend/internal/platform/database
+	TEST_DATABASE_URL="$(PRODUCT_TEST_DATABASE_URL)" go test -tags=integration ./backend/internal/platform/database/... ./backend/internal/identity/...
 
 test-e2e:
 	pnpm test:e2e
