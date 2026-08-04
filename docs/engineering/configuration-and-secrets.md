@@ -4,5 +4,4 @@ The backend validates environment, host/port, database URL, pool sizes, timeouts
 
 `.env.example` contains local placeholders. Real passwords, tokens, cookies, authorization headers, provider keys, private keys, or production connection strings must never be committed, logged, embedded in browser code, fixtures, screenshots, or tickets.
 
-Development, CI, staging, and production use separate databases and secret scopes. Production uses an approved secret manager. Before Authentication Phase 1, owners must approve the deployment hostname/cookie topology and Ed25519 key storage/rotation mechanism. No signing keys exist in M0.
-
+Development, CI, staging, and production use separate databases and secret scopes. The approved Authentication configuration contract, key-ring policy, and secret-manager rules are in [Authentication Deployment Contract](authentication-deployment-contract.md) and [TOKEN_SIGNING-v1](../policies/TOKEN_SIGNING-v1.md). No signing keys exist in M0.
