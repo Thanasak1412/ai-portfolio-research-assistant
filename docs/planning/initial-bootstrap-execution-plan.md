@@ -7,7 +7,7 @@ Prepare the engineering foundation for the AI Portfolio Research & Monitoring As
 
 ## Inputs and Constraints
 
-This plan is based on the [implementation planning](/Users/mac/Documents/AI%20Automation%202/docs/ai-portfolio-research/implementation-planning.md) and [decision closure specification](/Users/mac/Documents/AI%20Automation%202/docs/ai-portfolio-research/decision-closure-specification.md).
+This plan is based on the [planning baseline](planning-baseline.md) and [decision closure specification](decision-closure-specification.md).
 
 The existing workspace contains an unrelated LINE/lead application. The portfolio product must receive its own repository/workspace or be explicitly approved as a replacement; the products must not be combined by accident.
 
