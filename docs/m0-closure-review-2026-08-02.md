@@ -1,7 +1,7 @@
 # M0 Blocker Resolution and Closure Review
 
 **Review date:** 2026-08-02 (Asia/Bangkok)  
-**M0 status:** Open  
+**M0 status:** Historical review; superseded by the 2026-08-03 closure evidence pending independent PR approval.  
 **Authentication Phase 1 Execution Plan:** Not created because the M0 gate did not pass.
 
 ## 1. Review Basis
@@ -182,4 +182,3 @@ Before M0 can be re-reviewed:
 2. Approve the GitHub organization, repository name, default branch, required checks/review policy, and Go module identity. Establish the product directory as the dedicated repository root, publish it, and obtain a fully passing GitHub Actions run.
 
 Before Authentication implementation (after M0 closure), the Decision Closure Specification also requires approval of deployment hostname/cookie topology and an Ed25519 secret-management and rotation mechanism. These decisions do not authorize Authentication implementation in this review.
-
