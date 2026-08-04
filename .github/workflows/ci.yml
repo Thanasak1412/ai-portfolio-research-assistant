@@ -60,7 +60,9 @@ jobs:
           cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm contract:lint
+      - run: pnpm contract:test
       - run: pnpm contract:generate
+      - run: pnpm contract:typecheck
       - run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.28.0
       - run: sqlc generate
       - run: git diff --exit-code -- packages/api-contracts/generated backend/internal/platform/database/sqlcgen

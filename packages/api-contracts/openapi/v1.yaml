@@ -1,20 +1,22 @@
 openapi: 3.1.0
 info:
   title: Portfolio Research Assistant API
-  version: 1.0.0-bootstrap
+  version: 1.1.0
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
   description: >-
-    Bootstrap-only API contract. It intentionally exposes operational health and
-    readiness endpoints only; product and authentication operations are deferred.
+    Version 1 operational and Authentication contracts. Authentication assists
+    access control only; portfolio and financial operations remain out of scope.
 servers:
-  - url: http://localhost:8080/api/v1
-    description: Local development
+  - url: https://app.localhost:3443/api/v1
+    description: Approved local same-origin HTTPS development endpoint
 security: []
 tags:
   - name: Operations
     description: Restricted operational checks.
+  - name: Authentication
+    description: Email/password Authentication and current-session lifecycle.
 paths:
   /health/live:
     get:
@@ -55,16 +57,323 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [Authentication]
+      summary: Register with email and password
+      description: >-
+        Creates an active user and refresh session. On success, sets the
+        host-only pra_rt_v1 cookie with Secure, HttpOnly, SameSite=Lax, and
+        Path=/api/v1/auth. The raw refresh token is never returned in JSON.
+        Production requires HTTPS. A rejection never confirms whether the
+        normalized email is already registered.
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CredentialsRequest"
+      responses:
+        "201":
+          description: User registered and Authentication session established.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+            Set-Cookie:
+              $ref: "#/components/headers/SetRefreshCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticatedSessionResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "409":
+          $ref: "#/components/responses/RegistrationRejected"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+        "503":
+          $ref: "#/components/responses/AuthServiceUnavailable"
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [Authentication]
+      summary: Authenticate with email and password
+      description: >-
+        On success, establishes a refresh session and sets the host-only
+        pra_rt_v1 cookie with Secure, HttpOnly, SameSite=Lax, and
+        Path=/api/v1/auth. Unknown email, disabled account, and incorrect
+        password all return the same AUTHENTICATION_FAILED response.
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CredentialsRequest"
+      responses:
+        "200":
+          description: Authentication succeeded and a session was established.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+            Set-Cookie:
+              $ref: "#/components/headers/SetRefreshCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticatedSessionResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+        "503":
+          $ref: "#/components/responses/AuthServiceUnavailable"
+  /auth/refresh:
+    post:
+      operationId: refreshSession
+      tags: [Authentication]
+      summary: Rotate the refresh session
+      description: >-
+        Accepts the opaque refresh token only through the Secure HttpOnly
+        pra_rt_v1 cookie. The request must use same-origin HTTPS, an Origin
+        exactly matching AUTH_PUBLIC_ORIGIN, and X-Requested-With:
+        portfolio-web. Successful rotation replaces the cookie using the same
+        host-only attributes and never returns refresh/session internals.
+      security:
+        - RefreshCookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/RequiredOrigin"
+        - $ref: "#/components/parameters/RequestedWith"
+      responses:
+        "200":
+          description: Refresh token rotated and a new access token issued.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+            Set-Cookie:
+              $ref: "#/components/headers/SetRefreshCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessTokenResponse"
+        "401":
+          $ref: "#/components/responses/RefreshRejected"
+        "403":
+          $ref: "#/components/responses/BrowserSecurityRejected"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+        "503":
+          $ref: "#/components/responses/AuthServiceUnavailable"
+  /auth/logout:
+    post:
+      operationId: logoutSession
+      tags: [Authentication]
+      summary: Revoke the current Authentication session
+      description: >-
+        Accepts the refresh token only through the Secure HttpOnly pra_rt_v1
+        cookie. Requires same-origin HTTPS, an Origin exactly matching
+        AUTH_PUBLIC_ORIGIN, and X-Requested-With: portfolio-web. Revokes the
+        current session and clears the cookie using the same host-only,
+        Secure, HttpOnly, SameSite=Lax, and Path=/api/v1/auth attributes. No
+        token value is returned.
+      security:
+        - RefreshCookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/RequiredOrigin"
+        - $ref: "#/components/parameters/RequestedWith"
+      responses:
+        "204":
+          description: Current Authentication session revoked; no response body.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+            Set-Cookie:
+              $ref: "#/components/headers/ClearRefreshCookie"
+        "401":
+          $ref: "#/components/responses/RefreshRejected"
+        "403":
+          $ref: "#/components/responses/BrowserSecurityRejected"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+        "503":
+          $ref: "#/components/responses/AuthServiceUnavailable"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [Authentication]
+      summary: Return the current authenticated user
+      description: >-
+        Uses a Bearer access JWT. The backend response is authoritative for
+        authenticated identity; clients must not treat parsed JWT claims as
+        authoritative permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+      responses:
+        "200":
+          description: Safe authenticated-user representation.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticatedUser"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        Fifteen-minute Ed25519/EdDSA access JWT used only for API authorization.
+        Browser clients keep it in memory only; parsed claims are not
+        authoritative application permissions.
+    RefreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: pra_rt_v1
+      description: >-
+        Opaque refresh token supplied only by the browser as the host-only
+        Secure, HttpOnly, SameSite=Lax cookie scoped to /api/v1/auth. The cookie
+        has no Domain attribute and production requires HTTPS.
+  parameters:
+    RequestCorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      description: Optional caller correlation identifier; the API validates or generates it.
+      schema:
+        $ref: "#/components/schemas/CorrelationIdValue"
+    RequiredOrigin:
+      name: Origin
+      in: header
+      required: true
+      description: Must exactly equal the configured AUTH_PUBLIC_ORIGIN HTTPS origin.
+      schema:
+        type: string
+        format: uri
+    RequestedWith:
+      name: X-Requested-With
+      in: header
+      required: true
+      description: Required custom request header for refresh and logout CSRF protection.
+      schema:
+        type: string
+        const: portfolio-web
   headers:
     CorrelationId:
       description: Request correlation identifier, accepted from or generated for the request.
       schema:
+        $ref: "#/components/schemas/CorrelationIdValue"
+    SetRefreshCookie:
+      description: >-
+        Sets or rotates pra_rt_v1 with Secure, HttpOnly, SameSite=Lax,
+        Path=/api/v1/auth, and no Domain attribute. Max-Age is the lesser of the
+        30-day idle lifetime and remaining 90-day family lifetime.
+      schema:
         type: string
-        minLength: 1
-        maxLength: 128
-        pattern: "^[A-Za-z0-9._-]+$"
+    ClearRefreshCookie:
+      description: >-
+        Clears pra_rt_v1 with Max-Age=0 and the same Secure, HttpOnly,
+        SameSite=Lax, host-only, and Path=/api/v1/auth attributes used to set it.
+      schema:
+        type: string
+    RetryAfter:
+      description: Seconds until the current rate-limit window permits another attempt.
+      schema:
+        type: integer
+        minimum: 1
   schemas:
+    CredentialsRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          description: Login email; the backend trims surrounding whitespace and lowercases it.
+        password:
+          type: string
+          writeOnly: true
+          minLength: 12
+          maxLength: 1024
+          description: >-
+            Password with no composition rule. The backend enforces a maximum
+            UTF-8 encoded input size of 1,024 bytes; JSON Schema maxLength is an
+            additional character-count bound.
+    AuthenticatedUser:
+      type: object
+      additionalProperties: false
+      required: [id, email, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Immutable opaque user identifier.
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, disabled]
+        createdAt:
+          $ref: "#/components/schemas/Timestamp"
+        updatedAt:
+          $ref: "#/components/schemas/Timestamp"
+    AccessTokenFields:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+          description: Fifteen-minute Ed25519-signed JWT. Never contains a refresh token.
+        tokenType:
+          type: string
+          const: Bearer
+        expiresIn:
+          type: integer
+          const: 900
+          description: Access-token lifetime in seconds.
+    AccessTokenResponse:
+      description: >-
+        Access-token result. Browser clients must keep accessToken in memory
+        only and must never persist it or derive authoritative permissions from it.
+      allOf:
+        - $ref: "#/components/schemas/AccessTokenFields"
+      unevaluatedProperties: false
+    AuthenticatedSessionResponse:
+      allOf:
+        - $ref: "#/components/schemas/AccessTokenFields"
+        - type: object
+          required: [user]
+          properties:
+            user:
+              $ref: "#/components/schemas/AuthenticatedUser"
+      unevaluatedProperties: false
     HealthStatus:
       type: object
       additionalProperties: false
@@ -86,11 +395,31 @@ components:
       required: [code, message, correlationId]
       properties:
         code:
-          type: string
+          $ref: "#/components/schemas/ErrorCode"
         message:
           type: string
         correlationId:
-          type: string
+          $ref: "#/components/schemas/CorrelationIdValue"
+    ErrorCode:
+      type: string
+      enum:
+        - INVALID_REQUEST
+        - REGISTRATION_REJECTED
+        - AUTHENTICATION_FAILED
+        - SESSION_REFRESH_REJECTED
+        - ACCESS_TOKEN_INVALID
+        - BROWSER_SECURITY_REJECTED
+        - RATE_LIMIT_EXCEEDED
+        - AUTH_SERVICE_UNAVAILABLE
+        - INTERNAL_ERROR
+        - NOT_READY
+        - HTTP_ERROR
+        - NOT_FOUND
+    CorrelationIdValue:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: "^[A-Za-z0-9._-]+$"
     DecimalString:
       type: string
       description: Future financial decimal transport. Binary floating-point JSON numbers are prohibited.
@@ -99,3 +428,100 @@ components:
       type: string
       format: date-time
       description: ISO-8601 UTC instant.
+  responses:
+    InvalidRequest:
+      description: Request validation failed. Public code is INVALID_REQUEST.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    RegistrationRejected:
+      description: >-
+        Registration could not be completed. Public code is
+        REGISTRATION_REJECTED and does not confirm whether an account exists.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    AuthenticationFailed:
+      description: >-
+        Authentication failed. Public code is AUTHENTICATION_FAILED for unknown
+        email, disabled account, and incorrect password without distinction.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    RefreshRejected:
+      description: >-
+        Refresh was rejected. Public code is SESSION_REFRESH_REJECTED for
+        missing, expired, revoked, replaced, or replayed refresh credentials;
+        security internals are not disclosed.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+        Set-Cookie:
+          $ref: "#/components/headers/ClearRefreshCookie"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    AccessTokenUnauthorized:
+      description: Access token is absent or invalid. Public code is ACCESS_TOKEN_INVALID.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    BrowserSecurityRejected:
+      description: >-
+        Browser security validation failed. Public code is
+        BROWSER_SECURITY_REJECTED; origin or CSRF internals are not disclosed.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    RateLimited:
+      description: Rate limit exceeded. Public code is RATE_LIMIT_EXCEEDED.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    InternalFailure:
+      description: Internal failure. Public code is INTERNAL_ERROR.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    AuthServiceUnavailable:
+      description: >-
+        Authentication dependency is unavailable. Public code is
+        AUTH_SERVICE_UNAVAILABLE.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
