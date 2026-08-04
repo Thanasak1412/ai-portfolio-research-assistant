@@ -2,7 +2,7 @@
 
 **Milestone:** M0 — Architecture and Delivery Foundation  
 **Review date:** 2026-08-03 (Asia/Bangkok)  
-**M0 Status: Closed (effective on merge of PR #15)**
+**M0 Status: Closed**
 
 ## 1. Initial State
 
@@ -191,6 +191,8 @@ Authentication has not been implemented. The recommended next step is **Create A
 **Governance decision:** [ADR-013 — Solo Maintainer Merge Governance](adr/ADR-013-solo-maintainer-merge-governance.md)
 **Closure PR:** #15 (`codex/m0-closure-report`)
 
+PR #15 was merged into `main` on 2026-08-04. Its merge commit is `cc9a7e7406fadf036f428f67c87178468ba27bc2`. The post-merge `main` workflow, GitHub Actions run `30918382070`, completed successfully with all seven mandatory checks passing. The Gitleaks `secrets` job also passed using the automatic `GITHUB_TOKEN`; no secret-scanning exception or bypass was used.
+
 ADR-013 supersedes the prior independent-approval requirement for the solo-maintainer phase. `main` still requires a pull request, all seven mandatory checks, an up-to-date branch, and resolved conversations. GitHub branch protection requires zero approvals, has no latest-push approval requirement, applies to administrators, and blocks force pushes and deletion.
 
 ### Authoritative acceptance-criteria matrix
@@ -205,6 +207,8 @@ ADR-013 supersedes the prior independent-approval requirement for the solo-maint
 | Structured logging and correlation IDs | Passed | Runtime verification and platform tests recorded in the Bootstrap evidence. |
 | Secret handling | Passed | Gitleaks `secrets` check passes; `.env` is ignored; no credentials are tracked. |
 | Required CI checks remain enforced | Passed | `frontend`, `backend`, `contracts-and-generation`, `database-integration`, `browser-e2e`, `compose-smoke`, and `secrets` are strict branch-protection requirements. |
+| PR #15 merge and post-merge CI | Passed | PR #15 merged as `cc9a7e7406fadf036f428f67c87178468ba27bc2`; `main` workflow `30918382070` passed all seven mandatory jobs. |
+| Solo-maintainer ruleset after merge | Passed | Pull request required; approval count `0`; latest-push approval disabled; strict up-to-date checks and conversation resolution enabled; force pushes and deletion disabled. |
 | No Authentication or business functionality implemented | Passed | Scope inspection confirms only Bootstrap platform code and documentation; Authentication remains deferred. |
 | No critical Bootstrap blocker remains | Passed | B-M0-01 and B-M0-02 are resolved with Compose, repository, CI, and governance evidence. |
 
