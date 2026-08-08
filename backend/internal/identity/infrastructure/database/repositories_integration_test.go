@@ -293,6 +293,31 @@ func TestPostgresTransactorSerializesRepositoryLocksAcrossConnections(t *testing
 	}
 }
 
+func TestPostgresTransactorRollsBackAfterRequestCancellation(t *testing.T) {
+	pool := openTestPool(t)
+	transactor := NewPostgresTransactor(pool)
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	user := repositoryUserFixture(t, now)
+	requestContext, cancelRequest := context.WithCancel(context.Background())
+
+	err := transactor.WithinTransaction(requestContext, func(txContext context.Context, repositories application.TransactionRepositories) error {
+		if _, createErr := repositories.Users().Create(txContext, user); createErr != nil {
+			return createErr
+		}
+		cancelRequest()
+		return txContext.Err()
+	})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected canceled transaction, got %v", err)
+	}
+
+	verificationContext, cancelVerification := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelVerification()
+	if _, err := NewPostgresUserRepository(pool).FindByID(verificationContext, user.ID()); !errors.Is(err, application.ErrUserNotFound) {
+		t.Fatalf("canceled transaction was not rolled back: %v", err)
+	}
+}
+
 func repositoryUserFixture(t *testing.T, now time.Time) domain.User {
 	t.Helper()
 	id := mustDomainUserID(t, uuid.New())

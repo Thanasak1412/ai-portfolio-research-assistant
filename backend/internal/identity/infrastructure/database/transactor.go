@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -10,6 +11,8 @@ import (
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/application"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/database/sqlcgen"
 )
+
+const transactionRollbackTimeout = 5 * time.Second
 
 type PostgresTransactor struct{ pool *pgxpool.Pool }
 
@@ -31,7 +34,9 @@ func (transactor *PostgresTransactor) WithinTransaction(
 	committed := false
 	defer func() {
 		if !committed {
-			_ = tx.Rollback(ctx)
+			rollbackContext, cancel := context.WithTimeout(context.WithoutCancel(ctx), transactionRollbackTimeout)
+			defer cancel()
+			_ = tx.Rollback(rollbackContext)
 		}
 	}()
 
