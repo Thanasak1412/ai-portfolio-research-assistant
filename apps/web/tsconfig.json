@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@portfolio/api-contracts": [
+        "../../packages/api-contracts/generated/api.ts"
+      ]
     }
   },
   "include": [
