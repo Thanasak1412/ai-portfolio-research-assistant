@@ -118,11 +118,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose up --build -d --wait --wait-timeout 120 postgres postgres-test api worker web
+      - run: sh scripts/prepare-compose-auth-env.sh .compose.auth.env
+      - run: docker compose --env-file .compose.auth.env up --build -d --wait --wait-timeout 120 postgres postgres-test api worker web
       - run: curl --fail --retry 20 --retry-delay 2 http://localhost:8080/api/v1/health/ready
       - run: curl --fail --retry 20 --retry-delay 2 http://localhost:3000
       - if: always()
-        run: docker compose down -v
+        run: docker compose --env-file .compose.auth.env down -v
 
   secrets:
     runs-on: ubuntu-latest

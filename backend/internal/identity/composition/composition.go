@@ -1,11 +1,10 @@
-// Package composition is the identity module's composition root. Runtime HTTP
-// mounting remains deliberately blocked until the HTTPS-attestation decision
-// recorded by AUTH-BE-003 is approved.
+// Package composition is the identity module's composition root.
 package composition
 
 import (
 	"context"
 	"errors"
+	"net/netip"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,32 +18,27 @@ import (
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/ratelimit"
 	identityruntime "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/runtime"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/token"
+	identityhttp "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/transport/http"
 	platformdatabase "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database"
 )
 
 type LookupFunc func(string) (string, bool)
 
 type Config struct {
-	PublicOrigin      string
-	TrustedProxyCIDRs []string
+	PublicOrigin           string
+	TrustedProxyCIDRs      []string
+	TrustedHTTPSProxyCIDRs []string
 }
 
 func Build(ctx context.Context, pool *pgxpool.Pool, environment string, lookup LookupFunc) (*application.Service, Config, error) {
 	if pool == nil || lookup == nil {
 		return nil, Config{}, application.ErrInvalidSecurityConfig
 	}
-	publicOrigin, ok := lookup("AUTH_PUBLIC_ORIGIN")
-	if !ok || publicOrigin == "" || publicOrigin != strings.TrimSpace(publicOrigin) {
-		return nil, Config{}, application.ErrInvalidSecurityConfig
-	}
-	trustedRaw, _ := lookup("AUTH_TRUSTED_PROXY_CIDRS")
-	trusted, err := network.ParseTrustedProxyCIDRs(trustedRaw)
+	configuration, err := loadConfig(environment, lookup)
 	if err != nil {
 		return nil, Config{}, err
 	}
-	if (environment == "staging" || environment == "production") && len(trusted) == 0 {
-		return nil, Config{}, application.ErrInvalidSecurityConfig
-	}
+	publicOrigin, trusted := configuration.PublicOrigin, configuration.TrustedProxyCIDRs
 	resolver, err := network.NewResolver(trusted)
 	if err != nil {
 		return nil, Config{}, err
@@ -86,7 +80,66 @@ func Build(ctx context.Context, pool *pgxpool.Pool, environment string, lookup L
 	if err != nil {
 		return nil, Config{}, err
 	}
-	return service, Config{PublicOrigin: publicOrigin, TrustedProxyCIDRs: trusted}, nil
+	return service, configuration, nil
+}
+
+// BuildHTTP composes the identity application service and its HTTP transport.
+func BuildHTTP(ctx context.Context, pool *pgxpool.Pool, environment string, lookup LookupFunc) (*identityhttp.Handler, error) {
+	service, configuration, err := Build(ctx, pool, environment, lookup)
+	if err != nil {
+		return nil, err
+	}
+	attestor, err := identityhttp.NewTrustedHTTPSAttestor(configuration.TrustedHTTPSProxyCIDRs)
+	if err != nil {
+		return nil, err
+	}
+	return identityhttp.NewHandler(service, configuration.PublicOrigin, attestor)
+}
+
+func loadConfig(environment string, lookup LookupFunc) (Config, error) {
+	publicOrigin, ok := lookup("AUTH_PUBLIC_ORIGIN")
+	if !ok || publicOrigin == "" || publicOrigin != strings.TrimSpace(publicOrigin) {
+		return Config{}, application.ErrInvalidSecurityConfig
+	}
+	trustedRaw, _ := lookup("AUTH_TRUSTED_PROXY_CIDRS")
+	trusted, err := network.ParseTrustedProxyCIDRs(trustedRaw)
+	if err != nil {
+		return Config{}, err
+	}
+	httpsRaw, _ := lookup("AUTH_TRUSTED_HTTPS_PROXY_CIDRS")
+	httpsTrusted, err := parseTrustedHTTPSProxyCIDRs(httpsRaw)
+	if err != nil {
+		return Config{}, err
+	}
+	if environment == "staging" || environment == "production" {
+		if len(trusted) == 0 {
+			return Config{}, application.ErrInvalidSecurityConfig
+		}
+		if len(httpsTrusted) == 0 {
+			return Config{}, fieldError("AUTH_TRUSTED_HTTPS_PROXY_CIDRS is required")
+		}
+	}
+	return Config{PublicOrigin: publicOrigin, TrustedProxyCIDRs: trusted, TrustedHTTPSProxyCIDRs: httpsTrusted}, nil
+}
+
+func parseTrustedHTTPSProxyCIDRs(value string) ([]string, error) {
+	if strings.TrimSpace(value) == "" {
+		return nil, nil
+	}
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		prefix, err := netip.ParsePrefix(strings.TrimSpace(part))
+		if strings.TrimSpace(part) == "" || err != nil || prefix.Bits() == 0 {
+			return nil, fieldError("AUTH_TRUSTED_HTTPS_PROXY_CIDRS is invalid")
+		}
+		result = append(result, prefix.Masked().String())
+	}
+	return result, nil
+}
+
+func fieldError(field string) error {
+	return errors.Join(application.ErrInvalidSecurityConfig, errors.New(field))
 }
 
 func loadKeyRing(environment string, lookup LookupFunc) (*token.KeyRing, error) {

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/composition"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/config"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/httpserver"
@@ -40,7 +41,12 @@ func main() {
 	}
 	defer pool.Close()
 
-	server := httpserver.New(logger, poolReadiness{ping: pool.Ping})
+	authHandler, err := composition.BuildHTTP(rootContext, pool, applicationConfig.Environment, os.LookupEnv)
+	if err != nil {
+		logger.Error("identity authentication configuration failed", "error", err)
+		os.Exit(1)
+	}
+	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler)
 	serveErrors := make(chan error, 1)
 	go func() { serveErrors <- server.Listen(applicationConfig.HTTPAddress()) }()
 	logger.Info("api started", "address", applicationConfig.HTTPAddress(), "environment", applicationConfig.Environment)

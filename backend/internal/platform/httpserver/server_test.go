@@ -5,9 +5,38 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
 )
+
+type testRegistrar struct{}
+
+func (testRegistrar) Mount(router fiber.Router) {
+	router.Post("/auth/register", func(ctx *fiber.Ctx) error { return ctx.SendStatus(fiber.StatusNoContent) })
+}
+
+func TestV1RouteRegistrarMountsWithoutChangingHealthRoutes(t *testing.T) {
+	server := New(slog.New(slog.NewTextHandler(io.Discard, nil)), readinessStub{}, testRegistrar{})
+	for _, path := range []string{"/api/v1/health/live", "/api/v1/health/ready"} {
+		response, err := server.App().Test(httptest.NewRequest(http.MethodGet, path, nil))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.StatusCode != http.StatusOK {
+			t.Fatalf("%s status = %d", path, response.StatusCode)
+		}
+	}
+	response, err := server.App().Test(httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusNoContent {
+		t.Fatalf("route status = %d", response.StatusCode)
+	}
+}
 
 type readinessStub struct{ err error }
 

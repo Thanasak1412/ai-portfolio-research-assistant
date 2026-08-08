@@ -11,10 +11,10 @@ The approved deployment topology terminates TLS at a same-origin reverse proxy a
 
 The policy explicitly rejects arbitrary forwarded scheme assertions, forwarding chains, and untrusted plaintext peers. Fiber's direct-proxy transport view is therefore not used as proof of original HTTPS without the approved direct-peer check.
 
-## Remaining implementation work
+## Historical implementation record
 
-The application operations, strict HTTP DTOs, cookie serialization, Bearer middleware, exact Origin/header checks, and an injectable HTTPS-attestation boundary are already available. Runtime composition must remain unmounted until `AUTH-BE-003A` implements this approved attestor, validates `AUTH_TRUSTED_HTTPS_PROXY_CIDRS`, and adds the required HTTPS proxy tests. This decision does not itself activate routes or weaken Secure-cookie, exact-Origin, or HTTPS requirements.
+The application operations, strict HTTP DTOs, cookie serialization, Bearer middleware, exact Origin/header checks, and an injectable HTTPS-attestation boundary were available before runtime activation. `AUTH-BE-003A` implements the concrete attestor, validates `AUTH_TRUSTED_HTTPS_PROXY_CIDRS`, and mounts the approved Identity routes. This decision does not weaken Secure-cookie, exact-Origin, or HTTPS requirements.
 
 ## Closure evidence
 
-The decision records trusted TLS-terminating CIDRs, exact header semantics, direct-TLS behavior, multi-hop behavior, untrusted-peer handling, and local/CI/staging/production verification. `AUTH-BE-003A — Implement trusted HTTPS attestation and activate Authentication runtime routes` is now the only follow-on task for this decision.
+The decision records trusted TLS-terminating CIDRs, exact header semantics, direct-TLS behavior, multi-hop behavior, untrusted-peer handling, and local/CI/staging/production verification. Runtime activation is delivered by `AUTH-BE-003A`; its pull-request review and merge remain subject to ADR-013 governance.
