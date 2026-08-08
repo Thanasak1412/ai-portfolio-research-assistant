@@ -15,7 +15,7 @@ Financial and Portfolio modules must not write these tables. Identity infrastruc
 
 The database stores an encoded Argon2id password hash and a fixed-length opaque refresh-token digest because those are required security verifiers. It has no fields for raw passwords, raw refresh tokens, access tokens, cookie content, authorization headers, credential request bodies, or signing keys. Generated database structs have no JSON tags and must never be serialized as HTTP responses.
 
-Network identity and rate-limit keys are HMAC-derived outside this database layer. `network_identity_hash` is bounded safe metadata; `derived_key` is a 32-byte HMAC result. Raw email and IP values are not rate-limit event fields.
+Network identity and rate-limit keys are HMAC-derived outside this database layer. `network_identity_hash` is bounded safe metadata; `derived_key` is a 32-byte HMAC result. Raw email and IP values are not rate-limit event fields. Under `REFRESH_TOKEN-v1`, `token_digest` is a 32-byte SHA-256 digest of the exact canonical versioned external refresh-token representation. Under `AUTH_HMAC_KEYS-v1`, `ip_hmac_v1:` plus 64 lowercase hexadecimal characters is 75 characters and fits the existing 128-character network-identity bounds; no migration is required for these representation decisions.
 
 ## Refresh-session lifecycle
 
