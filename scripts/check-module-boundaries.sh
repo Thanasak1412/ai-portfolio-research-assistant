@@ -20,4 +20,20 @@ if [ -n "$violations" ]; then
   exit 1
 fi
 
+identity_domain_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/(application|infrastructure)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/identity/domain" || true)
+if [ -n "$identity_domain_violations" ]; then
+  echo "Identity domain imports a forbidden outer layer or infrastructure dependency:$identity_domain_violations" >&2
+  exit 1
+fi
+
+identity_application_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/identity/application" || true)
+if [ -n "$identity_application_violations" ]; then
+  echo "Identity application imports a forbidden transport or persistence implementation:$identity_application_violations" >&2
+  exit 1
+fi
+
 echo "Module boundary check passed"
