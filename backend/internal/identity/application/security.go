@@ -63,6 +63,9 @@ func (token RefreshToken) Value() string    { return token.value }
 func (token RefreshToken) IsZero() bool     { return token.value == "" }
 func (token RefreshToken) String() string   { return "[REDACTED]" }
 func (token RefreshToken) GoString() string { return "application.RefreshToken{[REDACTED]}" }
+func (token RefreshToken) MarshalJSON() ([]byte, error) {
+	return nil, ErrRefreshTokenRejected
+}
 
 type RefreshTokenService interface {
 	Generate(context.Context) (RefreshToken, error)

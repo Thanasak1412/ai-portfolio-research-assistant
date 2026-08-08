@@ -44,8 +44,8 @@ func TestRefreshTokenGenerationParsingAndDigest(t *testing.T) {
 		t.Fatal("refresh token formatting was not redacted")
 	}
 	serialized, err := json.Marshal(token)
-	if err != nil || bytes.Contains(serialized, []byte(expected)) {
-		t.Fatalf("refresh token leaked through JSON: %s", serialized)
+	if !errors.Is(err, application.ErrRefreshTokenRejected) || bytes.Contains(serialized, []byte(expected)) || strings.Contains(err.Error(), expected) {
+		t.Fatalf("refresh token JSON serialization did not fail safely: bytes=%s err=%v", serialized, err)
 	}
 }
 
