@@ -13,6 +13,8 @@ import (
 const correlationHeader = "X-Correlation-ID"
 const correlationLocal = "correlation_id"
 
+const CorrelationHeader = correlationHeader
+
 var validCorrelationID = regexp.MustCompile(`^[A-Za-z0-9._-]{1,128}$`)
 
 func correlationMiddleware(ctx *fiber.Ctx) error {
@@ -44,6 +46,10 @@ func correlationID(ctx *fiber.Ctx) string {
 	identifier, _ := ctx.Locals(correlationLocal).(string)
 	return identifier
 }
+
+// CorrelationID is the public platform boundary used by module transports.
+// The value is created and validated by the platform middleware.
+func CorrelationID(ctx *fiber.Ctx) string { return correlationID(ctx) }
 
 func newCorrelationID() string {
 	buffer := make([]byte, 16)

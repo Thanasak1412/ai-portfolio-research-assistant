@@ -8,6 +8,7 @@
 - [Authentication Security Decision Closure Specification](planning/authentication-security-decision-closure-specification.md)
 - [Authentication Implementation Gate](planning/authentication-implementation-gate.md)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
+- [AUTH-BE-003 HTTPS Attestation Blocker](planning/auth-be-003-https-attestation-blocker.md)
 - [Argon2id Benchmark Report — 2026-08-04](planning/argon2id-benchmark-report-2026-08-04.md)
 - [AUTH_IMPLEMENTATION_POLICY-v2](policies/AUTH_IMPLEMENTATION_POLICY-v2.md) (current)
 - [AUTH_IMPLEMENTATION_POLICY-v1](policies/AUTH_IMPLEMENTATION_POLICY-v1.md) (historical)
@@ -36,4 +37,5 @@
 - [Authentication Database Ownership](architecture/authentication-database.md)
 - [Authentication Local HTTPS](engineering/authentication-local-https.md)
 - [Authentication Deployment Contract](engineering/authentication-deployment-contract.md)
+- [Authentication Backend Runtime](engineering/authentication-backend-runtime.md)
 - [M0 Closure Report](m0-blocker-resolution-and-closure-report-2026-08-03.md)
