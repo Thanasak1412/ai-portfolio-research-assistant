@@ -38,6 +38,7 @@ type RefreshSessionTransactionRepository interface {
 type TransactionRepositories interface {
 	Users() UserRepository
 	RefreshSessions() RefreshSessionTransactionRepository
+	Audit() AuditWriter
 }
 
 type Transactor interface {
