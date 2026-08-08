@@ -36,4 +36,12 @@ if [ -n "$identity_application_violations" ]; then
   exit 1
 fi
 
+identity_transport_violations=$(rg -n --glob '*.go' --glob '!**/*_test.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/identity/transport" || true)
+if [ -n "$identity_transport_violations" ]; then
+  echo "Identity transport bypasses the application boundary or imports persistence implementation:$identity_transport_violations" >&2
+  exit 1
+fi
+
 echo "Module boundary check passed"
