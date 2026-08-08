@@ -3,6 +3,7 @@
 .env
 .env.*
 !.env.example
+.compose.auth.env
 node_modules/
 .next/
 coverage/

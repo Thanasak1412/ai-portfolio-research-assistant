@@ -6,9 +6,9 @@ The platform HTTP server still owns lifecycle, health/readiness, correlation IDs
 
 ## Runtime activation status
 
-Authentication route activation in `cmd/api` is intentionally blocked by [AUTH-BE-003 HTTPS Attestation Blocker](../planning/auth-be-003-https-attestation-blocker.md). The current approved reverse-proxy topology does not yet define how the private API proves original browser HTTPS after TLS termination. The transport requires an injected HTTPS attestor and cannot be constructed without one; it never falls back to trusting arbitrary `X-Forwarded-Proto` or Fiber protocol convenience behavior.
+`cmd/api` composes Identity and mounts `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, and `GET /api/v1/auth/me`. The platform server owns `/api/v1` and health routes; Identity supplies a generic route registrar, so platform code does not depend on Identity internals.
 
-Consequently, the application and HTTP behavior are executable in deterministic and PostgreSQL integration tests using an explicit test attestor, but the production API composition does not mount Authentication routes yet. This is a blocking limitation, not an insecure development fallback. Existing health routes remain unchanged.
+The concrete attestor accepts either a completed direct TLS connection or one exact raw `X-Forwarded-Proto: https` header from the actual plaintext socket peer when that peer belongs to `AUTH_TRUSTED_HTTPS_PROXY_CIDRS`. This setting is independent from `AUTH_TRUSTED_PROXY_CIDRS`; duplicate, comma-separated, padded, mixed-case, malformed, and untrusted assertions fail closed. Staging and production require non-empty non-universal HTTPS-proxy CIDRs. Existing health routes remain unchanged.
 
 ## Security invariants
 

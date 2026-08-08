@@ -8,7 +8,7 @@
 - [Authentication Security Decision Closure Specification](planning/authentication-security-decision-closure-specification.md)
 - [Authentication Implementation Gate](planning/authentication-implementation-gate.md)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
-- [AUTH-BE-003 HTTPS Attestation Decision](planning/auth-be-003-https-attestation-blocker.md) (resolved; runtime implementation pending)
+- [AUTH-BE-003 HTTPS Attestation Decision](planning/auth-be-003-https-attestation-blocker.md) (resolved; runtime activation implemented in AUTH-BE-003A, pending review)
 - [Argon2id Benchmark Report — 2026-08-04](planning/argon2id-benchmark-report-2026-08-04.md)
 - [AUTH_IMPLEMENTATION_POLICY-v3](policies/AUTH_IMPLEMENTATION_POLICY-v3.md) (current)
 - [AUTH_IMPLEMENTATION_POLICY-v2](policies/AUTH_IMPLEMENTATION_POLICY-v2.md) (historical)

@@ -12,12 +12,18 @@ type ReadinessChecker interface {
 	Ping(context.Context) error
 }
 
+// V1RouteRegistrar lets a module mount its public v1 transport routes without
+// making the platform server depend on that module's implementation.
+type V1RouteRegistrar interface {
+	Mount(fiber.Router)
+}
+
 type Server struct {
 	app    *fiber.App
 	logger *slog.Logger
 }
 
-func New(logger *slog.Logger, readiness ReadinessChecker) *Server {
+func New(logger *slog.Logger, readiness ReadinessChecker, registrars ...V1RouteRegistrar) *Server {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		ErrorHandler:          errorHandler,
@@ -40,6 +46,11 @@ func New(logger *slog.Logger, readiness ReadinessChecker) *Server {
 		}
 		return ctx.JSON(fiber.Map{"status": "ready"})
 	})
+	for _, registrar := range registrars {
+		if registrar != nil {
+			registrar.Mount(api)
+		}
+	}
 
 	return &Server{app: app, logger: logger}
 }

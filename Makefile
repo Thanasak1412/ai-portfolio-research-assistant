@@ -1,6 +1,7 @@
 SHELL := /bin/sh
 PRODUCT_DATABASE_URL ?= postgres://portfolio:portfolio_local_only@localhost:5432/portfolio?sslmode=disable
 PRODUCT_TEST_DATABASE_URL ?= postgres://portfolio:portfolio_test_local_only@localhost:5433/portfolio_test?sslmode=disable
+COMPOSE_AUTH_ENV ?= .compose.auth.env
 
 .PHONY: install dev-up dev-down migrate-up migrate-status sqlc-generate format format-check lint test test-integration test-e2e contract-check build db-reset-local
 
@@ -9,12 +10,13 @@ install:
 	go mod download
 
 dev-up:
-	docker compose up --build -d postgres postgres-test
-	docker compose --profile tools run --rm migrate
-	docker compose up --build -d api worker web
+	sh scripts/prepare-compose-auth-env.sh "$(COMPOSE_AUTH_ENV)"
+	docker compose --env-file "$(COMPOSE_AUTH_ENV)" up --build -d postgres postgres-test
+	docker compose --env-file "$(COMPOSE_AUTH_ENV)" --profile tools run --rm migrate
+	docker compose --env-file "$(COMPOSE_AUTH_ENV)" up --build -d api worker web
 
 dev-down:
-	docker compose down
+	docker compose --env-file "$(COMPOSE_AUTH_ENV)" down
 
 migrate-up:
 	@DATABASE_URL="$(PRODUCT_DATABASE_URL)" go run github.com/pressly/goose/v3/cmd/goose@v3.26.0 -dir backend/migrations postgres "$(PRODUCT_DATABASE_URL)" up

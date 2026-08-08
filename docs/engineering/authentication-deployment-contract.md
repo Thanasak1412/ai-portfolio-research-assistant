@@ -4,4 +4,4 @@ Required before a staging/production API starts: `AUTH_PUBLIC_ORIGIN` (single HT
 
 The public proxy is the sole TLS endpoint and forwards to private API/web services. It must preserve the configured origin, send X-Forwarded-For only from the approved ingress chain, strip every client-supplied `X-Forwarded-Proto`, and write exactly one `X-Forwarded-Proto: https` for HTTPS frontend traffic. It must never expose API/private ports publicly. Startup rejects invalid origin, malformed keys, missing active kid, or absent/invalid production trusted-proxy configuration. The HTTPS proxy CIDRs authorize scheme attestation only and must not be inferred from client-IP proxy CIDRs.
 
-The HTTPS attestation decision is approved in [HTTPS_ATTESTATION-v1](../policies/HTTPS_ATTESTATION-v1.md), but routes remain unmounted until `AUTH-BE-003A` implements it in runtime composition. `X-Forwarded-Proto` is never trusted merely because it is present.
+Authentication routes are mounted only after this configuration validates successfully. [HTTPS_ATTESTATION-v1](../policies/HTTPS_ATTESTATION-v1.md) is enforced at runtime; `X-Forwarded-Proto` is never trusted merely because it is present.
