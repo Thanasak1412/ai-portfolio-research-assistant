@@ -13,6 +13,7 @@ var (
 	ErrCredentialRejected     = errors.New("credential verification failed")
 	ErrInvalidSecurityConfig  = errors.New("invalid authentication security configuration")
 	ErrAccessTokenRejected    = errors.New("access token verification failed")
+	ErrRefreshTokenRejected   = errors.New("refresh token rejected")
 	ErrClientIdentityRejected = errors.New("client network identity rejected")
 	ErrAuditPersistence       = errors.New("authentication audit persistence failed")
 	ErrRateLimitUnavailable   = errors.New("authentication rate limit unavailable")
@@ -47,6 +48,28 @@ type AccessTokenService interface {
 	Verify(context.Context, AccessToken, time.Time) (domain.Principal, error)
 }
 
+// RefreshToken is an opaque bearer credential. It deliberately redacts its
+// String and GoString forms; Value exists only for the later cookie transport.
+type RefreshToken struct{ value string }
+
+func NewRefreshToken(value string) (RefreshToken, error) {
+	if value == "" {
+		return RefreshToken{}, ErrRefreshTokenRejected
+	}
+	return RefreshToken{value: value}, nil
+}
+
+func (token RefreshToken) Value() string    { return token.value }
+func (token RefreshToken) IsZero() bool     { return token.value == "" }
+func (token RefreshToken) String() string   { return "[REDACTED]" }
+func (token RefreshToken) GoString() string { return "application.RefreshToken{[REDACTED]}" }
+
+type RefreshTokenService interface {
+	Generate(context.Context) (RefreshToken, error)
+	Parse(string) (RefreshToken, error)
+	Digest(RefreshToken) (domain.TokenDigest, error)
+}
+
 type ClientNetworkRequest struct {
 	DirectPeerIP string
 	ForwardedFor string
@@ -54,6 +77,10 @@ type ClientNetworkRequest struct {
 
 type ClientNetworkResolver interface {
 	Resolve(ClientNetworkRequest) (netip.Addr, error)
+}
+
+type NetworkIdentityHasher interface {
+	Hash(netip.Addr) (string, error)
 }
 
 type AuditAction string
@@ -144,4 +171,13 @@ type RateLimiter interface {
 	Check(context.Context, RateLimitPolicy, RateLimitKey, time.Time) (RateLimitResult, error)
 	ResetLoginEmailFailures(context.Context, RateLimitKey) error
 	CleanupExpired(context.Context, time.Time) (int64, error)
+}
+
+// RateLimitKeyDeriver exposes identity-specific methods so callers cannot mix
+// canonical identities with the wrong policy namespace.
+type RateLimitKeyDeriver interface {
+	LoginEmailFailure(domain.NormalizedEmail) (RateLimitKey, error)
+	LoginIPAttempt(netip.Addr) (RateLimitKey, error)
+	RegistrationIPAttempt(netip.Addr) (RateLimitKey, error)
+	RefreshFamilyAttempt(domain.TokenFamilyID) (RateLimitKey, error)
 }
