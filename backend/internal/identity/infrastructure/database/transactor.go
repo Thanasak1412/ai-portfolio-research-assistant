@@ -9,7 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/application"
+	identityaudit "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/audit"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure/database/sqlcgen"
+	platformdatabase "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database"
 )
 
 const transactionRollbackTimeout = 5 * time.Second
@@ -46,6 +48,7 @@ func (transactor *PostgresTransactor) WithinTransaction(
 		sessions: &postgresRefreshSessionTransactionRepository{
 			PostgresRefreshSessionRepository: newPostgresRefreshSessionRepository(queries),
 		},
+		audit: identityaudit.NewPostgresWriter(platformdatabase.NewAuthenticationAuditStore(tx)),
 	}
 	if err := operation(ctx, repositories); err != nil {
 		return err
@@ -60,6 +63,7 @@ func (transactor *PostgresTransactor) WithinTransaction(
 type transactionRepositories struct {
 	users    application.UserRepository
 	sessions application.RefreshSessionTransactionRepository
+	audit    application.AuditWriter
 }
 
 func (repositories transactionRepositories) Users() application.UserRepository {
@@ -68,6 +72,10 @@ func (repositories transactionRepositories) Users() application.UserRepository {
 
 func (repositories transactionRepositories) RefreshSessions() application.RefreshSessionTransactionRepository {
 	return repositories.sessions
+}
+
+func (repositories transactionRepositories) Audit() application.AuditWriter {
+	return repositories.audit
 }
 
 func isNoRows(err error) bool { return errors.Is(err, pgx.ErrNoRows) }

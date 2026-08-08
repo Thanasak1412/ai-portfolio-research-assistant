@@ -7,6 +7,7 @@
 - [Authentication Phase 1 — Execution Plan](planning/authentication-phase-1-execution-plan.md)
 - [Authentication Security Decision Closure Specification](planning/authentication-security-decision-closure-specification.md)
 - [Authentication Implementation Gate](planning/authentication-implementation-gate.md)
+- [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
 - [Argon2id Benchmark Report — 2026-08-04](planning/argon2id-benchmark-report-2026-08-04.md)
 - [AUTH_IMPLEMENTATION_POLICY-v1](policies/AUTH_IMPLEMENTATION_POLICY-v1.md)
 - [PASSWORD_HASH-v1](policies/PASSWORD_HASH-v1.md)
