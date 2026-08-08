@@ -1,28 +1,20 @@
-# AUTH-BE-003 HTTPS Attestation Blocker
+# AUTH-BE-003 HTTPS Attestation Decision
 
-- Status: Blocked
+- Status: Resolved
 - Scope: Runtime activation of the refresh and logout browser-session routes
 - Recorded: 2026-08-08
-- Policy sources: `AUTH_BROWSER_SECURITY-v1`, ADR-016, `CLIENT_NETWORK_IDENTITY-v1`
+- Policy sources: `AUTH_BROWSER_SECURITY-v1`, `HTTPS_ATTESTATION-v1`, ADR-016, ADR-017, ADR-021
 
-## Confirmed gap
+## Resolved decision
 
-The approved deployment topology terminates TLS at a same-origin reverse proxy and keeps the Go API private. The current policy package does not define how the API proves that the original browser request used HTTPS after TLS termination. It neither authorizes unconditional trust in `X-Forwarded-Proto` nor defines a trusted-proxy scheme-attestation header, hop-selection rule, or authenticated internal transport signal.
+The approved deployment topology terminates TLS at a same-origin reverse proxy and keeps the Go API private. [HTTPS_ATTESTATION-v1](../policies/HTTPS_ATTESTATION-v1.md) and ADR-021 now define how the API proves the original browser request used HTTPS after TLS termination: direct TLS, or one exact `X-Forwarded-Proto: https` assertion from the direct peer in the separate `AUTH_TRUSTED_HTTPS_PROXY_CIDRS` set.
 
-Fiber's request protocol describes the direct proxy-to-API connection in this topology. Trusting an arbitrary forwarded scheme would allow an untrusted direct caller to claim HTTPS and bypass an AUTH_BROWSER_SECURITY-v1 requirement.
+The policy explicitly rejects arbitrary forwarded scheme assertions, forwarding chains, and untrusted plaintext peers. Fiber's direct-proxy transport view is therefore not used as proof of original HTTPS without the approved direct-peer check.
 
-## Impact
+## Remaining implementation work
 
-The application operations, strict HTTP DTOs, cookie serialization, Bearer middleware, exact Origin/header checks, and an injectable HTTPS-attestation boundary can be implemented and tested. Production composition must not activate refresh/logout until an approved attestor can be constructed. This document does not weaken the Secure-cookie, exact-Origin, or HTTPS requirements.
+The application operations, strict HTTP DTOs, cookie serialization, Bearer middleware, exact Origin/header checks, and an injectable HTTPS-attestation boundary are already available. Runtime composition must remain unmounted until `AUTH-BE-003A` implements this approved attestor, validates `AUTH_TRUSTED_HTTPS_PROXY_CIDRS`, and adds the required HTTPS proxy tests. This decision does not itself activate routes or weaken Secure-cookie, exact-Origin, or HTTPS requirements.
 
-## Decision required
+## Closure evidence
 
-Approve a versioned scheme-attestation rule that specifies all of the following:
-
-- the trusted TLS-terminating proxy identities or CIDRs;
-- the exact scheme header or authenticated internal signal;
-- canonical accepted value and multi-value rejection behavior;
-- behavior for direct TLS, untrusted peers, missing values, and malformed values;
-- local HTTPS, CI, staging, and production tests.
-
-After approval, this blocker may be resolved by implementing the attestor and activating the browser-session routes in runtime composition. No Authentication or proxy policy is implicitly approved by this record.
+The decision records trusted TLS-terminating CIDRs, exact header semantics, direct-TLS behavior, multi-hop behavior, untrusted-peer handling, and local/CI/staging/production verification. `AUTH-BE-003A — Implement trusted HTTPS attestation and activate Authentication runtime routes` is now the only follow-on task for this decision.
