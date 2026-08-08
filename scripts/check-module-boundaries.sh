@@ -9,7 +9,7 @@ for module_path in "$backend_root"/*; do
   module_name=$(basename "$module_path")
   [ "$module_name" = "platform" ] && continue
   import_path="github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/$module_name/infrastructure"
-  matches=$(rg -n --glob '*.go' "\"$import_path" "$backend_root" --glob "!$module_name/**" || true)
+  matches=$(cd "$backend_root" && rg -n --glob '*.go' "\"$import_path" . --glob "!$module_name/**" || true)
   if [ -n "$matches" ]; then
     violations="$violations\n$matches"
   fi

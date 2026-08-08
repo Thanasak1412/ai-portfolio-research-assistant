@@ -3,3 +3,30 @@
 //   sqlc v1.28.0
 
 package sqlcgen
+
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type AuditLog struct {
+	AuditEventID        pgtype.UUID
+	OccurredAt          pgtype.Timestamptz
+	Action              string
+	Result              string
+	Severity            string
+	ActorUserID         pgtype.UUID
+	CorrelationID       string
+	SessionID           pgtype.UUID
+	TokenFamilyID       pgtype.UUID
+	NetworkIdentityHash pgtype.Text
+	UserAgent           pgtype.Text
+}
+
+type AuthRateLimitEvent struct {
+	EventID       int64
+	DerivedKey    []byte
+	PolicyName    string
+	PolicyVersion string
+	OccurredAt    pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
+}
