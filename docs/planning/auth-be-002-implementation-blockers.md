@@ -1,36 +1,41 @@
 # AUTH-BE-002 Security Decision Gaps
 
-**Status:** Blocking selected adapters only
+**Status:** Resolved on merge of this decision closure
 **Reviewed:** 2026-08-08
 **Scope:** AUTH-BE-002
 
-The approved Authentication policy package was searched before selecting refresh-token and HMAC-secret parameters. Two implementation decisions are not present and therefore must not be invented inside adapter code.
+The original approved Authentication policy package lacked two representation decisions. This decision closure resolves them through `REFRESH_TOKEN-v1`, `AUTH_HMAC_KEYS-v1`, ADR-019, ADR-020, and `AUTH_IMPLEMENTATION_POLICY-v2`.
 
 ## Refresh-token format and digest
 
-`AUTH-v1` defines opaque, cryptographically random, single-use refresh tokens stored only as secure hashes, but the approved package does not define the exact entropy, external encoding, or digest algorithm/format. The refresh-token generator, parser, and digester remain blocked until a versioned policy approves all three values and their migration compatibility.
+Resolved by [REFRESH_TOKEN-v1](../policies/REFRESH_TOKEN-v1.md) and ADR-019:
 
-Required owner decision:
-
-- token entropy in bytes or bits;
-- canonical external encoding and accepted parser behavior;
-- digest algorithm, optional secret/pepper policy, and stored representation;
-- compatibility/versioning rules for previously issued tokens.
+- 32 `crypto/rand` bytes, 256 bits of entropy;
+- `rt_v1_` plus canonical unpadded base64url payload;
+- SHA-256 over exact canonical external token bytes, including the prefix;
+- raw 32-byte digest storage with no pepper/HMAC secret; and
+- explicit future-version and 90-day compatibility rules.
 
 ## HMAC secret input contract
 
-`CLIENT_NETWORK_IDENTITY-v1` and `AUTH_RATE_LIMIT-v1` approve HMAC-SHA-256, distinct environment-variable names, namespaces, and persisted outputs. They do not define secret encoding, minimum entropy/length, or key-version/rotation handling. The network-identity HMAC adapter, rate-limit HMAC key-derivation adapter, and their secret configuration parsers remain blocked until those properties are approved.
+Resolved by [AUTH_HMAC_KEYS-v1](../policies/AUTH_HMAC_KEYS-v1.md) and ADR-020:
 
-Required owner decision:
+- two independent canonical standard-Base64 secrets that decode to exactly 32 bytes;
+- explicit NUL-delimited HMAC-SHA-256 derivation domains;
+- lowercase hexadecimal network identity and raw 32-byte rate-limit output;
+- canonical identity requirements; and
+- planned and emergency rotation rules without silent overlap.
 
-- environment secret encoding;
-- minimum decoded key strength and validation behavior;
-- key version and rotation/overlap behavior;
-- output digest encoding;
-- compatibility impact on existing audit identities and active rate-limit windows.
+## Schema representation verification
 
-## Unaffected work
+No migration is required solely for this closure:
 
-The gaps do not block the approved Argon2id adapter, Ed25519 key ring and JWT adapter, trusted-proxy resolver, append-only audit writer, or PostgreSQL rate-limit transaction adapter when it receives an already-derived opaque rate-limit key. No Authentication endpoint or workflow is activated by this work.
+| Representation | Required size | Existing schema capacity | Result |
+|---|---:|---:|---|
+| Refresh-token SHA-256 digest | 32 bytes | `refresh_sessions.token_digest` is constrained to 32 bytes | Fits |
+| Rate-limit HMAC-SHA-256 | 32 bytes | `auth_rate_limit_events.derived_key` is constrained to 32 bytes | Fits |
+| `ip_hmac_v1:` + lowercase hex digest | 75 characters | Network-identity fields are bounded to 128 characters | Fits |
 
-No pre-M1 password population or approved legacy Argon2id parameter set exists. The password port exposes rehash evaluation, but verification accepts only `PASSWORD_HASH-v1` until a future policy version explicitly approves a legacy-compatible transition set.
+## Resumption boundary
+
+After this decision closure is merged, resume only the previously blocked AUTH-BE-002 components: refresh-token generation/parsing/digesting, network-identity HMAC, rate-limit key derivation, their secret configuration parsing, and focused tests. Do not begin AUTH-BE-003 or expose any Authentication endpoint through this closure.
