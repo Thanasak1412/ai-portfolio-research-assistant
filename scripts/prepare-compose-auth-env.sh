@@ -2,6 +2,7 @@
 set -eu
 
 output=${1:-.compose.auth.env}
+tls_directory=${AUTH_TLS_DIR:-.local/auth-tls}
 umask 077
 temporary_directory=$(mktemp -d)
 trap 'rm -rf "$temporary_directory"' EXIT HUP INT TERM
@@ -20,8 +21,9 @@ AUTH_JWT_ACTIVE_PRIVATE_KEY_B64=$private_key
 AUTH_JWT_VERIFICATION_KEYS_JSON=[{"kid":"auth-ed25519-20260808-01","publicKeyB64":"$public_key"}]
 AUTH_JWT_LOCAL_KEY_RING_PATH=
 AUTH_TRUSTED_PROXY_CIDRS=
-AUTH_TRUSTED_HTTPS_PROXY_CIDRS=
+AUTH_TRUSTED_HTTPS_PROXY_CIDRS=172.30.20.2/32
 AUTH_NETWORK_HMAC_KEY=$network_key
 AUTH_RATE_LIMIT_HMAC_KEY=$rate_limit_key
+AUTH_TLS_DIR=$tls_directory
 EOF
 chmod 600 "$output"

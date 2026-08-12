@@ -32,6 +32,8 @@ services:
       - "5432:5432"
     volumes:
       - portfolio_postgres_data:/var/lib/postgresql/data
+    networks:
+      - database
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
       interval: 2s
@@ -48,6 +50,8 @@ services:
       - "5433:5432"
     tmpfs:
       - /var/lib/postgresql/data
+    networks:
+      - test-database
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio_test"]
       interval: 2s
@@ -66,6 +70,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - database
+
+  migrate-test:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: migrator
+    command: ["-dir", "/migrations", "postgres", "postgres://portfolio:portfolio_test_local_only@postgres-test:5432/portfolio_test?sslmode=disable", "up"]
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - test-database
 
   api:
     build:
@@ -78,6 +99,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      proxy-api:
+      database:
+      test-database:
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/v1/health/live"]
       interval: 3s
@@ -95,6 +120,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - database
+      - test-database
     stop_grace_period: 15s
 
   web:
@@ -103,7 +131,7 @@ services:
       dockerfile: Dockerfile.web
       target: development
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api/v1
+      NEXT_PUBLIC_API_BASE_URL: https://app.localhost:3443/api/v1
     ports:
       - "3000:3000"
     depends_on:
@@ -115,6 +143,44 @@ services:
       timeout: 3s
       retries: 20
       start_period: 15s
+    networks:
+      - frontend
+
+  auth-proxy:
+    profiles: ["auth-https"]
+    image: caddy:2.8.4-alpine
+    ports:
+      - "3443:443"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${AUTH_TLS_DIR:-./.local/auth-tls}:/tls:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--no-check-certificate", "https://127.0.0.1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      frontend:
+      proxy-api:
+        ipv4_address: 172.30.20.2
 
 volumes:
   portfolio_postgres_data:
+
+networks:
+  frontend:
+  database:
+    internal: true
+  test-database:
+    internal: true
+  proxy-api:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.20.0/29

@@ -11,7 +11,12 @@ export default defineConfig({
   resolve: { alias: { "@": path.resolve(currentDirectory, "src") } },
   test: {
     environment: "jsdom",
-    exclude: ["tests/e2e/**", "node_modules/**", ".next/**"],
+    exclude: [
+      "tests/e2e/**",
+      "tests/auth-e2e/**",
+      "node_modules/**",
+      ".next/**",
+    ],
     setupFiles: ["./src/test/setup.ts"],
   },
 });

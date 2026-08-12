@@ -1,0 +1,19 @@
+{
+	auto_https disable_redirects
+}
+
+https://app.localhost {
+	tls /tls/app.localhost.pem /tls/app.localhost-key.pem
+
+	@api path /api/v1/*
+	handle @api {
+		reverse_proxy api:8080 {
+			header_up -X-Forwarded-Proto
+			header_up X-Forwarded-Proto "https"
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const featureDirectory = path.dirname(fileURLToPath(import.meta.url));
+const webDirectory = path.resolve(featureDirectory, "../../..");
 const productionFiles = [
   "api/auth-api.ts",
   "model/auth-session-provider.tsx",
@@ -52,5 +53,14 @@ describe("Authentication browser-storage boundary", () => {
     ]) {
       expect(source).not.toContain(forbidden);
     }
+  });
+
+  it("keeps the operational Authentication suite connected to the real API", async () => {
+    const source = await readFile(
+      path.join(webDirectory, "tests/auth-e2e/authentication.spec.ts"),
+      "utf8",
+    );
+    expect(source).not.toContain("page.route(");
+    expect(source).not.toContain("route.fulfill(");
   });
 });
