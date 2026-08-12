@@ -113,6 +113,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @portfolio/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: sh scripts/prepare-ci-auth-https.sh .local/ci-auth-tls
+      - run: AUTH_TLS_DIR=.local/ci-auth-tls sh scripts/prepare-auth-e2e-env.sh .compose.auth.e2e.env
+      - run: docker compose --env-file .compose.auth.e2e.env up --build -d --wait --wait-timeout 120 postgres postgres-test
+      - run: docker compose --env-file .compose.auth.e2e.env --profile tools run --rm migrate-test
+      - run: docker compose --env-file .compose.auth.e2e.env --profile auth-https up --build -d --wait --wait-timeout 120 api worker web auth-proxy
+      - run: sh scripts/verify-auth-https-stack.sh .compose.auth.e2e.env
+      - run: PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:auth
+      - if: failure()
+        run: sh scripts/collect-auth-ops-diagnostics.sh .compose.auth.e2e.env
+      - if: always()
+        run: docker compose --env-file .compose.auth.e2e.env --profile auth-https down -v
 
   compose-smoke:
     runs-on: ubuntu-latest

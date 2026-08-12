@@ -4,6 +4,9 @@
 .env.*
 !.env.example
 .compose.auth.env
+.compose.auth.e2e.env
+.local/auth-tls/
+.local/ci-auth-tls/
 node_modules/
 .next/
 coverage/

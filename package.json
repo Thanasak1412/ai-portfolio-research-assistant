@@ -15,6 +15,7 @@
     "typecheck": "pnpm --filter @portfolio/web typecheck",
     "test": "pnpm --filter @portfolio/web test",
     "test:e2e": "pnpm --filter @portfolio/web test:e2e",
+    "test:e2e:auth": "pnpm --filter @portfolio/web test:e2e:auth",
     "contract:lint": "redocly lint packages/api-contracts/openapi/v1.yaml",
     "contract:generate": "openapi-typescript packages/api-contracts/openapi/v1.yaml -o packages/api-contracts/generated/api.ts",
     "contract:test": "node --test packages/api-contracts/tests/*.test.mjs",
