@@ -11,6 +11,11 @@
 
 Start the supported local stack with `make auth-dev-up`. It validates or creates the ignored `.local/auth-tls/` certificate, prepares ignored ephemeral Authentication runtime material in `.compose.auth.env`, migrates the persistent local database, and starts the HTTPS profile. Open `https://app.localhost:3443`.
 
+This is the only supported local Authentication origin. `http://localhost:3000`
+is a Next.js diagnostic/development port, and `http://localhost:8080` is an API
+health/diagnostic port. Neither is a browser Authentication entrypoint; plain
+HTTP refresh and logout are intentionally rejected.
+
 Stop safely with `make auth-dev-down`. This stops containers but preserves the local PostgreSQL volume and the local certificate. To remove Compose application volumes, use the deliberately destructive command `CONFIRM_RESET=portfolio-auth-local make auth-dev-reset`; it does not remove the developer certificate or local CA.
 
 ## Disposable operational E2E

@@ -101,8 +101,10 @@ services:
         condition: service_healthy
     networks:
       proxy-api:
+        ipv4_address: 172.30.20.3
       database:
       test-database:
+      diagnostics:
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/v1/health/live"]
       interval: 3s
@@ -175,6 +177,7 @@ volumes:
 
 networks:
   frontend:
+  diagnostics:
   database:
     internal: true
   test-database:

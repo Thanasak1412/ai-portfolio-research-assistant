@@ -2,6 +2,12 @@
 
 Browser Authentication uses the approved same-origin endpoint: `https://app.localhost:3443`. The `auth-proxy` Compose profile terminates TLS, routes `/api/v1/*` to the private Go API on port 8080, and routes all other paths to Next.js on port 3000. Direct `http://localhost:8080` remains a health and diagnostic port only; it cannot satisfy refresh/logout browser security.
 
+`http://localhost:3000` is the Next.js diagnostic/development port only and is
+not a supported Authentication entrypoint. Open `/register`, `/login`, and
+`/app` through `https://app.localhost:3443`. `http://localhost:8080` is the API
+health/diagnostic port only. Refresh and logout requests sent through either
+plain-HTTP port are expected to be rejected by browser security.
+
 ## First-time setup
 
 Install [`mkcert`](https://github.com/FiloSottile/mkcert), then trust its local CA once with `mkcert -install`. Run `make auth-dev-up`; it calls `scripts/prepare-local-auth-https.sh`, which creates an ignored leaf certificate and owner-readable key in `.local/auth-tls/`. The script never installs packages or alters the trust store itself. If `mkcert` is missing, it exits with installation guidance.
