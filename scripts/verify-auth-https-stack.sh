@@ -9,6 +9,15 @@ trap 'rm -rf "$temporary_directory"' EXIT HUP INT TERM
 curl --fail --silent --show-error --retry 20 --retry-delay 2 --insecure "$base_url/" >/dev/null
 curl --fail --silent --show-error --retry 20 --retry-delay 2 --insecure "$base_url/api/v1/health/ready" >/dev/null
 
+refresh_response=$(curl --silent --show-error --insecure --output "$temporary_directory/initial-refresh.json" --write-out '%{http_code}' \
+  -X POST "$base_url/api/v1/auth/refresh" \
+  -H 'Origin: https://app.localhost:3443' \
+  -H 'X-Requested-With: portfolio-web')
+if [ "$refresh_response" != "401" ] || ! grep -q 'SESSION_REFRESH_REJECTED' "$temporary_directory/initial-refresh.json"; then
+  echo "Expected an unauthenticated browser refresh to reach Authentication and return SESSION_REFRESH_REJECTED" >&2
+  exit 1
+fi
+
 expect_browser_rejection() {
   name=$1
   shift
