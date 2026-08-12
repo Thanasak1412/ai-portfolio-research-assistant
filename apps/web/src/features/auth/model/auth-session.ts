@@ -20,6 +20,17 @@ export function sessionFromResponse(
   };
 }
 
+export function sessionFromBootstrap(
+  access: AccessTokenResponse,
+  user: AuthenticatedUser,
+): AuthenticatedSession {
+  return {
+    accessToken: access.accessToken,
+    user,
+    accessTokenExpiresAt: Date.now() + access.expiresIn * 1_000,
+  };
+}
+
 export function replaceSessionAccessToken(
   session: AuthenticatedSession,
   response: AccessTokenResponse,

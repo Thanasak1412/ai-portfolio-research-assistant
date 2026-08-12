@@ -170,4 +170,16 @@ describe("Authentication API", () => {
       retryAfterSeconds: 15,
     });
   });
+
+  it("rejects malformed successful Authentication responses", async () => {
+    mockFetch(
+      new Response(JSON.stringify({ tokenType: "Bearer", expiresIn: 900 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(authApi.refresh()).rejects.toMatchObject({
+      code: "INTERNAL_ERROR",
+    });
+  });
 });

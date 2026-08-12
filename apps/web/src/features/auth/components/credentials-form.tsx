@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -26,8 +27,8 @@ export function CredentialsForm({
   api = authApi,
 }: Readonly<CredentialsFormProps>) {
   const { establishSession } = useAuthSession();
+  const router = useRouter();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const {
     register,
     handleSubmit,
@@ -41,14 +42,13 @@ export function CredentialsForm({
 
   const submit = async (values: CredentialsFormValues) => {
     setSubmissionError(null);
-    setSuccess(false);
     try {
       const response = isLogin
         ? await api.login(normalizedCredentials(values))
         : await api.register(normalizedCredentials(values));
       establishSession(response);
       setValue("password", "");
-      setSuccess(true);
+      router.replace("/app");
     } catch (error) {
       setValue("password", "");
       setSubmissionError(authErrorMessage(error, mode));
@@ -115,15 +115,6 @@ export function CredentialsForm({
           )}
         </div>
         <AuthFormError message={submissionError} />
-        {success && (
-          <p
-            role="status"
-            aria-live="polite"
-            className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800"
-          >
-            You are signed in.
-          </p>
-        )}
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Submitting…" : title}
         </Button>
