@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthApi } from "@/features/auth/api/auth-api";
 import { AuthApiError } from "@/features/auth/api/auth-api";
@@ -8,6 +8,9 @@ import {
   AuthSessionProvider,
   useAuthSession,
 } from "@/features/auth/model/auth-session-provider";
+
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 
 const validCredential = "x".repeat(12);
 
@@ -27,19 +30,28 @@ function fakeApi(overrides: Partial<AuthApi> = {}): AuthApi {
   return {
     register: vi.fn().mockResolvedValue(response),
     login: vi.fn().mockResolvedValue(response),
-    refresh: vi.fn(),
+    refresh: vi
+      .fn()
+      .mockRejectedValue(
+        new AuthApiError(401, "SESSION_REFRESH_REJECTED", "rejected"),
+      ),
     logout: vi.fn(),
     me: vi.fn(),
     ...overrides,
   };
 }
 function SessionProbe() {
-  const { session } = useAuthSession();
-  return <output>{session?.user.email ?? "anonymous"}</output>;
+  const { state, session } = useAuthSession();
+  return (
+    <>
+      <output data-testid="auth-status">{state.status}</output>
+      <output>{session?.user.email ?? "anonymous"}</output>
+    </>
+  );
 }
 function renderForm(mode: "login" | "register", api: AuthApi) {
   return render(
-    <AuthSessionProvider>
+    <AuthSessionProvider api={api}>
       <CredentialsForm mode={mode} api={api} />
       <SessionProbe />
     </AuthSessionProvider>,
@@ -47,9 +59,20 @@ function renderForm(mode: "login" | "register", api: AuthApi) {
 }
 
 describe("CredentialsForm", () => {
+  beforeEach(() => replace.mockReset());
+
+  async function waitForBootstrap() {
+    await waitFor(() =>
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated",
+      ),
+    );
+  }
+
   it("validates login fields and establishes an in-memory session", async () => {
     const api = fakeApi();
     renderForm("login", api);
+    await waitForBootstrap();
     const email = screen.getByLabelText("Email");
     const password = screen.getByLabelText("Password");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
@@ -74,9 +97,9 @@ describe("CredentialsForm", () => {
         password: validCredential,
       }),
     );
-    expect(await screen.findByText("You are signed in.")).toBeInTheDocument();
     expect(screen.getByText("person@example.com")).toBeInTheDocument();
     expect(password).toHaveValue("");
+    expect(replace).toHaveBeenCalledWith("/app");
   });
 
   it("keeps login failures generic and clears the password", async () => {
@@ -88,6 +111,7 @@ describe("CredentialsForm", () => {
         ),
     });
     renderForm("login", api);
+    await waitForBootstrap();
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "person@example.com" },
     });
@@ -120,6 +144,7 @@ describe("CredentialsForm", () => {
         ),
     });
     renderForm("register", api);
+    await waitForBootstrap();
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "person@example.com" },
     });
@@ -141,6 +166,7 @@ describe("CredentialsForm", () => {
   it("establishes a registration session and keeps rejection generic", async () => {
     const successApi = fakeApi();
     const { unmount } = renderForm("register", successApi);
+    await waitForBootstrap();
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "person@example.com" },
     });
@@ -149,7 +175,7 @@ describe("CredentialsForm", () => {
       target: { value: validCredential },
     });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    expect(await screen.findByText("You are signed in.")).toBeInTheDocument();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/app"));
     expect(screen.getByText("person@example.com")).toBeInTheDocument();
     expect(password).toHaveValue("");
     unmount();
@@ -162,6 +188,7 @@ describe("CredentialsForm", () => {
         ),
     });
     renderForm("register", rejectionApi);
+    await waitForBootstrap();
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "person@example.com" },
     });
@@ -178,6 +205,7 @@ describe("CredentialsForm", () => {
   it("rejects a password over the approved UTF-8 byte limit", async () => {
     const api = fakeApi();
     renderForm("register", api);
+    await waitForBootstrap();
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "person@example.com" },
     });

@@ -34,32 +34,50 @@ export const authApi: AuthApi = {
   register: (input) => requestSession("/register", input),
   login: (input) => requestSession("/login", input),
   refresh: () =>
-    requestJSON("/refresh", {
-      method: "POST",
-      headers: requestedWithHeaders(),
-    }),
+    requestJSON(
+      "/refresh",
+      {
+        method: "POST",
+        headers: requestedWithHeaders(),
+      },
+      isAccessTokenResponse,
+    ),
   logout: () =>
     requestVoid("/logout", { method: "POST", headers: requestedWithHeaders() }),
   me: (accessToken) =>
-    requestJSON("/me", { headers: { Authorization: `Bearer ${accessToken}` } }),
+    requestJSON(
+      "/me",
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+      isAuthenticatedUser,
+    ),
 };
 
 async function requestSession(
   path: string,
   input: CredentialsRequest,
 ): Promise<AuthenticatedSessionResponse> {
-  return requestJSON(path, {
-    method: "POST",
-    headers: jsonHeaders(),
-    body: JSON.stringify(input),
-  });
+  return requestJSON(
+    path,
+    {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify(input),
+    },
+    isAuthenticatedSessionResponse,
+  );
 }
 
-async function requestJSON<T>(path: string, init: RequestInit): Promise<T> {
+async function requestJSON<T>(
+  path: string,
+  init: RequestInit,
+  validate: (value: unknown) => value is T,
+): Promise<T> {
   const response = await request(path, init);
   if (!response.ok) throw await parseError(response);
   try {
-    return (await response.json()) as T;
+    const body: unknown = await response.json();
+    if (!validate(body)) throw genericError(response);
+    return body;
   } catch {
     throw genericError(response);
   }
@@ -144,4 +162,42 @@ function jsonHeaders() {
 }
 function requestedWithHeaders() {
   return { "X-Requested-With": "portfolio-web" };
+}
+
+function isAccessTokenResponse(value: unknown): value is AccessTokenResponse {
+  if (!isObject(value)) return false;
+  return (
+    typeof value.accessToken === "string" &&
+    value.accessToken.length > 0 &&
+    value.tokenType === "Bearer" &&
+    typeof value.expiresIn === "number" &&
+    Number.isSafeInteger(value.expiresIn) &&
+    value.expiresIn > 0
+  );
+}
+
+function isAuthenticatedSessionResponse(
+  value: unknown,
+): value is AuthenticatedSessionResponse {
+  return (
+    isAccessTokenResponse(value) &&
+    isAuthenticatedUser((value as Record<string, unknown>).user)
+  );
+}
+
+function isAuthenticatedUser(value: unknown): value is AuthenticatedUser {
+  if (!isObject(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    typeof value.email === "string" &&
+    value.email.length > 0 &&
+    (value.status === "active" || value.status === "disabled") &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string"
+  );
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object";
 }
