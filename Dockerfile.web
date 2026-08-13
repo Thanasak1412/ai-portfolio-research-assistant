@@ -8,7 +8,7 @@ RUN pnpm install --filter @portfolio/web... --frozen-lockfile
 FROM dependencies AS development
 COPY apps/web apps/web
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@portfolio/web", "dev", "--hostname", "0.0.0.0"]
+CMD ["pnpm", "--filter", "@portfolio/web", "dev", "--webpack", "--hostname", "0.0.0.0"]
 
 FROM dependencies AS build
 COPY apps/web apps/web
