@@ -9,19 +9,19 @@ RUN CGO_ENABLED=0 go build -trimpath -o /out/worker ./backend/cmd/worker
 FROM golang:1.26-alpine AS tools
 RUN GOBIN=/out go install github.com/pressly/goose/v3/cmd/goose@v3.26.0
 
-FROM alpine:3.22 AS api
+FROM alpine:3.24 AS api
 RUN addgroup -S app && adduser -S -G app app
 COPY --from=build /out/api /usr/local/bin/api
 USER app
 ENTRYPOINT ["/usr/local/bin/api"]
 
-FROM alpine:3.22 AS worker
+FROM alpine:3.24 AS worker
 RUN addgroup -S app && adduser -S -G app app
 COPY --from=build /out/worker /usr/local/bin/worker
 USER app
 ENTRYPOINT ["/usr/local/bin/worker"]
 
-FROM alpine:3.22 AS migrator
+FROM alpine:3.24 AS migrator
 COPY --from=tools /out/goose /usr/local/bin/goose
 ENTRYPOINT ["goose"]
 
