@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 24 LTS and pnpm 10.
-- Go 1.26.5 or newer supported 1.26 patch release. The module toolchain directive prevents builds with the vulnerable local Go 1.23 runtime.
+- Go 1.26.6 or newer supported 1.26 patch release. The module toolchain directive prevents builds with vulnerable older Go runtimes.
 - PostgreSQL 17 through Docker Compose.
 - Docker 27+ with Compose v2.
 - sqlc 1.28.

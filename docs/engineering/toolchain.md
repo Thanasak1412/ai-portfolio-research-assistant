@@ -2,7 +2,7 @@
 
 | Tool | Supported baseline | Pinning point |
 |---|---|---|
-| Go | 1.26.5 | `go.mod` and CI 1.26 patch line |
+| Go | 1.26.6 | `go.mod` and CI 1.26 patch line |
 | Node.js | 24 LTS | `.node-version`, Docker major, CI major |
 | pnpm | 10.18.3 | root `packageManager` |
 | PostgreSQL | 17 | Docker Compose/CI images |
@@ -12,4 +12,3 @@
 | Playwright | locked by pnpm | lockfile and Chromium install step |
 
 Dependency update PRs are created weekly. Security fixes can bypass the normal update window but must pass all quality gates. Major framework/tool changes require explicit technical-lead review and updated documentation.
-
