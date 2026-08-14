@@ -4,58 +4,71 @@
 
 - Milestone: M1 Authentication Phase 1
 - Verification task: `AUTH-VERIFY-001`
-- Policy composition: `AUTH_IMPLEMENTATION_POLICY-v3`
+- Implementation policy: `AUTH_IMPLEMENTATION_POLICY-v3`
 - Verification date: 2026-08-14 (Asia/Bangkok)
-- Protected main base: `57f6dde`
+- Protected `main` base SHA: `57f6dde`
 - Required merged ancestor: `ef4c40ff6c5afe0c1a751b174bc1f6a0f655217f`
 - Verification branch: `codex/auth-verify-001`
-- Final verification PR/head: pending draft PR and remote CI
+- Final verification head: `5f6fc992a2e94e47172cfe00879a42c6896912ad`
+- Draft PR: [#32](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/32)
+- Final remote workflow: [bootstrap-quality-gates run 31761400693](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693)
 
-## Implemented scope under review
+## Implemented Scope
 
-This review covers M1 Authentication only: registration, login, current-user resolution, Ed25519 access JWTs, refresh sessions and rotation, replay/family revocation, logout, disabled-account enforcement, principal extraction, PostgreSQL-backed rate limits, audit evidence, browser security, HTTPS attestation, frontend memory-only sessions, protected routing, and operational verification.
+This verification covers the merged M1 Authentication implementation: registration, login, current-user resolution, Ed25519 access JWTs, refresh sessions and rotation, replay/family revocation, logout, disabled-account enforcement, principal extraction, PostgreSQL-backed rate limits, audit evidence, browser security, HTTPS attestation, frontend memory-only sessions, protected routing, and operational verification.
 
-## Explicitly out of scope
+No Authentication runtime behavior was added by AUTH-VERIFY-001. The only verification-only changes are the patched `nanoid` override, Go 1.26.6 toolchain baseline, CI pinning for the patched toolchain, and evidence documentation.
+
+## Explicitly Out of Scope
 
 No MFA, password reset, email verification, SSO, roles, Portfolio, Asset, Transaction Ledger, Price Data, holdings, valuation, allocation, dashboard, alerts, documents, AI, or other M2 functionality was added.
 
-## Verification summary
+## Acceptance Matrix
 
-Passed evidence includes OpenAPI lint, contract tests, generated TypeScript generation/typecheck, sqlc generation, Go unit tests, `go vet`, backend builds, module-boundary checks, frontend lint/typecheck, 37 frontend unit tests, the production web build with `NEXT_PUBLIC_API_BASE_URL=https://app.localhost:3443/api/v1`, and local GitGuardian scanning.
+See the complete [Authentication M1 Acceptance Matrix](authentication-m1-acceptance-matrix.md). Every required row is `PASS`; no Critical or Major verification finding remains. Formal closure still requires review approval and merge into protected `main`.
 
-The explicit `nanoid` override was updated from vulnerable `3.3.17` to patched `3.3.18`. The Go module toolchain was updated from `go1.26.5` to `go1.26.6` because the former had reachable standard-library vulnerabilities. `pnpm audit --audit-level high` and `govulncheck ./...` are now clean.
+## Functional Verification
 
-The real HTTPS Playwright Authentication suite previously executed against the live Caddy → Next.js → API → PostgreSQL stack with 3/3 tests passing before the final dependency/toolchain changes.
+Unit and application evidence covers email normalization, password bounds, registration, duplicate-registration non-enumeration, generic login failure, disabled-account behavior, current-user resolution, refresh rotation, replay/family revocation, logout, and principal extraction. The remote `database-integration` job passed empty/reset/up/down/up migration verification and PostgreSQL integration/concurrency tests.
 
-## Current closure blockers
+## Security Verification
 
-1. Docker Desktop stopped during verification after repeated containerd overlay metadata I/O errors. The Docker socket is unavailable, so PostgreSQL integration, migration reruns, Compose health/readiness, HTTPS runtime checks, and final browser reruns cannot execute against the final verification head.
-2. The required seven remote CI jobs have not yet run on the final verification branch/head.
+The approved `AUTH_IMPLEMENTATION_POLICY-v3` composition remains unchanged. Unit, contract, integration, and remote CI evidence covers Argon2id/PASSWORD_HASH-v1, Ed25519/TOKEN_SIGNING-v1, REFRESH_TOKEN-v1, HMAC/network identity, durable rate limits, audit safety, browser security, HTTPS attestation, cookie attributes, default-deny authorization, and redaction requirements.
 
-The initial host-side integration run also found that the disposable `postgres-test` container had no active host port despite Compose rendering `5433:5432`; recreating it led to Docker overlay/socket failures. The host cannot route to its internal test-network IP, so this is not treated as passing evidence.
+## Frontend Verification
 
-## Findings
+Frontend tests and the remote browser suite cover memory-only access-token state, no refresh-token JavaScript access, session bootstrap, single-flight refresh, one retry maximum, protected-route behavior, reload recovery, logout, and unauthenticated handling. No JWT claim parsing is used as authoritative authorization.
 
-- Critical: 0 confirmed.
-- Major: 2 open verification blockers (Docker runtime unavailable; remote CI not executed on final head).
-- Minor: 0 open implementation findings.
-- Informational: host pnpm shims emitted Node engine warnings; checks passed with the Node 24 runtime path.
+## Operational Verification
 
-## Acceptance matrix
+The remote `compose-smoke` job passed API readiness and web diagnostics. The remote `browser-e2e` job passed the real HTTPS stack, including Caddy TLS, deterministic API/web routing, migrations, stack verification, and the live Authentication suite (`3 passed (9.2s)`). The local Docker daemon stopped during verification after containerd overlay I/O errors; equivalent remote Compose, database, and browser evidence passed on the final head.
 
-See [Authentication M1 Acceptance Matrix](authentication-m1-acceptance-matrix.md). `BLOCKED` rows are not closure passes.
+## Persistence and Secret Review
 
-## Security review
+Local GitGuardian scanning reported no secrets. The remote `secrets` job also passed. No private signing key, HMAC key, refresh token, access token, password, cookie, or credential body was added to the repository or documentation. `pnpm audit --audit-level high` passed after the nanoid override was updated to 3.3.18.
 
-Static and unit evidence supports the approved AUTH-v1 component policies for password hashing, JWT validation, refresh-token representation, HMAC derivation, network identity, browser security, HTTPS attestation, memory-only frontend state, and default-deny principal extraction. Database-backed concurrency, account-state, rate-limit, audit, and runtime browser-security evidence must be rerun after Docker recovery.
+## CI Evidence
 
-No Authentication policy was changed. The only verification-only remediations are the patched `nanoid` override and Go 1.26.6 toolchain update.
+Final workflow run [31761400693](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693) passed all seven mandatory jobs on the final verification head:
 
-## Commands and results
+| Required job | Result | Evidence |
+|---|---|---|
+| `frontend` | PASS | [job 94648352069](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648352069) |
+| `backend` | PASS | [job 94648351448](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351448) |
+| `contracts-and-generation` | PASS | [job 94648351478](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351478) |
+| `database-integration` | PASS | [job 94648351518](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351518) |
+| `browser-e2e` | PASS | [job 94648351546](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351546) |
+| `compose-smoke` | PASS | [job 94648351453](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351453) |
+| `secrets` | PASS | [job 94648351501](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351501) |
 
-### Passed
+GitGuardian Security Checks also passed.
 
-- `sqlc generate`
+## Commands and Results
+
+### Passed locally
+
+- `git diff --check`
+- `sqlc generate` and generated-code drift check
 - `sh scripts/check-module-boundaries.sh`
 - `make format-check`
 - `make lint`
@@ -68,24 +81,39 @@ No Authentication policy was changed. The only verification-only remediations ar
 - `pnpm audit --audit-level high`
 - `GOTOOLCHAIN=go1.26.6 govulncheck ./...`
 - `ggshield secret scan path . --recursive --yes --use-gitignore`
+- `PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:auth` — 3 passed before the local Docker outage
 
-### Passed before final runtime outage
+### Superseded or unavailable locally, covered remotely
 
-- `PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:auth` — 3 passed.
+- `make test-integration` — host PostgreSQL test port was unavailable; remote `database-integration` passed.
+- Local Compose/HTTPS stack reruns — Docker daemon became unavailable after overlay metadata I/O failures; remote `compose-smoke` and `browser-e2e` passed.
+- Final browser rerun on this host — remote `browser-e2e` passed the real stack and Authentication suite.
 
-### Blocked or failed due environment
+## Findings
 
-- `make test-integration` — host `localhost:5433` was not accepting connections; subsequent Docker overlay metadata I/O errors prevented a reliable rerun.
-- `sh scripts/verify-auth-https-stack.sh .compose.auth.env` — Docker services became unavailable.
-- Compose health/readiness and migration reruns — Docker daemon unavailable.
-- Seven remote CI jobs — not yet run on this branch.
+- Critical: 0
+- Major: 0
+- Minor: 0
+- Informational: 2
 
-## M1 decision
+Informational items are the local Docker/containerd outage during verification and non-failing GitHub Actions Node 20 deprecation/cache warnings. Neither affects the successful remote evidence.
 
-M1 remains open until Docker is recovered, all affected database/runtime/browser checks are rerun on the final head, and the seven mandatory remote CI jobs pass.
+## Deviations
+
+No Authentication policy or runtime semantics were changed. Verification required pinning CI security checks to Go 1.26.6 because `govulncheck` resolved Go 1.26.5 and reported standard-library vulnerabilities fixed in 1.26.6. The same patched toolchain was already used for successful local verification.
+
+## Remaining Risks
+
+- The local Docker Desktop/containerd installation should be repaired before relying on local Compose verification.
+- M1 closure is not authoritative until this PR is reviewed and merged into protected `main`.
+- M2 work must not begin from this draft branch.
+
+## M1 Decision
+
+All functional, security, persistence, operational, and remote CI evidence required by AUTH-VERIFY-001 is present on this draft branch. Per the approved review gate, the formal milestone remains pending review and merge.
 
 M1 Status: Open
 
-## Recommended next step
+## Recommended Next Step
 
-Recover Docker Desktop/containerd, recreate the disposable test database with host port `5433`, rerun all blocked checks, push this branch as a Draft PR, and obtain the required remote CI evidence. Do not begin M2.
+Complete AUTH-VERIFY-001 security review, resolve all review conversations, mark PR #32 Ready when approved, and merge it into protected `main`. Only after protected-main verification should M1 be treated as closed; do not begin M2 automatically.
