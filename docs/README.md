@@ -28,6 +28,8 @@
 - [Authentication Frontend Runtime](engineering/authentication-frontend-runtime.md)
 - [Authentication Local HTTPS](engineering/authentication-local-https.md)
 - [Authentication Operations Runbook](engineering/authentication-operations-runbook.md)
+- [Authentication M1 Completion Report](engineering/authentication-m1-completion-report.md) (AUTH-VERIFY-001; currently open pending Docker/CI evidence)
+- [Authentication M1 Acceptance Matrix](engineering/authentication-m1-acceptance-matrix.md)
 - [ADR-013 — Solo Maintainer Merge Governance](adr/ADR-013-solo-maintainer-merge-governance.md)
 - [ADR-014 — Argon2id Password Hashing Parameters](adr/ADR-014-argon2id-password-hashing.md)
 - [ADR-015 — Ed25519 Key Ring and Secret Management](adr/ADR-015-ed25519-key-ring-and-secret-management.md)
