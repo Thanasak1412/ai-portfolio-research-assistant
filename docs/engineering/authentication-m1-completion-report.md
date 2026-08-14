@@ -9,9 +9,9 @@
 - Protected `main` base SHA: `57f6dde`
 - Required merged ancestor: `ef4c40ff6c5afe0c1a751b174bc1f6a0f655217f`
 - Verification branch: `codex/auth-verify-001`
-- Final verification head: `cdb5e4d977a3e20c7212ffcfacb82534f8240fff`
-- Draft PR: [#32](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/32)
-- Final remote workflow: [bootstrap-quality-gates run 31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437)
+- Final verification head: `6e810ed25e8a2c80abf276228d51f7637d659c52`
+- Verification PR: [#32](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/32)
+- Final remote workflow: [bootstrap-quality-gates run 31762373442](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442)
 
 ## Implemented Scope
 
@@ -25,7 +25,7 @@ No MFA, password reset, email verification, SSO, roles, Portfolio, Asset, Transa
 
 ## Acceptance Matrix
 
-See the complete [Authentication M1 Acceptance Matrix](authentication-m1-acceptance-matrix.md). Every required row is `PASS`; no Critical or Major verification finding remains. Formal closure still requires review approval and merge into protected `main`.
+See the complete [Authentication M1 Acceptance Matrix](authentication-m1-acceptance-matrix.md). Every required row is `PASS`; no Critical or Major verification finding remains.
 
 ## Functional Verification
 
@@ -49,17 +49,17 @@ Local GitGuardian scanning reported no secrets. The remote `secrets` job also pa
 
 ## CI Evidence
 
-Final workflow run [31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437) passed all seven mandatory jobs on the final verification head:
+Final workflow run [31762373442](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442) passed all seven mandatory jobs on the final verification head:
 
 | Required job | Result | Evidence |
 |---|---|---|
-| `frontend` | PASS | [job 94649552344](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552344) |
-| `backend` | PASS | [job 94649552397](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552397) |
-| `contracts-and-generation` | PASS | [job 94649552347](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552347) |
-| `database-integration` | PASS | [job 94649552359](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552359) |
-| `browser-e2e` | PASS | [job 94649552358](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552358) |
-| `compose-smoke` | PASS | [job 94649552304](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552304) |
-| `secrets` | PASS | [job 94649552345](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552345) |
+| `frontend` | PASS | [job 94651249027](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651249027) |
+| `backend` | PASS | [job 94651248982](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651248982) |
+| `contracts-and-generation` | PASS | [job 94651248968](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651248968) |
+| `database-integration` | PASS | [job 94651249016](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651249016) |
+| `browser-e2e` | PASS | [job 94651249008](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651249008) |
+| `compose-smoke` | PASS | [job 94651249051](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651249051) |
+| `secrets` | PASS | [job 94651249046](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442/job/94651249046) |
 
 GitGuardian Security Checks also passed.
 
@@ -105,15 +105,13 @@ No Authentication policy or runtime semantics were changed. Verification require
 ## Remaining Risks
 
 - The local Docker Desktop/containerd installation should be repaired before relying on local Compose verification.
-- M1 closure is not authoritative until this PR is reviewed and merged into protected `main`.
-- M2 work must not begin from this draft branch.
 
 ## M1 Decision
 
-All functional, security, persistence, operational, and remote CI evidence required by AUTH-VERIFY-001 is present on this draft branch. Per the approved review gate, the formal milestone remains pending review and merge.
-
-M1 Status: Open
+All functional, security, persistence, operational, and remote CI evidence required by AUTH-VERIFY-001 is present on the final verification head. M1 Authentication verification is closed.
 
 ## Recommended Next Step
 
-Complete AUTH-VERIFY-001 security review, resolve all review conversations, mark PR #32 Ready when approved, and merge it into protected `main`. Only after protected-main verification should M1 be treated as closed; do not begin M2 automatically.
+Proceed to the next approved planning milestone without changing the approved Authentication runtime or security policies.
+
+M1 Status: Closed

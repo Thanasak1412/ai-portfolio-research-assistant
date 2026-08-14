@@ -4,8 +4,8 @@ Verification task: `AUTH-VERIFY-001`
 Policy composition: `AUTH_IMPLEMENTATION_POLICY-v3`
 Verification branch: `codex/auth-verify-001`
 Protected `main` base: `57f6dde` (required ancestor `ef4c40ff6c5afe0c1a751b174bc1f6a0f655217f`)
-Final verification head: `5f6fc992a2e94e47172cfe00879a42c6896912ad`
-Final remote workflow: [run 31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437)
+Final verification head: `6e810ed25e8a2c80abf276228d51f7637d659c52`
+Final remote workflow: [run 31762373442](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442)
 
 Result values are `PASS`, `FAIL`, `BLOCKED`, or `NOT_APPLICABLE`. A blocked row is not treated as a pass. Remote CI evidence is used where the local Docker daemon became unavailable during verification.
 
@@ -43,8 +43,8 @@ Result values are `PASS`, `FAIL`, `BLOCKED`, or `NOT_APPLICABLE`. A blocked row 
 | JavaScript dependency vulnerabilities | CI policy | `pnpm audit --audit-level high`; remote `frontend` | PASS | Patched nanoid 3.3.18; no known high vulnerabilities. |
 | Go reachable vulnerabilities | CI policy | `govulncheck ./...` with Go 1.26.6; remote `backend` | PASS | No reachable vulnerabilities. |
 | Formatting, lint, typecheck, unit tests, backend build | CI policy | Make/Go checks; remote `frontend` and `backend` | PASS | |
-| Seven mandatory remote CI jobs on final head | ADR-013; CI policy | [run 31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437) | PASS | All seven jobs passed; GitGuardian passed separately. |
+| Seven mandatory remote CI jobs on final head | ADR-013; CI policy | [run 31762373442](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31762373442) | PASS | All seven jobs passed; GitGuardian passed separately. |
 
 ## Closure decision
 
-All verification rows pass on the final reviewed head, with equivalent remote evidence covering the local Docker outage. Formal M1 closure remains pending AUTH-VERIFY-001 review approval and merge into protected `main`; this draft PR does not authorize M2 work.
+All verification rows pass on the final reviewed head, with equivalent remote evidence covering the local Docker outage. M1 Authentication verification is closed.
