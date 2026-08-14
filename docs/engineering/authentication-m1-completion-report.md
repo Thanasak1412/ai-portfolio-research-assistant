@@ -9,9 +9,9 @@
 - Protected `main` base SHA: `57f6dde`
 - Required merged ancestor: `ef4c40ff6c5afe0c1a751b174bc1f6a0f655217f`
 - Verification branch: `codex/auth-verify-001`
-- Final verification head: `5f6fc992a2e94e47172cfe00879a42c6896912ad`
+- Final verification head: `cdb5e4d977a3e20c7212ffcfacb82534f8240fff`
 - Draft PR: [#32](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/32)
-- Final remote workflow: [bootstrap-quality-gates run 31761400693](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693)
+- Final remote workflow: [bootstrap-quality-gates run 31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437)
 
 ## Implemented Scope
 
@@ -49,17 +49,17 @@ Local GitGuardian scanning reported no secrets. The remote `secrets` job also pa
 
 ## CI Evidence
 
-Final workflow run [31761400693](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693) passed all seven mandatory jobs on the final verification head:
+Final workflow run [31761799437](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437) passed all seven mandatory jobs on the final verification head:
 
 | Required job | Result | Evidence |
 |---|---|---|
-| `frontend` | PASS | [job 94648352069](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648352069) |
-| `backend` | PASS | [job 94648351448](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351448) |
-| `contracts-and-generation` | PASS | [job 94648351478](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351478) |
-| `database-integration` | PASS | [job 94648351518](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351518) |
-| `browser-e2e` | PASS | [job 94648351546](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351546) |
-| `compose-smoke` | PASS | [job 94648351453](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351453) |
-| `secrets` | PASS | [job 94648351501](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761400693/job/94648351501) |
+| `frontend` | PASS | [job 94649552344](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552344) |
+| `backend` | PASS | [job 94649552397](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552397) |
+| `contracts-and-generation` | PASS | [job 94649552347](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552347) |
+| `database-integration` | PASS | [job 94649552359](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552359) |
+| `browser-e2e` | PASS | [job 94649552358](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552358) |
+| `compose-smoke` | PASS | [job 94649552304](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552304) |
+| `secrets` | PASS | [job 94649552345](https://github.com/Thanasak1412/ai-portfolio-research-assistant/actions/runs/31761799437/job/94649552345) |
 
 GitGuardian Security Checks also passed.
 
