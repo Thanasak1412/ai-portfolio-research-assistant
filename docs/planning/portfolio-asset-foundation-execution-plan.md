@@ -793,7 +793,7 @@ the exact blocker is recorded.
 
 | Requirement                                       | Plan section    | Status  | Notes                                                                       |
 | ------------------------------------------------- | --------------- | ------- | --------------------------------------------------------------------------- |
-| Status, version, M0/M1 dependency, approval state | Metadata        | COVERED | Proposed; review required; no implementation allowed.                       |
+| Status, version, M0/M1 dependency, approval state | Metadata        | COVERED | Approved;Approval state: Approved for implementation sequencing after merge; no implementation allowed.                       |
 | M2 objective and success criteria                 | 1               | COVERED | Portfolio ownership and Asset catalog foundation.                           |
 | Required sources and precedence                   | 2.1             | COVERED | Repository sources and policy order listed.                                 |
 | Current repository assessment                     | 2.2–2.3         | COVERED | Actual Go, web, contracts, DB, CI, HTTPS state recorded.                    |
