@@ -14,5 +14,13 @@ export default defineConfig({
       process.env.PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS === "true",
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "auth-setup", testMatch: /generated\/auth\.setup\.ts/ },
+    {
+      name: "chromium",
+      dependencies: ["auth-setup"],
+      testIgnore: /generated\/auth\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
 });
