@@ -88,7 +88,7 @@ seed enters the supported HTTPS origin at `/register` with no session.
 - The `Create account` heading, `Email` textbox, `Password` textbox, and
   `Create account` button are visible.
 - `Sign in instead` navigates to `/login`; `/login` exposes the `Create an
-  account` link back to `/register`.
+account` link back to `/register`.
 - No protected shell or authenticated identity is visible.
 
 ### 2. Registration with valid credentials
@@ -228,7 +228,7 @@ Navigate to `/login`, then `/register`.
 ### 10. Session recovery after browser reload
 
 **Starting state:** Real authenticated session reached through registration or a
-  setup state; `/app` is visible.
+setup state; `/app` is visible.
 
 **Steps:** Reload the page (a full browser reload, not client-side navigation).
 
@@ -326,26 +326,26 @@ credential/token leakage before sharing them.
 
 ## Planner review coverage matrix
 
-| Area | Required scenario | Plan section | Status | Required action |
-| --- | --- | --- | --- | --- |
-| Bootstrap | Seed reaches usable unauthenticated `/register` | 1 | COVERED | None |
-| Register | Form and navigation | 1 | COVERED | None |
-| Register verify | Required fields and invalid email | 3 | COVERED | None |
-| Password verification | Under-12 password rejected | 3, 6 | COVERED | None |
-| Registration successful | Valid registration to `/app` | 2 | COVERED | None |
-| Duplicate registration | Safe generic duplicate failure | 4 | COVERED | None |
-| Login | Form and navigation | 5 | COVERED | None |
-| Login validation | Empty/invalid input | 6 | COVERED | None |
-| Login successful | Valid login to `/app` | 5 | COVERED | None |
-| Login incorrect | Unknown/wrong credentials not disclosed | 7 | COVERED | None |
-| Protected path | `/app` redirects with no content flash | 8 | COVERED | None |
-| Session recovery | Reload restores `/app` | 10 | COVERED | None |
-| Public route security | Authenticated `/login` and `/register` redirect | 9 | COVERED | None |
-| Logout | Sign out to `/login` | 11 | COVERED | None |
-| Logout persistence | Reload/direct `/app` remain unauthenticated | 12 | COVERED | None |
-| Browser security smoke | Cookie attributes and storage boundary | 2, 10, Cross-scenario security assertions | COVERED | None |
-| Cross-tab | Logout invalidates another supported tab | 13 | COVERED | SHOULD run when same-context session signaling is available; otherwise document limitation |
-| Actual topology | HTTPS Caddy stack and no Auth mocks | Scope, Cross-scenario security assertions | COVERED | None |
+| Area                    | Required scenario                               | Plan section                              | Status  | Required action                                                                            |
+| ----------------------- | ----------------------------------------------- | ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| Bootstrap               | Seed reaches usable unauthenticated `/register` | 1                                         | COVERED | None                                                                                       |
+| Register                | Form and navigation                             | 1                                         | COVERED | None                                                                                       |
+| Register verify         | Required fields and invalid email               | 3                                         | COVERED | None                                                                                       |
+| Password verification   | Under-12 password rejected                      | 3, 6                                      | COVERED | None                                                                                       |
+| Registration successful | Valid registration to `/app`                    | 2                                         | COVERED | None                                                                                       |
+| Duplicate registration  | Safe generic duplicate failure                  | 4                                         | COVERED | None                                                                                       |
+| Login                   | Form and navigation                             | 5                                         | COVERED | None                                                                                       |
+| Login validation        | Empty/invalid input                             | 6                                         | COVERED | None                                                                                       |
+| Login successful        | Valid login to `/app`                           | 5                                         | COVERED | None                                                                                       |
+| Login incorrect         | Unknown/wrong credentials not disclosed         | 7                                         | COVERED | None                                                                                       |
+| Protected path          | `/app` redirects with no content flash          | 8                                         | COVERED | None                                                                                       |
+| Session recovery        | Reload restores `/app`                          | 10                                        | COVERED | None                                                                                       |
+| Public route security   | Authenticated `/login` and `/register` redirect | 9                                         | COVERED | None                                                                                       |
+| Logout                  | Sign out to `/login`                            | 11                                        | COVERED | None                                                                                       |
+| Logout persistence      | Reload/direct `/app` remain unauthenticated     | 12                                        | COVERED | None                                                                                       |
+| Browser security smoke  | Cookie attributes and storage boundary          | 2, 10, Cross-scenario security assertions | COVERED | None                                                                                       |
+| Cross-tab               | Logout invalidates another supported tab        | 13                                        | COVERED | SHOULD run when same-context session signaling is available; otherwise document limitation |
+| Actual topology         | HTTPS Caddy stack and no Auth mocks             | Scope, Cross-scenario security assertions | COVERED | None                                                                                       |
 
 Review totals: 18 required/should scenarios, 18 covered, 0 partial, 0
 missing, 0 not applicable. Six covered areas overlap existing deterministic
