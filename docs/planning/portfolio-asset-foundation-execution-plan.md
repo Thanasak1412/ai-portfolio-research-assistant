@@ -1,13 +1,13 @@
 # Portfolio & Asset Foundation — Execution Plan
 
-**Status:** Status: Approved; Approval state: Approved for implementation sequencing after merge
+**Status:** Approved
 **Version:** `M2-PORTFOLIO-ASSET-PLAN-v1`
 **Milestone:** M2 — Portfolio & Asset Foundation
 **Planning task:** `M2-PLAN-001`
 **Planning branch:** `codex/m2-portfolio-asset-plan`
 **Base:** protected `main` as represented by local `origin/main` at `7824492` (merged PR #33)
 **Depends on:** M0 closed; M1 Authentication closed; approved ADRs and decision policies listed below
-**Approval state:** Not approved; implementation must not begin until this plan is reviewed and merged
+**Approval state:** Approved for implementation sequencing after merge
 
 This document is an implementation plan only. It contains no Portfolio or
 Asset implementation, OpenAPI changes, migrations, sqlc queries, runtime
@@ -791,34 +791,34 @@ the exact blocker is recorded.
 
 ## 19. Self-review coverage matrix
 
-| Requirement                                       | Plan section    | Status  | Notes                                                                       |
-| ------------------------------------------------- | --------------- | ------- | --------------------------------------------------------------------------- |
-| Status, version, M0/M1 dependency, approval state | Metadata        | COVERED | Approved;Approval state: Approved for implementation sequencing after merge; no implementation allowed.                       |
-| M2 objective and success criteria                 | 1               | COVERED | Portfolio ownership and Asset catalog foundation.                           |
-| Required sources and precedence                   | 2.1             | COVERED | Repository sources and policy order listed.                                 |
-| Current repository assessment                     | 2.2–2.3         | COVERED | Actual Go, web, contracts, DB, CI, HTTPS state recorded.                    |
-| Repository/documentation mismatch handling        | 2.3             | COVERED | Baseline/ADR/index mismatches explicitly recorded.                          |
-| Portfolio lifecycle                               | 5.1             | COVERED | Explicit archive, no hard delete/restore.                                   |
-| Portfolio name semantics                          | 5.2             | COVERED | Per-owner active uniqueness, trim/case-insensitive, no extra normalization. |
-| Asset type closed set                             | 6.1             | COVERED | EQUITY, ETF, CRYPTO only; unsupported values rejected/excluded.             |
-| Canonical Asset identity                          | 6.2–6.3         | COVERED | Symbol/exchange and CRYPTO namespace.                                       |
-| Asset creation authority/catalog                  | 6.4             | COVERED | System-managed, read/search only for users.                                 |
-| Crypto compatibility with financial policies      | 6.5             | COVERED | No crypto transactions, prices, holdings, or valuation.                     |
-| Ownership and module boundaries                   | 4, 7, 12        | COVERED | Principal-scoped Portfolio; shared Asset catalog; no private imports.       |
-| OpenAPI-first contract direction                  | 8               | COVERED | M2-CONTRACT-001 freezes details; no contract changed here.                  |
-| Database direction and constraints                | 9               | COVERED | Tables/indexes/concurrency/bootstrap requirements without SQL.              |
-| Catalog bootstrap selection                       | 9.3             | COVERED | Deferred to M2-DB-001 as a named, deterministic decision.                   |
-| Frontend routes/UI direction                      | 10              | COVERED | Portfolio flows and Asset discovery; no financial UI.                       |
-| Domain/application/infrastructure/transport split | 7               | COVERED | Responsibilities and dependency directions specified.                       |
-| Domain/application/API/DB/frontend/E2E tests      | 11              | COVERED | Layer-specific assignments listed.                                          |
-| Security requirements                             | 4, 12           | COVERED | Default deny, owner isolation, no Auth redesign or leakage.                 |
-| CI/operational verification                       | 13              | COVERED | Current seven jobs and repository command categories inherited.             |
-| Ordered task sequence                             | 14              | COVERED | All required M2 task IDs and review gates included.                         |
-| Dependency graph                                  | 15              | COVERED | Mermaid graph preserves review-before-merge order.                          |
-| Per-task acceptance criteria/complexity/risks     | 14              | COVERED | Every task has dependencies, scope, acceptance, complexity, risks.          |
-| Scope guard/stop conditions                       | 16              | COVERED | Conflicts stop affected work; no hidden decisions.                          |
-| M2 Definition of Done and closure                 | 17–18           | COVERED | Closure only through M2-VERIFY-001.                                         |
-| No implementation changes in planning task        | Repository diff | COVERED | Only this plan and docs index are permitted.                                |
+| Requirement                                       | Plan section    | Status  | Notes                                                                          |
+| ------------------------------------------------- | --------------- | ------- | ------------------------------------------------------------------------------ |
+| Status, version, M0/M1 dependency, approval state | Metadata        | COVERED | Approved for implementation sequencing after merge; no implementation allowed. |
+| M2 objective and success criteria                 | 1               | COVERED | Portfolio ownership and Asset catalog foundation.                              |
+| Required sources and precedence                   | 2.1             | COVERED | Repository sources and policy order listed.                                    |
+| Current repository assessment                     | 2.2–2.3         | COVERED | Actual Go, web, contracts, DB, CI, HTTPS state recorded.                       |
+| Repository/documentation mismatch handling        | 2.3             | COVERED | Baseline/ADR/index mismatches explicitly recorded.                             |
+| Portfolio lifecycle                               | 5.1             | COVERED | Explicit archive, no hard delete/restore.                                      |
+| Portfolio name semantics                          | 5.2             | COVERED | Per-owner active uniqueness, trim/case-insensitive, no extra normalization.    |
+| Asset type closed set                             | 6.1             | COVERED | EQUITY, ETF, CRYPTO only; unsupported values rejected/excluded.                |
+| Canonical Asset identity                          | 6.2–6.3         | COVERED | Symbol/exchange and CRYPTO namespace.                                          |
+| Asset creation authority/catalog                  | 6.4             | COVERED | System-managed, read/search only for users.                                    |
+| Crypto compatibility with financial policies      | 6.5             | COVERED | No crypto transactions, prices, holdings, or valuation.                        |
+| Ownership and module boundaries                   | 4, 7, 12        | COVERED | Principal-scoped Portfolio; shared Asset catalog; no private imports.          |
+| OpenAPI-first contract direction                  | 8               | COVERED | M2-CONTRACT-001 freezes details; no contract changed here.                     |
+| Database direction and constraints                | 9               | COVERED | Tables/indexes/concurrency/bootstrap requirements without SQL.                 |
+| Catalog bootstrap selection                       | 9.3             | COVERED | Deferred to M2-DB-001 as a named, deterministic decision.                      |
+| Frontend routes/UI direction                      | 10              | COVERED | Portfolio flows and Asset discovery; no financial UI.                          |
+| Domain/application/infrastructure/transport split | 7               | COVERED | Responsibilities and dependency directions specified.                          |
+| Domain/application/API/DB/frontend/E2E tests      | 11              | COVERED | Layer-specific assignments listed.                                             |
+| Security requirements                             | 4, 12           | COVERED | Default deny, owner isolation, no Auth redesign or leakage.                    |
+| CI/operational verification                       | 13              | COVERED | Current seven jobs and repository command categories inherited.                |
+| Ordered task sequence                             | 14              | COVERED | All required M2 task IDs and review gates included.                            |
+| Dependency graph                                  | 15              | COVERED | Mermaid graph preserves review-before-merge order.                             |
+| Per-task acceptance criteria/complexity/risks     | 14              | COVERED | Every task has dependencies, scope, acceptance, complexity, risks.             |
+| Scope guard/stop conditions                       | 16              | COVERED | Conflicts stop affected work; no hidden decisions.                             |
+| M2 Definition of Done and closure                 | 17–18           | COVERED | Closure only through M2-VERIFY-001.                                            |
+| No implementation changes in planning task        | Repository diff | COVERED | Only this plan and docs index are permitted.                                   |
 
 **Coverage result:** 28 required planning areas reviewed; 28 `COVERED`, 0
 `PARTIAL`, 0 `MISSING`, 0 `BLOCKED`.
