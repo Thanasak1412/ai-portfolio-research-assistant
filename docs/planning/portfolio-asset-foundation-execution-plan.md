@@ -1,6 +1,6 @@
 # Portfolio & Asset Foundation — Execution Plan
 
-**Status:** Proposed — review required
+**Status:** Status: Approved; Approval state: Approved for implementation sequencing after merge
 **Version:** `M2-PORTFOLIO-ASSET-PLAN-v1`
 **Milestone:** M2 — Portfolio & Asset Foundation
 **Planning task:** `M2-PLAN-001`
