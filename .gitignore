@@ -12,6 +12,7 @@ node_modules/
 .next/
 coverage/
 playwright-report/
+apps/web/playwright/.auth/
 test-results/
 dist/
 bin/
