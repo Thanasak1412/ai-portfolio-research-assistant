@@ -15,10 +15,19 @@ const authOperations = {
   "/auth/me": "get",
 };
 
+const m2Operations = {
+  "/portfolios": ["post", "get"],
+  "/portfolios/{portfolioId}": ["get", "patch"],
+  "/portfolios/{portfolioId}/archive": ["post"],
+  "/assets": ["get"],
+  "/assets/{assetId}": ["get"],
+};
+
 const expectedPaths = new Set([
   "/health/live",
   "/health/ready",
   ...Object.keys(authOperations),
+  ...Object.keys(m2Operations),
 ]);
 
 function operation(path, method) {
@@ -53,11 +62,13 @@ function propertyNames(schema, found = new Set()) {
   return found;
 }
 
-test("defines only the approved operational and Authentication operations", () => {
+test("defines only the approved operational, Authentication, and M2 operations", () => {
   assert.deepEqual(new Set(Object.keys(contract.paths)), expectedPaths);
 
   for (const [path, method] of Object.entries(authOperations))
     operation(path, method);
+  for (const [path, methods] of Object.entries(m2Operations))
+    for (const method of methods) operation(path, method);
 
   const serverBase = contract.servers[0].url;
   for (const path of Object.keys(authOperations)) {
@@ -255,13 +266,17 @@ test("uses the standard error envelope, correlation ID, and Retry-After", () => 
   assert.equal(operation("/auth/logout", "post").responses["429"], undefined);
 });
 
-test("introduces no M2 path or schema", () => {
-  const publicNames = JSON.stringify({
-    paths: Object.keys(contract.paths),
-    schemas: Object.keys(contract.components.schemas),
-  });
-  assert.doesNotMatch(
-    publicNames,
-    /portfolio|asset|transaction|holding|valuation|allocation|dashboard/i,
-  );
+test("introduces no transaction, holding, price, valuation, allocation, dashboard, or AI contract", () => {
+  for (const path of Object.keys(contract.paths)) {
+    assert.doesNotMatch(
+      path,
+      /\/(transactions|holdings|prices|valuations|allocations|dashboard|alerts|documents|ai)(?:\/|$)/i,
+    );
+  }
+  for (const schema of Object.keys(contract.components.schemas)) {
+    assert.doesNotMatch(
+      schema,
+      /^(Transaction|Holding|Price|Valuation|Allocation|Dashboard|Alert|Document|AI)/,
+    );
+  }
 });

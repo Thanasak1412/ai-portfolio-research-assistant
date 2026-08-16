@@ -17,6 +17,10 @@ tags:
     description: Restricted operational checks.
   - name: Authentication
     description: Email/password Authentication and current-session lifecycle.
+  - name: Portfolios
+    description: Authenticated management of user-owned Portfolio records.
+  - name: Assets
+    description: Authenticated discovery of system-managed canonical Assets.
 paths:
   /health/live:
     get:
@@ -238,6 +242,245 @@ paths:
           $ref: "#/components/responses/AccessTokenUnauthorized"
         "500":
           $ref: "#/components/responses/InternalFailure"
+  /portfolios:
+    post:
+      operationId: createPortfolio
+      tags: [Portfolios]
+      summary: Create a user-owned Portfolio
+      description: >-
+        Creates an ACTIVE Portfolio for the authenticated principal. The owner
+        is derived from the access token; ownership fields are not accepted.
+        baseCurrency is constrained to USD and becomes immutable. Portfolio
+        names are trimmed, compared case-insensitively per owner, and must be
+        unique among that owner's ACTIVE Portfolios.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePortfolioRequest"
+      responses:
+        "201":
+          description: Portfolio created.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "409":
+          $ref: "#/components/responses/PortfolioNameConflict"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+    get:
+      operationId: listPortfolios
+      tags: [Portfolios]
+      summary: List the authenticated user's Portfolios
+      description: >-
+        Returns only Portfolios owned by the authenticated principal. ACTIVE is
+        the default lifecycle filter; pass status=ARCHIVED to list archived
+        Portfolios. Results are ordered by updatedAt descending, then id
+        ascending. M2 does not paginate the expected small owner-scoped set.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/PortfolioStatusFilter"
+      responses:
+        "200":
+          description: Owner-scoped Portfolio list.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioListResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+  /portfolios/{portfolioId}:
+    get:
+      operationId: getPortfolio
+      tags: [Portfolios]
+      summary: Get one owned Portfolio
+      description: >-
+        Returns a Portfolio only when it belongs to the authenticated
+        principal. An absent Portfolio and a Portfolio owned by someone else
+        both return the same PORTFOLIO_NOT_FOUND response.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/PortfolioId"
+      responses:
+        "200":
+          description: Owned Portfolio.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "404":
+          $ref: "#/components/responses/PortfolioNotFound"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+    patch:
+      operationId: updatePortfolio
+      tags: [Portfolios]
+      summary: Update an owned active Portfolio
+      description: >-
+        Updates only the Portfolio name. ID, owner, baseCurrency, status,
+        archivedAt, and lifecycle timestamps are immutable through this
+        operation. The normalized name must remain unique among the
+        authenticated owner's ACTIVE Portfolios; conflicts use
+        PORTFOLIO_NAME_CONFLICT. Updating an ARCHIVED Portfolio is rejected.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/PortfolioId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePortfolioRequest"
+      responses:
+        "200":
+          description: Active Portfolio updated.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "404":
+          $ref: "#/components/responses/PortfolioNotFound"
+        "409":
+          $ref: "#/components/responses/PortfolioNameConflict"
+        "422":
+          $ref: "#/components/responses/PortfolioArchived"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+  /portfolios/{portfolioId}/archive:
+    post:
+      operationId: archivePortfolio
+      tags: [Portfolios]
+      summary: Archive an owned Portfolio
+      description: >-
+        Explicitly transitions an owned ACTIVE Portfolio to ARCHIVED; it never
+        hard-deletes the record. The operation is idempotent from the client's
+        perspective: retrying archive for an already archived owned Portfolio
+        returns its same ARCHIVED representation. There is no restore operation.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/PortfolioId"
+      responses:
+        "200":
+          description: Portfolio archived, or its existing archived representation returned on retry.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "404":
+          $ref: "#/components/responses/PortfolioNotFound"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+  /assets:
+    get:
+      operationId: listAssets
+      tags: [Assets]
+      summary: Search supported canonical Assets
+      description: >-
+        Returns system-managed canonical Asset metadata available to every
+        authenticated user. search is case-insensitive discovery over canonical
+        symbol and display name. type is an exact supported AssetType filter.
+        Results are ordered by symbol, exchange, then id ascending; cursor is
+        opaque and preserves that ordering. No user can mutate the catalog.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/AssetSearch"
+        - $ref: "#/components/parameters/AssetTypeFilter"
+        - $ref: "#/components/parameters/AssetCursor"
+        - $ref: "#/components/parameters/AssetPageLimit"
+      responses:
+        "200":
+          description: Page of supported canonical Assets.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetListResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
+  /assets/{assetId}:
+    get:
+      operationId: getAsset
+      tags: [Assets]
+      summary: Get supported canonical Asset metadata
+      description: >-
+        Returns only public metadata for a supported canonical Asset. It does
+        not return provider, venue-price, holding, transaction, or valuation
+        data. For CRYPTO, exchange uses the canonical CRYPTO market namespace,
+        not a trading venue such as COINBASE or BINANCE.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestCorrelationId"
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Supported canonical Asset.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/AccessTokenUnauthorized"
+        "404":
+          $ref: "#/components/responses/AssetNotFound"
+        "500":
+          $ref: "#/components/responses/InternalFailure"
 components:
   securitySchemes:
     BearerAuth:
@@ -280,6 +523,72 @@ components:
       schema:
         type: string
         const: portfolio-web
+    PortfolioId:
+      name: portfolioId
+      in: path
+      required: true
+      description: Immutable opaque Portfolio identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    PortfolioStatusFilter:
+      name: status
+      in: query
+      required: false
+      description: >-
+        Lifecycle filter. Defaults to ACTIVE; ARCHIVED must be requested
+        explicitly. The API does not return another user's Portfolio in either
+        case.
+      schema:
+        $ref: "#/components/schemas/PortfolioStatus"
+        default: ACTIVE
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      description: Immutable opaque canonical Asset identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    AssetSearch:
+      name: search
+      in: query
+      required: false
+      description: >-
+        Case-insensitive user-facing discovery query over canonical symbol and
+        display name. It does not query providers or prices.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    AssetTypeFilter:
+      name: type
+      in: query
+      required: false
+      description: Exact supported canonical Asset type filter.
+      schema:
+        $ref: "#/components/schemas/AssetType"
+    AssetCursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor from a previous Asset list response.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 512
+    AssetPageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of Assets to return. Defaults to 25 and cannot exceed 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
   headers:
     CorrelationId:
       description: Request correlation identifier, accepted from or generated for the request.
@@ -374,6 +683,146 @@ components:
             user:
               $ref: "#/components/schemas/AuthenticatedUser"
       unevaluatedProperties: false
+    PortfolioStatus:
+      type: string
+      enum: [ACTIVE, ARCHIVED]
+      description: ACTIVE Portfolios are editable; ARCHIVED Portfolios are retained and immutable in M2.
+    PortfolioBaseCurrency:
+      type: string
+      const: USD
+      description: The only approved M2 Portfolio base currency. It is immutable after creation.
+    Portfolio:
+      type: object
+      additionalProperties: false
+      required:
+        [id, name, baseCurrency, status, archivedAt, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Immutable opaque Portfolio identifier.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: >-
+            Portfolio display name. The backend trims surrounding whitespace and
+            enforces case-insensitive active-name uniqueness per owner.
+        baseCurrency:
+          $ref: "#/components/schemas/PortfolioBaseCurrency"
+        status:
+          $ref: "#/components/schemas/PortfolioStatus"
+        archivedAt:
+          anyOf:
+            - $ref: "#/components/schemas/Timestamp"
+            - type: "null"
+          description: Archive time for ARCHIVED Portfolios; null while ACTIVE.
+        createdAt:
+          $ref: "#/components/schemas/Timestamp"
+        updatedAt:
+          $ref: "#/components/schemas/Timestamp"
+    CreatePortfolioRequest:
+      type: object
+      additionalProperties: false
+      required: [name, baseCurrency]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: >-
+            Proposed Portfolio name. The backend trims surrounding whitespace;
+            it preserves other whitespace/content semantics and is authoritative
+            for uniqueness validation.
+        baseCurrency:
+          $ref: "#/components/schemas/PortfolioBaseCurrency"
+      description: >-
+        Owner identity is derived from the bearer token. ownerUserId, userId,
+        lifecycle status, and financial state are not accepted.
+    UpdatePortfolioRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: New display name for an ACTIVE Portfolio.
+      description: >-
+        M2 permits only name updates. ID, ownership, baseCurrency, status,
+        archivedAt, and lifecycle timestamps are immutable.
+    PortfolioListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          description: Owner-scoped Portfolios in the documented stable order.
+          items:
+            $ref: "#/components/schemas/Portfolio"
+    AssetType:
+      type: string
+      enum: [EQUITY, ETF, CRYPTO]
+      description: >-
+        Structural canonical instrument type. It is not a strategy, sector,
+        industry, research classification, or risk classification.
+    AssetCurrency:
+      type: string
+      const: USD
+      description: >-
+        Catalog currency metadata under the current USD-only policy. It is not
+        a price, quote, holding, or authorization for CRYPTO financial processing.
+    Asset:
+      type: object
+      additionalProperties: false
+      required: [id, symbol, name, assetType, exchange, currency]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Immutable opaque canonical Asset identifier.
+        symbol:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: User-facing canonical symbol; normalized persistence fields are not exposed.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Canonical display name.
+        assetType:
+          $ref: "#/components/schemas/AssetType"
+        exchange:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: >-
+            Canonical exchange or market namespace. CRYPTO Assets use CRYPTO,
+            never a provider/trading venue identity.
+        currency:
+          $ref: "#/components/schemas/AssetCurrency"
+    AssetListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+        nextCursor:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 512
+            - type: "null"
+          description: Opaque cursor for the next stable page, or null when there is no next page.
     HealthStatus:
       type: object
       additionalProperties: false
@@ -415,6 +864,10 @@ components:
         - NOT_READY
         - HTTP_ERROR
         - NOT_FOUND
+        - PORTFOLIO_NAME_CONFLICT
+        - PORTFOLIO_NOT_FOUND
+        - PORTFOLIO_ARCHIVED
+        - ASSET_NOT_FOUND
     CorrelationIdValue:
       type: string
       minLength: 1
@@ -518,6 +971,52 @@ components:
       description: >-
         Authentication dependency is unavailable. Public code is
         AUTH_SERVICE_UNAVAILABLE.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    PortfolioNameConflict:
+      description: >-
+        The authenticated owner already has an ACTIVE Portfolio with the
+        requested normalized name. Public code is PORTFOLIO_NAME_CONFLICT; no
+        persistence constraint details are disclosed.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    PortfolioNotFound:
+      description: >-
+        Portfolio is absent or is not owned by the authenticated principal.
+        Public code is PORTFOLIO_NOT_FOUND for both cases and does not disclose
+        cross-owner resource existence.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    PortfolioArchived:
+      description: >-
+        The requested mutation is not permitted because the owned Portfolio is
+        archived. Public code is PORTFOLIO_ARCHIVED.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    AssetNotFound:
+      description: >-
+        The requested canonical Asset is absent or unsupported. Public code is
+        ASSET_NOT_FOUND; internal catalog lifecycle details are not disclosed.
       headers:
         X-Correlation-ID:
           $ref: "#/components/headers/CorrelationId"

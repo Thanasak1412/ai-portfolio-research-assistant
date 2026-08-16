@@ -138,6 +138,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portfolios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the authenticated user's Portfolios
+         * @description Returns only Portfolios owned by the authenticated principal. ACTIVE is the default lifecycle filter; pass status=ARCHIVED to list archived Portfolios. Results are ordered by updatedAt descending, then id ascending. M2 does not paginate the expected small owner-scoped set.
+         */
+        get: operations["listPortfolios"];
+        put?: never;
+        /**
+         * Create a user-owned Portfolio
+         * @description Creates an ACTIVE Portfolio for the authenticated principal. The owner is derived from the access token; ownership fields are not accepted. baseCurrency is constrained to USD and becomes immutable. Portfolio names are trimmed, compared case-insensitively per owner, and must be unique among that owner's ACTIVE Portfolios.
+         */
+        post: operations["createPortfolio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolios/{portfolioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one owned Portfolio
+         * @description Returns a Portfolio only when it belongs to the authenticated principal. An absent Portfolio and a Portfolio owned by someone else both return the same PORTFOLIO_NOT_FOUND response.
+         */
+        get: operations["getPortfolio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update an owned active Portfolio
+         * @description Updates only the Portfolio name. ID, owner, baseCurrency, status, archivedAt, and lifecycle timestamps are immutable through this operation. The normalized name must remain unique among the authenticated owner's ACTIVE Portfolios; conflicts use PORTFOLIO_NAME_CONFLICT. Updating an ARCHIVED Portfolio is rejected.
+         */
+        patch: operations["updatePortfolio"];
+        trace?: never;
+    };
+    "/portfolios/{portfolioId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive an owned Portfolio
+         * @description Explicitly transitions an owned ACTIVE Portfolio to ARCHIVED; it never hard-deletes the record. The operation is idempotent from the client's perspective: retrying archive for an already archived owned Portfolio returns its same ARCHIVED representation. There is no restore operation.
+         */
+        post: operations["archivePortfolio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search supported canonical Assets
+         * @description Returns system-managed canonical Asset metadata available to every authenticated user. search is case-insensitive discovery over canonical symbol and display name. type is an exact supported AssetType filter. Results are ordered by symbol, exchange, then id ascending; cursor is opaque and preserves that ordering. No user can mutate the catalog.
+         */
+        get: operations["listAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/{assetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get supported canonical Asset metadata
+         * @description Returns only public metadata for a supported canonical Asset. It does not return provider, venue-price, holding, transaction, or valuation data. For CRYPTO, exchange uses the canonical CRYPTO market namespace, not a trading venue such as COINBASE or BINANCE.
+         */
+        get: operations["getAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -177,6 +285,70 @@ export interface components {
         AuthenticatedSessionResponse: components["schemas"]["AccessTokenFields"] & {
             user: components["schemas"]["AuthenticatedUser"];
         };
+        /**
+         * @description ACTIVE Portfolios are editable; ARCHIVED Portfolios are retained and immutable in M2.
+         * @enum {string}
+         */
+        PortfolioStatus: "ACTIVE" | "ARCHIVED";
+        /**
+         * @description The only approved M2 Portfolio base currency. It is immutable after creation.
+         * @constant
+         */
+        PortfolioBaseCurrency: "USD";
+        Portfolio: {
+            /** @description Immutable opaque Portfolio identifier. */
+            id: string;
+            /** @description Portfolio display name. The backend trims surrounding whitespace and enforces case-insensitive active-name uniqueness per owner. */
+            name: string;
+            baseCurrency: components["schemas"]["PortfolioBaseCurrency"];
+            status: components["schemas"]["PortfolioStatus"];
+            /** @description Archive time for ARCHIVED Portfolios; null while ACTIVE. */
+            archivedAt: components["schemas"]["Timestamp"] | null;
+            createdAt: components["schemas"]["Timestamp"];
+            updatedAt: components["schemas"]["Timestamp"];
+        };
+        /** @description Owner identity is derived from the bearer token. ownerUserId, userId, lifecycle status, and financial state are not accepted. */
+        CreatePortfolioRequest: {
+            /** @description Proposed Portfolio name. The backend trims surrounding whitespace; it preserves other whitespace/content semantics and is authoritative for uniqueness validation. */
+            name: string;
+            baseCurrency: components["schemas"]["PortfolioBaseCurrency"];
+        };
+        /** @description M2 permits only name updates. ID, ownership, baseCurrency, status, archivedAt, and lifecycle timestamps are immutable. */
+        UpdatePortfolioRequest: {
+            /** @description New display name for an ACTIVE Portfolio. */
+            name: string;
+        };
+        PortfolioListResponse: {
+            /** @description Owner-scoped Portfolios in the documented stable order. */
+            items: components["schemas"]["Portfolio"][];
+        };
+        /**
+         * @description Structural canonical instrument type. It is not a strategy, sector, industry, research classification, or risk classification.
+         * @enum {string}
+         */
+        AssetType: "EQUITY" | "ETF" | "CRYPTO";
+        /**
+         * @description Catalog currency metadata under the current USD-only policy. It is not a price, quote, holding, or authorization for CRYPTO financial processing.
+         * @constant
+         */
+        AssetCurrency: "USD";
+        Asset: {
+            /** @description Immutable opaque canonical Asset identifier. */
+            id: string;
+            /** @description User-facing canonical symbol; normalized persistence fields are not exposed. */
+            symbol: string;
+            /** @description Canonical display name. */
+            name: string;
+            assetType: components["schemas"]["AssetType"];
+            /** @description Canonical exchange or market namespace. CRYPTO Assets use CRYPTO, never a provider/trading venue identity. */
+            exchange: string;
+            currency: components["schemas"]["AssetCurrency"];
+        };
+        AssetListResponse: {
+            items: components["schemas"]["Asset"][];
+            /** @description Opaque cursor for the next stable page, or null when there is no next page. */
+            nextCursor: string | null;
+        };
         HealthStatus: {
             /** @enum {string} */
             status: "alive" | "ready";
@@ -190,7 +362,7 @@ export interface components {
             correlationId: components["schemas"]["CorrelationIdValue"];
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND";
+        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND" | "PORTFOLIO_NAME_CONFLICT" | "PORTFOLIO_NOT_FOUND" | "PORTFOLIO_ARCHIVED" | "ASSET_NOT_FOUND";
         CorrelationIdValue: string;
         /** @description Future financial decimal transport. Binary floating-point JSON numbers are prohibited. */
         DecimalString: string;
@@ -293,6 +465,46 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
+        /** @description The authenticated owner already has an ACTIVE Portfolio with the requested normalized name. Public code is PORTFOLIO_NAME_CONFLICT; no persistence constraint details are disclosed. */
+        PortfolioNameConflict: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Portfolio is absent or is not owned by the authenticated principal. Public code is PORTFOLIO_NOT_FOUND for both cases and does not disclose cross-owner resource existence. */
+        PortfolioNotFound: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description The requested mutation is not permitted because the owned Portfolio is archived. Public code is PORTFOLIO_ARCHIVED. */
+        PortfolioArchived: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description The requested canonical Asset is absent or unsupported. Public code is ASSET_NOT_FOUND; internal catalog lifecycle details are not disclosed. */
+        AssetNotFound: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
     };
     parameters: {
         /** @description Optional caller correlation identifier; the API validates or generates it. */
@@ -301,6 +513,20 @@ export interface components {
         RequiredOrigin: string;
         /** @description Required custom request header for refresh and logout CSRF protection. */
         RequestedWith: "portfolio-web";
+        /** @description Immutable opaque Portfolio identifier. */
+        PortfolioId: string;
+        /** @description Lifecycle filter. Defaults to ACTIVE; ARCHIVED must be requested explicitly. The API does not return another user's Portfolio in either case. */
+        PortfolioStatusFilter: components["schemas"]["PortfolioStatus"];
+        /** @description Immutable opaque canonical Asset identifier. */
+        AssetId: string;
+        /** @description Case-insensitive user-facing discovery query over canonical symbol and display name. It does not query providers or prices. */
+        AssetSearch: string;
+        /** @description Exact supported canonical Asset type filter. */
+        AssetTypeFilter: components["schemas"]["AssetType"];
+        /** @description Opaque cursor from a previous Asset list response. */
+        AssetCursor: string;
+        /** @description Maximum number of Assets to return. Defaults to 25 and cannot exceed 100. */
+        AssetPageLimit: number;
     };
     requestBodies: never;
     headers: {
@@ -525,6 +751,231 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccessTokenUnauthorized"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    listPortfolios: {
+        parameters: {
+            query?: {
+                /** @description Lifecycle filter. Defaults to ACTIVE; ARCHIVED must be requested explicitly. The API does not return another user's Portfolio in either case. */
+                status?: components["parameters"]["PortfolioStatusFilter"];
+            };
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-scoped Portfolio list. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioListResponse"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    createPortfolio: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePortfolioRequest"];
+            };
+        };
+        responses: {
+            /** @description Portfolio created. */
+            201: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Portfolio"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            409: components["responses"]["PortfolioNameConflict"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    getPortfolio: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owned Portfolio. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Portfolio"];
+                };
+            };
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["PortfolioNotFound"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    updatePortfolio: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePortfolioRequest"];
+            };
+        };
+        responses: {
+            /** @description Active Portfolio updated. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Portfolio"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["PortfolioNotFound"];
+            409: components["responses"]["PortfolioNameConflict"];
+            422: components["responses"]["PortfolioArchived"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    archivePortfolio: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portfolio archived, or its existing archived representation returned on retry. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Portfolio"];
+                };
+            };
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["PortfolioNotFound"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    listAssets: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive user-facing discovery query over canonical symbol and display name. It does not query providers or prices. */
+                search?: components["parameters"]["AssetSearch"];
+                /** @description Exact supported canonical Asset type filter. */
+                type?: components["parameters"]["AssetTypeFilter"];
+                /** @description Opaque cursor from a previous Asset list response. */
+                cursor?: components["parameters"]["AssetCursor"];
+                /** @description Maximum number of Assets to return. Defaults to 25 and cannot exceed 100. */
+                limit?: components["parameters"]["AssetPageLimit"];
+            };
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of supported canonical Assets. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetListResponse"];
+                };
+            };
+            400: components["responses"]["InvalidRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    getAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque canonical Asset identifier. */
+                assetId: components["parameters"]["AssetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Supported canonical Asset. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["AssetNotFound"];
             500: components["responses"]["InternalFailure"];
         };
     };
