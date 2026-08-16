@@ -20,3 +20,23 @@ sql:
         sql_package: "pgx/v5"
         emit_empty_slices: true
         omit_unused_structs: true
+  - engine: "postgresql"
+    schema: "backend/migrations"
+    queries: "backend/queries/portfolio"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "backend/internal/portfolio/infrastructure/database/sqlcgen"
+        sql_package: "pgx/v5"
+        emit_empty_slices: true
+        omit_unused_structs: true
+  - engine: "postgresql"
+    schema: "backend/migrations"
+    queries: "backend/queries/asset"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "backend/internal/asset/infrastructure/database/sqlcgen"
+        sql_package: "pgx/v5"
+        emit_empty_slices: true
+        omit_unused_structs: true
