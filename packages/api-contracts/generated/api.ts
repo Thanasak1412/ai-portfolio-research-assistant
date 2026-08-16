@@ -181,7 +181,7 @@ export interface paths {
         head?: never;
         /**
          * Update an owned active Portfolio
-         * @description Updates only the Portfolio name. ID, owner, baseCurrency, status, archivedAt, and lifecycle timestamps are immutable through this operation. Updating an ARCHIVED Portfolio is rejected.
+         * @description Updates only the Portfolio name. ID, owner, baseCurrency, status, archivedAt, and lifecycle timestamps are immutable through this operation. The normalized name must remain unique among the authenticated owner's ACTIVE Portfolios; conflicts use PORTFOLIO_NAME_CONFLICT. Updating an ARCHIVED Portfolio is rejected.
          */
         patch: operations["updatePortfolio"];
         trace?: never;
@@ -316,7 +316,7 @@ export interface components {
         /** @description M2 permits only name updates. ID, ownership, baseCurrency, status, archivedAt, and lifecycle timestamps are immutable. */
         UpdatePortfolioRequest: {
             /** @description New display name for an ACTIVE Portfolio. */
-            name?: string;
+            name: string;
         };
         PortfolioListResponse: {
             /** @description Owner-scoped Portfolios in the documented stable order. */
@@ -878,7 +878,8 @@ export interface operations {
             400: components["responses"]["InvalidRequest"];
             401: components["responses"]["AccessTokenUnauthorized"];
             404: components["responses"]["PortfolioNotFound"];
-            409: components["responses"]["PortfolioArchived"];
+            409: components["responses"]["PortfolioNameConflict"];
+            422: components["responses"]["PortfolioArchived"];
             500: components["responses"]["InternalFailure"];
         };
     };

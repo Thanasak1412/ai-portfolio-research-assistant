@@ -348,7 +348,9 @@ paths:
       description: >-
         Updates only the Portfolio name. ID, owner, baseCurrency, status,
         archivedAt, and lifecycle timestamps are immutable through this
-        operation. Updating an ARCHIVED Portfolio is rejected.
+        operation. The normalized name must remain unique among the
+        authenticated owner's ACTIVE Portfolios; conflicts use
+        PORTFOLIO_NAME_CONFLICT. Updating an ARCHIVED Portfolio is rejected.
       security:
         - BearerAuth: []
       parameters:
@@ -377,6 +379,8 @@ paths:
         "404":
           $ref: "#/components/responses/PortfolioNotFound"
         "409":
+          $ref: "#/components/responses/PortfolioNameConflict"
+        "422":
           $ref: "#/components/responses/PortfolioArchived"
         "500":
           $ref: "#/components/responses/InternalFailure"
@@ -739,6 +743,7 @@ components:
     UpdatePortfolioRequest:
       type: object
       additionalProperties: false
+      required: [name]
       minProperties: 1
       properties:
         name:

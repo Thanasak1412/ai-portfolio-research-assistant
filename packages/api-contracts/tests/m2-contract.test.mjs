@@ -86,6 +86,7 @@ test("freezes Portfolio public fields and immutable command boundaries", () => {
 
   const update = contract.components.schemas.UpdatePortfolioRequest;
   assert.deepEqual(Object.keys(update.properties), ["name"]);
+  assert.deepEqual(update.required, ["name"]);
   assert.equal(update.additionalProperties, false);
   assert.equal(update.minProperties, 1);
 
@@ -151,6 +152,10 @@ test("documents Portfolio lifecycle, list, archive, and ownership-safe errors", 
   );
   assert.equal(
     responseReference("/portfolios/{portfolioId}", "patch", "409"),
+    "#/components/responses/PortfolioNameConflict",
+  );
+  assert.equal(
+    responseReference("/portfolios/{portfolioId}", "patch", "422"),
     "#/components/responses/PortfolioArchived",
   );
 });
