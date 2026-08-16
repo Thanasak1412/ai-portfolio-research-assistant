@@ -12,6 +12,7 @@ import (
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/httpserver"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/logging"
+	portfoliocomposition "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/composition"
 )
 
 type poolReadiness struct {
@@ -46,7 +47,12 @@ func main() {
 		logger.Error("identity authentication configuration failed", "error", err)
 		os.Exit(1)
 	}
-	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler)
+	portfolioHandler, err := portfoliocomposition.BuildHTTP(pool, authHandler.BearerMiddleware(), authHandler.PrincipalExtractor())
+	if err != nil {
+		logger.Error("portfolio configuration failed", "error", err)
+		os.Exit(1)
+	}
+	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler, portfolioHandler)
 	serveErrors := make(chan error, 1)
 	go func() { serveErrors <- server.Listen(applicationConfig.HTTPAddress()) }()
 	logger.Info("api started", "address", applicationConfig.HTTPAddress(), "environment", applicationConfig.Environment)
