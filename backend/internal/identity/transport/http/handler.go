@@ -52,6 +52,17 @@ func (handler *Handler) Mount(router fiber.Router) {
 	auth.Get("/me", handler.authenticateBearer, handler.me)
 }
 
+// BearerMiddleware exposes the already-approved Identity authentication
+// boundary for composition-root reuse by other module transports. It does not
+// expose token parsing or verification details.
+func (handler *Handler) BearerMiddleware() fiber.Handler { return handler.authenticateBearer }
+
+// PrincipalExtractor exposes only the validated-principal context boundary for
+// composition-root injection. A module transport must never inspect tokens.
+func (handler *Handler) PrincipalExtractor() func(*fiber.Ctx) (domain.Principal, bool) {
+	return PrincipalFromContext
+}
+
 type credentialsRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
