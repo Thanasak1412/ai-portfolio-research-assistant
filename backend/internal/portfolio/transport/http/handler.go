@@ -77,7 +77,7 @@ func (handler *Handler) list(ctx *fiber.Ctx) error {
 func (handler *Handler) get(ctx *fiber.Ctx) error {
 	id, err := domain.ParsePortfolioID(ctx.Params("portfolioId"))
 	if err != nil {
-		return writeError(ctx, errInvalidJSON)
+		return writeError(ctx, application.ErrPortfolioNotFound)
 	}
 	portfolio, err := handler.operations.GetPortfolio(ctx.UserContext(), handler.validPrincipal(ctx), id)
 	if err != nil {
@@ -89,7 +89,7 @@ func (handler *Handler) get(ctx *fiber.Ctx) error {
 func (handler *Handler) update(ctx *fiber.Ctx) error {
 	id, err := domain.ParsePortfolioID(ctx.Params("portfolioId"))
 	if err != nil {
-		return writeError(ctx, errInvalidJSON)
+		return writeError(ctx, application.ErrPortfolioNotFound)
 	}
 	var request updatePortfolioRequest
 	if err := decodeJSON(ctx, &request); err != nil || request.Name == nil {
@@ -105,7 +105,7 @@ func (handler *Handler) update(ctx *fiber.Ctx) error {
 func (handler *Handler) archive(ctx *fiber.Ctx) error {
 	id, err := domain.ParsePortfolioID(ctx.Params("portfolioId"))
 	if err != nil {
-		return writeError(ctx, errInvalidJSON)
+		return writeError(ctx, application.ErrPortfolioNotFound)
 	}
 	portfolio, err := handler.operations.ArchivePortfolio(ctx.UserContext(), handler.validPrincipal(ctx), id)
 	if err != nil {

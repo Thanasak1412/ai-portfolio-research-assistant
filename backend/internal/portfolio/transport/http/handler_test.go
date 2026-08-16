@@ -111,7 +111,11 @@ func TestHandlerMapsOperationErrorsAndCorrelations(t *testing.T) {
 	response = perform(t, app, "PATCH", "/api/v1/portfolios/"+id, `{"name":"Changed"}`, "application/json")
 	assertError(t, response, fiber.StatusUnprocessableEntity, "PORTFOLIO_ARCHIVED")
 	response = perform(t, app, "GET", "/api/v1/portfolios/not-a-uuid", "", "")
-	assertError(t, response, fiber.StatusBadRequest, "INVALID_REQUEST")
+	assertError(t, response, fiber.StatusNotFound, "PORTFOLIO_NOT_FOUND")
+	response = perform(t, app, "PATCH", "/api/v1/portfolios/not-a-uuid", `{"name":"Changed"}`, "application/json")
+	assertError(t, response, fiber.StatusNotFound, "PORTFOLIO_NOT_FOUND")
+	response = perform(t, app, "POST", "/api/v1/portfolios/not-a-uuid/archive", "", "")
+	assertError(t, response, fiber.StatusNotFound, "PORTFOLIO_NOT_FOUND")
 }
 
 func TestHandlerRequiresInjectedBearerMiddleware(t *testing.T) {
