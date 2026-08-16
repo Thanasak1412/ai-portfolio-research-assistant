@@ -6,10 +6,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { StrictMode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthApi } from "@/features/auth/api/auth-api";
 import { AuthApiError } from "@/features/auth/api/auth-api";
+import { portfolioApi } from "@/features/portfolio/api/portfolio-api";
 import type {
   AuthenticationSignal,
   BrowserSessionCoordinator,
@@ -206,6 +207,7 @@ describe("AuthSessionProvider bootstrap", () => {
 });
 
 describe("AuthSessionProvider recovery and logout", () => {
+  afterEach(() => vi.unstubAllGlobals());
   it("shares one refresh across simultaneous operations and retries with the new token", async () => {
     const refresh = vi
       .fn()
@@ -314,6 +316,129 @@ describe("AuthSessionProvider recovery and logout", () => {
     fireEvent.click(screen.getByText("fail"));
     await waitFor(() => expect(caught).toBe(true));
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries an actual Portfolio request once through the existing refresh flow", async () => {
+    const refresh = vi
+      .fn()
+      .mockRejectedValueOnce(rejectedSession())
+      .mockResolvedValueOnce({ ...access, accessToken: "portfolio-retry" });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "ACCESS_TOKEN_INVALID",
+              message: "Invalid",
+              correlationId: "portfolio-first",
+            },
+          }),
+          { status: 401 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ items: [] }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    let completed = false;
+    function PortfolioRetryProbe() {
+      const { establishSession, runAuthenticated } = useAuthSession();
+      return (
+        <button
+          onClick={() => {
+            establishSession(sessionResponse);
+            void runAuthenticated((token) =>
+              portfolioApi.list(token, "ACTIVE"),
+            ).then(() => {
+              completed = true;
+            });
+          }}
+        >
+          portfolio request
+        </button>
+      );
+    }
+    render(
+      <AuthSessionProvider api={fakeApi({ refresh })}>
+        <PortfolioRetryProbe />
+      </AuthSessionProvider>,
+    );
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByText("portfolio request"));
+    await waitFor(() => expect(completed).toBe(true));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/portfolios?status=ACTIVE",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer memory-access",
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/portfolios?status=ACTIVE",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer portfolio-retry",
+        }),
+      }),
+    );
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("invalidates the session when the retried Portfolio request is also unauthorized", async () => {
+    const refresh = vi
+      .fn()
+      .mockRejectedValueOnce(rejectedSession())
+      .mockResolvedValueOnce({ ...access, accessToken: "portfolio-retry" });
+    const unauthorized = () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            code: "ACCESS_TOKEN_INVALID",
+            message: "Invalid",
+            correlationId: "portfolio-rejected",
+          },
+        }),
+        { status: 401 },
+      );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(unauthorized())
+      .mockResolvedValueOnce(unauthorized());
+    vi.stubGlobal("fetch", fetchMock);
+    function SecondPortfolioRejectionProbe() {
+      const { state, establishSession, runAuthenticated } = useAuthSession();
+      return (
+        <>
+          <output>{state.status}</output>
+          <button
+            onClick={() => {
+              establishSession(sessionResponse);
+              void runAuthenticated((token) =>
+                portfolioApi.list(token, "ACTIVE"),
+              ).catch(() => undefined);
+            }}
+          >
+            reject portfolio request
+          </button>
+        </>
+      );
+    }
+    render(
+      <AuthSessionProvider api={fakeApi({ refresh })}>
+        <SecondPortfolioRejectionProbe />
+      </AuthSessionProvider>,
+    );
+    await screen.findByText("unauthenticated");
+    fireEvent.click(screen.getByText("reject portfolio request"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByText("unauthenticated")).toBeInTheDocument(),
+    );
+    expect(refresh).toHaveBeenCalledTimes(2);
   });
 
   it("retains memory state on a temporary refresh failure and clears the failed flight", async () => {

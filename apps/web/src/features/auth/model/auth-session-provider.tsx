@@ -27,6 +27,7 @@ import {
   sessionFromResponse,
   type AuthenticatedSession,
 } from "@/features/auth/model/auth-session";
+import { ApiError, isAccessTokenInvalid } from "@/platform/api/api-error";
 
 export type AuthState =
   | { status: "bootstrapping"; session: null }
@@ -167,7 +168,7 @@ export function AuthSessionProvider({
       const current = stateRef.current;
       if (current.status !== "authenticated") throw invalidAccessTokenError();
       const attemptedAccessToken = current.session.accessToken;
-      let invalidTokenError: AuthApiError;
+      let invalidTokenError: ApiError;
       try {
         return await operation(attemptedAccessToken);
       } catch (error) {
@@ -230,13 +231,7 @@ export function useAuthSession(): AuthSessionContextValue {
   return value;
 }
 
-function isInvalidAccessToken(error: unknown): error is AuthApiError {
-  return (
-    error instanceof AuthApiError &&
-    error.status === 401 &&
-    error.code === "ACCESS_TOKEN_INVALID"
-  );
-}
+const isInvalidAccessToken = isAccessTokenInvalid;
 
 function isSessionRefreshRejected(error: unknown): error is AuthApiError {
   return (

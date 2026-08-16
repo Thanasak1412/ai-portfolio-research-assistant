@@ -1,5 +1,7 @@
 import type { components } from "@portfolio/api-contracts";
 
+import { ApiError } from "@/platform/api/api-error";
+
 export type CredentialsRequest = components["schemas"]["CredentialsRequest"];
 export type AuthenticatedUser = components["schemas"]["AuthenticatedUser"];
 export type AuthenticatedSessionResponse =
@@ -9,15 +11,15 @@ export type ErrorCode = components["schemas"]["ErrorCode"];
 
 const authBasePath = "/api/v1/auth";
 
-export class AuthApiError extends Error {
+export class AuthApiError extends ApiError {
   constructor(
-    readonly status: number,
-    readonly code: ErrorCode,
+    status: number,
+    code: ErrorCode,
     message: string,
-    readonly correlationId?: string,
-    readonly retryAfterSeconds?: number,
+    correlationId?: string,
+    retryAfterSeconds?: number,
   ) {
-    super(message);
+    super(status, code, message, correlationId, retryAfterSeconds);
     this.name = "AuthApiError";
   }
 }
