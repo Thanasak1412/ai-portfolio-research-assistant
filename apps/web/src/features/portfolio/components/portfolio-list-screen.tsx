@@ -20,7 +20,6 @@ export function PortfolioListScreen() {
           Create and manage your Portfolio records.
         </p>
       </header>
-      <PortfolioCreateForm />
       <div className="flex gap-2" aria-label="Portfolio status">
         <StatusButton status="ACTIVE" selected={status} onSelect={setStatus} />
         <StatusButton
@@ -29,6 +28,7 @@ export function PortfolioListScreen() {
           onSelect={setStatus}
         />
       </div>
+      {status === "ACTIVE" ? <PortfolioCreateForm /> : null}
       {portfolios.isLoading ? <p role="status">Loading portfolios…</p> : null}
       {portfolios.isError ? (
         <div className="space-y-3">

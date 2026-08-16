@@ -66,9 +66,13 @@ describe("PortfolioListScreen", () => {
       </QueryClientProvider>,
     );
     expect(screen.getByText("No active portfolios yet.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Portfolio name")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Archived" }));
     expect(usePortfolios).toHaveBeenLastCalledWith("ARCHIVED");
     expect(screen.getByText("No archived portfolios.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio name")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Active" }));
+    expect(screen.getByLabelText("Portfolio name")).toBeInTheDocument();
   });
 
   it("renders only neutral metadata and retries a failed query", () => {
