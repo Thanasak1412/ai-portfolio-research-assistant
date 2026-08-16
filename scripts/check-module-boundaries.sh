@@ -68,4 +68,28 @@ if [ -n "$portfolio_transport_violations" ]; then
   exit 1
 fi
 
+asset_domain_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/(application|infrastructure)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/(portfolio|identity)/|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/asset/domain" || true)
+if [ -n "$asset_domain_violations" ]; then
+  echo "Asset domain imports a forbidden outer layer or module implementation:$asset_domain_violations" >&2
+  exit 1
+fi
+
+asset_application_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/infrastructure|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/asset/application" || true)
+if [ -n "$asset_application_violations" ]; then
+  echo "Asset application imports a forbidden transport or persistence implementation:$asset_application_violations" >&2
+  exit 1
+fi
+
+asset_transport_violations=$(rg -n --glob '*.go' --glob '!**/*_test.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/infrastructure|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/(infrastructure|transport)|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/asset/transport" || true)
+if [ -n "$asset_transport_violations" ]; then
+  echo "Asset transport bypasses the application boundary or imports a forbidden module implementation:$asset_transport_violations" >&2
+  exit 1
+fi
+
 echo "Module boundary check passed"

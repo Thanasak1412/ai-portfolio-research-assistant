@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	assetcomposition "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/composition"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/composition"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/config"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database"
@@ -52,7 +53,12 @@ func main() {
 		logger.Error("portfolio configuration failed", "error", err)
 		os.Exit(1)
 	}
-	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler, portfolioHandler)
+	assetHandler, err := assetcomposition.BuildHTTP(pool, authHandler.BearerMiddleware(), authHandler.PrincipalExtractor())
+	if err != nil {
+		logger.Error("asset configuration failed", "error", err)
+		os.Exit(1)
+	}
+	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler, portfolioHandler, assetHandler)
 	serveErrors := make(chan error, 1)
 	go func() { serveErrors <- server.Listen(applicationConfig.HTTPAddress()) }()
 	logger.Info("api started", "address", applicationConfig.HTTPAddress(), "environment", applicationConfig.Environment)
