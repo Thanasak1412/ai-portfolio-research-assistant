@@ -44,4 +44,20 @@ if [ -n "$identity_transport_violations" ]; then
   exit 1
 fi
 
+portfolio_domain_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/(application|infrastructure)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/portfolio/domain" || true)
+if [ -n "$portfolio_domain_violations" ]; then
+  echo "Portfolio domain imports a forbidden outer layer or infrastructure dependency:$portfolio_domain_violations" >&2
+  exit 1
+fi
+
+portfolio_application_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/infrastructure|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/infrastructure|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen"' \
+  "$backend_root/portfolio/application" || true)
+if [ -n "$portfolio_application_violations" ]; then
+  echo "Portfolio application imports a forbidden transport or persistence implementation:$portfolio_application_violations" >&2
+  exit 1
+fi
+
 echo "Module boundary check passed"
