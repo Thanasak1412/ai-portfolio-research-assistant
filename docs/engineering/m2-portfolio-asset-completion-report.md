@@ -8,7 +8,7 @@
 - Verification date: 2026-08-21 (Asia/Bangkok)
 - Protected `main` base SHA: `55fcbc943b75f2f9bc7a2bea06fe20df12180943`
 - Verification branch: `codex/m2-verify-001`
-- Verification PR: draft PR created from this branch; its pull-request record is the authoritative source for its current head and CI run.
+- Verification PR: [#45](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/45); its pull-request record is the authoritative source for its current head and CI run.
 
 ## Implementation Traceability
 

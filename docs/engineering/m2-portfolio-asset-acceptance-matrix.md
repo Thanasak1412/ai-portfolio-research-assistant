@@ -6,7 +6,7 @@
 - Verification branch: `codex/m2-verify-001`
 - Protected `main` base: `55fcbc943b75f2f9bc7a2bea06fe20df12180943`
 - M2 implementation merge sequence: PRs #34–#40, #43, and #44
-- Draft verification PR: created from this branch; its current-head CI is the final merge gate.
+- Draft verification PR: [#45](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/45); its current-head CI is the final merge gate.
 
 Result values are `PASS`, `FAIL`, `BLOCKED`, and `NOT_APPLICABLE`. A result is
 not final closure evidence until the draft verification PR's required CI checks
