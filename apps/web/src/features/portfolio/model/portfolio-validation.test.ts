@@ -26,5 +26,10 @@ describe("Portfolio name validation", () => {
     expect(
       portfolioNameFormSchema.safeParse({ name: "😀".repeat(201) }).success,
     ).toBe(false);
+    expect(
+      portfolioNameFormSchema.safeParse({
+        name: ` ${"😀".repeat(200)} `,
+      }).success,
+    ).toBe(true);
   });
 });

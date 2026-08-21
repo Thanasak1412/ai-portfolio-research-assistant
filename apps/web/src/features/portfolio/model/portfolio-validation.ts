@@ -12,7 +12,7 @@ export const portfolioNameSchema = z
   .refine((value) => trimPortfolioNameEdges(value) !== "", {
     message: "Portfolio name is required.",
   })
-  .refine((value) => Array.from(value).length <= 200, {
+  .refine((value) => Array.from(trimPortfolioNameEdges(value)).length <= 200, {
     message: "Portfolio name must be 200 characters or fewer.",
   });
 
