@@ -28,6 +28,9 @@ export function ProtectedApplicationShell({
               <Link className="text-sm underline" href="/app/portfolios">
                 Portfolios
               </Link>
+              <Link className="text-sm underline" href="/app/assets">
+                Assets
+              </Link>
               <LogoutButton />
             </div>
           </nav>

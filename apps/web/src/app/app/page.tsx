@@ -7,11 +7,16 @@ export default function ProtectedAppPage() {
     <main className="mx-auto max-w-3xl space-y-4 px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold">Your workspace</h1>
       <p className="text-sm text-slate-600">
-        Manage your Portfolio records from one protected workspace.
+        Manage your Portfolio records and discover canonical Asset metadata.
       </p>
-      <Button asChild>
-        <Link href="/app/portfolios">View Portfolios</Link>
-      </Button>
+      <div className="flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href="/app/portfolios">View Portfolios</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/app/assets">Discover Assets</Link>
+        </Button>
+      </div>
     </main>
   );
 }
