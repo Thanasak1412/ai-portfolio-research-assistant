@@ -5,8 +5,10 @@
 !.env.example
 .compose.auth.env
 .compose.auth.e2e.env
+.compose.m2-e2e.env
 .local/auth-tls/
 .local/ci-auth-tls/
+.local/m2-e2e-tls/
 .local/auth-key-ring.json
 node_modules/
 .next/

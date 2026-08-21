@@ -120,9 +120,12 @@ jobs:
       - run: AUTH_TLS_DIR=.local/ci-auth-tls sh scripts/prepare-auth-e2e-env.sh .compose.auth.e2e.env
       - run: docker compose --env-file .compose.auth.e2e.env up --build -d --wait --wait-timeout 120 postgres postgres-test
       - run: docker compose --env-file .compose.auth.e2e.env --profile tools run --rm migrate-test
+      - run: sh scripts/seed-m2-e2e-assets.sh .compose.auth.e2e.env
       - run: docker compose --env-file .compose.auth.e2e.env --profile auth-https up --build -d --wait --wait-timeout 120 api worker web auth-proxy
       - run: sh scripts/verify-auth-https-stack.sh .compose.auth.e2e.env
       - run: PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:auth
+      - run: sh scripts/reset-e2e-auth-rate-limits.sh .compose.auth.e2e.env
+      - run: PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:m2
       - if: failure()
         run: sh scripts/collect-auth-ops-diagnostics.sh .compose.auth.e2e.env
       - if: always()
