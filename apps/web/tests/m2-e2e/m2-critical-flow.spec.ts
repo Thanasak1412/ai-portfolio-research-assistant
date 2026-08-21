@@ -44,8 +44,18 @@ async function assertAssetCatalog(page: Page): Promise<void> {
 
   const cryptoAsset = list.getByRole("listitem").filter({ hasText: "M2A03" });
   await expect(cryptoAsset).toContainText("Synthetic Crypto Gamma");
-  await expect(cryptoAsset).toContainText("CRYPTO");
-  await expect(cryptoAsset).toContainText("USD");
+  const exchangeMetadata = cryptoAsset
+    .locator("dl > div")
+    .filter({ hasText: "Exchange" });
+  await expect(
+    exchangeMetadata.getByText("CRYPTO", { exact: true }),
+  ).toBeVisible();
+  const currencyMetadata = cryptoAsset
+    .locator("dl > div")
+    .filter({ hasText: "Currency" });
+  await expect(
+    currencyMetadata.getByText("USD", { exact: true }),
+  ).toBeVisible();
   await expect(list.getByText(/COINBASE|BINANCE|KRAKEN/i)).toHaveCount(0);
 
   await expect(page.getByRole("button", { name: "Load more" })).toBeVisible();
@@ -200,6 +210,21 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     );
     expect(userAActivePortfolioURL).not.toBe(archivedPortfolioURL);
     await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
+
+    const archivedPortfolioPath = new URL(archivedPortfolioURL).pathname;
+    await page.goto("/app/portfolios");
+    await expect(
+      page.getByRole("heading", { name: "Portfolios" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Archived" }).click();
+    const archivedPortfolioLink = page.getByRole("link", {
+      name: renamedPortfolioName,
+    });
+    await expect(archivedPortfolioLink).toBeVisible();
+    await expect(archivedPortfolioLink).toHaveAttribute(
+      "href",
+      archivedPortfolioPath,
+    );
 
     await assertAssetCatalog(page);
     await page.getByRole("button", { name: "Sign out" }).click();
