@@ -38,24 +38,47 @@ Evidence statuses are `VERIFIED`, `MISSING`, `NOT_APPLICABLE`, and
 
 ## A. Product decision
 
-No Product decision evidence was supplied for this review.
+The Product decision supplied for this review selects Twelve Data as the
+primary official-close provider for a private beta. This is a Product decision
+only; it does not establish contractual permission.
 
-| Product decision            | Current value | Evidence status | Required evidence reference         |
-| --------------------------- | ------------- | --------------- | ----------------------------------- |
-| Provider legal/company name | Not selected  | MISSING         | Product approval record             |
-| Provider product/plan name  | Not selected  | MISSING         | Product approval record             |
-| Provider service/API name   | Not selected  | MISSING         | Product approval record             |
-| Primary-provider status     | Not selected  | MISSING         | Product approval record             |
-| Intended user population    | Not defined   | MISSING         | Product approval record             |
-| Product approver            | Not supplied  | MISSING         | Approval record with name/role/date |
-| Product approval date       | Not supplied  | MISSING         | Approval record                     |
-| Product approval evidence   | Not supplied  | MISSING         | Controlled evidence reference       |
+| Product decision               | Current value                                                            | Evidence status | Evidence reference                         |
+| ------------------------------ | ------------------------------------------------------------------------ | --------------- | ------------------------------------------ |
+| Provider legal/company name    | Twelve Data                                                              | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Provider product/plan name     | UNRESOLVED                                                               | UNRESOLVED      | Exact plan not supplied                    |
+| Provider service/API name      | Twelve Data API (plan details unresolved)                                | UNRESOLVED      | Exact service/plan reference not supplied  |
+| Primary-provider status        | Primary Official-Close Provider                                          | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Intended user population       | Project owner and explicitly invited authenticated beta users            | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Public commercial availability | OUT OF CURRENT SCOPE; separate licensing review required                 | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Product approver               | Thanasak Srisaeng                                                        | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Product approval date          | 2026-08-29                                                               | VERIFIED        | Supplied Product decision dated 2026-08-29 |
+| Product approval evidence      | Human-supplied Product decision; controlled record location not supplied | VERIFIED        | Supplied Product decision dated 2026-08-29 |
 
-The intended population must be explicitly classified by Product, for example
-internal developer-only, private individual use, invited beta users, public
-consumers, commercial customers, or enterprise users. Engineering must not
-infer it from repository visibility, technical API access, or a provider's
-marketing material.
+The recorded intended population is the project owner and explicitly invited
+authenticated beta users. Public commercial availability is outside the
+current scope and requires a separate licensing review. Engineering must not
+expand this audience or infer additional rights from repository visibility,
+technical API access, or provider marketing material.
+
+### Product requirements
+
+These are Product requirements and restrictions, not Legal permission. Legal
+must still verify that the selected Twelve Data product/plan permits the
+required uses.
+
+| Product requirement               | Decision state               | Recorded requirement                                                 |
+| --------------------------------- | ---------------------------- | -------------------------------------------------------------------- |
+| Server-side retrieval             | REQUIRED                     | Required for the approved MVP                                        |
+| Authenticated in-app display      | REQUIRED                     | Required for the approved MVP                                        |
+| Persistent observation storage    | REQUIRED                     | Required for provenance, deterministic replay, and valuation history |
+| Historical observation retention  | REQUIRED                     | Duration is subject to provider/Legal terms                          |
+| Derived portfolio valuation input | REQUIRED                     | Future valuation use; no calculation is implemented by M3            |
+| Public raw-data API               | PROHIBITED BY PRODUCT POLICY | No public raw-data exposure                                          |
+| CSV/raw-price export              | NOT APPROVED                 | Not approved by Product                                              |
+| External redistribution           | PROHIBITED BY PRODUCT POLICY | Only approved authenticated in-app display is in scope               |
+| Raw provider data sent to an LLM  | NOT APPROVED                 | No AI-provider redistribution                                        |
+| Embeddings/vectorization          | NOT APPROVED                 | No vectorization                                                     |
+| Model training                    | PROHIBITED                   | No training use                                                      |
 
 ## B. Legal and contractual permission evidence
 
@@ -66,7 +89,9 @@ closing price** data for supported US-listed `EQUITY` and `ETF` assets in `USD`.
 This gate does not seek approval for intraday pricing, CRYPTO, FX, non-US
 markets, multiple providers, manual prices, news, or fundamentals.
 
-No provider is selected and no Legal/contract-owner evidence is recorded.
+Twelve Data is selected by Product, but no Legal/contract-owner evidence is
+recorded. The exact Twelve Data product/plan and the official-close semantics
+remain unresolved.
 
 ### Retrieval rights
 
@@ -76,10 +101,10 @@ user population and deployment model.
 
 | Retrieval requirement                               | Permission status | Evidence type | Evidence reference |
 | --------------------------------------------------- | ----------------- | ------------- | ------------------ |
-| Official daily close retrieval                      | MISSING           | Not supplied  | Not supplied       |
-| Programmatic retrieval through selected API/product | MISSING           | Not supplied  | Not supplied       |
-| Intended-user use                                   | MISSING           | Not supplied  | Not supplied       |
-| Intended deployment-model use                       | MISSING           | Not supplied  | Not supplied       |
+| Official daily close retrieval                      | UNRESOLVED        | Not supplied  | Not supplied       |
+| Programmatic retrieval through selected API/product | UNRESOLVED        | Not supplied  | Not supplied       |
+| Intended-user use                                   | UNRESOLVED        | Not supplied  | Not supplied       |
+| Intended deployment-model use                       | UNRESOLVED        | Not supplied  | Not supplied       |
 
 Acceptable evidence types include a contract, order form, subscription terms,
 provider terms, license, written provider confirmation, or Legal memo. Public
@@ -98,7 +123,7 @@ Assistant.
 | Future portfolio valuation             | UNRESOLVED        | Not supplied       |
 | Future historical views                | UNRESOLVED        | Not supplied       |
 | Future exports                         | UNRESOLVED        | Not supplied       |
-| Minimum MVP official-close display use | MISSING           | Not supplied       |
+| Minimum MVP official-close display use | UNRESOLVED        | Not supplied       |
 
 An unclear display right remains `UNRESOLVED`; Engineering must not treat API
 access, a public endpoint, or a free tier as permission to display data.
@@ -165,13 +190,13 @@ future ingestion design is approved.
 
 AI data use is future legal-risk evidence, not an M3 implementation feature.
 
-| Future use                                | Current approval state | Evidence / restriction             |
-| ----------------------------------------- | ---------------------- | ---------------------------------- |
-| Send provider data to an LLM/API provider | NOT APPROVED           | No Product/Legal approval supplied |
-| Use provider data in AI prompts           | NOT APPROVED           | No Product/Legal approval supplied |
-| Store provider data in AI-vendor logs     | NOT APPROVED           | No Product/Legal approval supplied |
-| Model training                            | NOT APPROVED           | No Product/Legal approval supplied |
-| Embedding/vectorization                   | NOT APPROVED           | No Product/Legal approval supplied |
+| Future use                                | Current approval state | Evidence / restriction         |
+| ----------------------------------------- | ---------------------- | ------------------------------ |
+| Send provider data to an LLM/API provider | NOT APPROVED           | Not approved by Product policy |
+| Use provider data in AI prompts           | NOT APPROVED           | Not approved by Product policy |
+| Store provider data in AI-vendor logs     | NOT APPROVED           | Not approved by Product policy |
+| Model training                            | PROHIBITED             | Prohibited by Product policy   |
+| Embedding/vectorization                   | NOT APPROVED           | Not approved by Product policy |
 
 `NOT APPROVED` is an Engineering default pending evidence, not an inference
 that a provider contract forbids the use. Future AI redistribution is not a
@@ -194,21 +219,22 @@ The following are Engineering defaults pending verified Product/Legal evidence:
 Provider credential requirements remain unresolved until a selected provider's
 terms are reviewed:
 
-| Credential requirement       | Status     | Recorded value                                                |
-| ---------------------------- | ---------- | ------------------------------------------------------------- |
-| API-key classification       | UNRESOLVED | No provider selected                                          |
-| Secret-storage requirement   | UNRESOLVED | No provider selected                                          |
-| Rotation requirement         | UNRESOLVED | No provider selected                                          |
-| Environment separation       | UNRESOLVED | No provider selected                                          |
-| Client-side exposure allowed | UNRESOLVED | No provider selected; Engineering default is server-side only |
+| Credential requirement       | Status     | Recorded value                                        |
+| ---------------------------- | ---------- | ----------------------------------------------------- |
+| API-key classification       | UNRESOLVED | Exact Twelve Data product/plan not supplied           |
+| Secret-storage requirement   | UNRESOLVED | Exact Twelve Data product/plan not supplied           |
+| Rotation requirement         | UNRESOLVED | Exact Twelve Data product/plan not supplied           |
+| Environment separation       | UNRESOLVED | Exact Twelve Data product/plan not supplied           |
+| Client-side exposure allowed | UNRESOLVED | Not supplied; Engineering default is server-side only |
 
 ## D. Evidence references
 
-No Product or Legal evidence references have been supplied. When evidence is
-available, reference it without copying confidential content. Preferred forms
-are an official public terms URL, Product approval record, internal Legal ticket
-ID, provider support email/ticket ID, or contract/document title with a
-controlled location. For confidential material, record only:
+The Product decision is recorded from the human-supplied decision dated
+2026-08-29. No Legal/contract evidence reference has been supplied. When
+evidence is available, reference it without copying confidential content.
+Preferred forms are an official public terms URL, Product approval record,
+internal Legal ticket ID, provider support email/ticket ID, or contract/document
+title with a controlled location. For confidential material, record only:
 
 `Evidence location: Internal restricted record <identifier>`
 
@@ -217,17 +243,17 @@ approval** and paired with a Legal interpretation/approval record.
 
 ## Required approval table
 
-| Requirement                            | Evidence         | Owner           | Status     |
-| -------------------------------------- | ---------------- | --------------- | ---------- |
-| Provider selected                      | Not supplied     | Product         | MISSING    |
-| Intended users defined                 | Not supplied     | Product         | MISSING    |
-| Official-close retrieval permitted     | Not supplied     | Legal           | MISSING    |
-| Official-close display permitted       | Not supplied     | Legal           | MISSING    |
-| Commercial/intended-user use permitted | Not supplied     | Legal           | MISSING    |
-| Storage/retention rules known          | Not supplied     | Legal           | UNRESOLVED |
-| Attribution rules known                | Not supplied     | Legal / Product | UNRESOLVED |
-| Redistribution rules known             | Not supplied     | Legal           | UNRESOLVED |
-| Engineering constraints captured       | This document §C | Engineering     | VERIFIED   |
+| Requirement                            | Evidence                            | Owner           | Status     |
+| -------------------------------------- | ----------------------------------- | --------------- | ---------- |
+| Provider selected                      | Supplied Product decision           | Product         | VERIFIED   |
+| Intended users defined                 | Supplied Product decision           | Product         | VERIFIED   |
+| Official-close retrieval permitted     | No Legal/contract evidence supplied | Legal           | UNRESOLVED |
+| Official-close display permitted       | No Legal/contract evidence supplied | Legal           | UNRESOLVED |
+| Commercial/intended-user use permitted | No Legal/contract evidence supplied | Legal           | UNRESOLVED |
+| Storage/retention rules known          | No Legal/contract evidence supplied | Legal           | UNRESOLVED |
+| Attribution rules known                | No Legal/contract evidence supplied | Legal / Product | UNRESOLVED |
+| Redistribution rules known             | No Legal/contract evidence supplied | Legal           | UNRESOLVED |
+| Engineering constraints captured       | This document §C                    | Engineering     | VERIFIED   |
 
 The mandatory rows—provider selected, intended users defined, retrieval
 permitted, display permitted, intended-user/commercial use permitted,
@@ -238,12 +264,12 @@ before the gate can be approved.
 
 ### Product approval
 
-| Field                        | Value        |
-| ---------------------------- | ------------ |
-| Product approver name / role | Not supplied |
-| Decision                     | PENDING      |
-| Date                         | Not supplied |
-| Evidence reference           | Not supplied |
+| Field                        | Value                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| Product approver name / role | Thanasak Srisaeng (as supplied Product approver)                                          |
+| Decision                     | APPROVED                                                                                  |
+| Date                         | 2026-08-29                                                                                |
+| Evidence reference           | Human-supplied Product decision dated 2026-08-29; controlled record location not supplied |
 
 ### Legal/contract approval
 
@@ -264,15 +290,16 @@ populate approver names or `APPROVED` without an actual human-approved source.
 The gate is blocked because the following mandatory evidence is absent or
 unresolved:
 
-1. Product has not selected a provider or defined intended users.
-2. Product approval has not been recorded.
-3. Legal/contract confirmation of official-close retrieval has not been
+1. The exact Twelve Data product/plan and official-close semantics remain
+   unresolved.
+2. Legal/contract confirmation of official-close retrieval has not been
    recorded.
-4. Legal/contract confirmation of display rights for the intended deployment
+3. Legal/contract confirmation of display rights for the intended deployment
    and users has not been recorded.
-5. Intended-user/commercial-use coverage, storage/retention requirements, and
+4. Intended-user/commercial-use coverage, storage/retention requirements, and
    attribution requirements have not been resolved.
-6. No controlled evidence references exist for the required decisions.
+5. No controlled Legal/contract evidence references exist for the required
+   decisions.
 
 `M3-CONTRACT-001` is therefore **BLOCKED**. No provider integration, price
 ingestion, price storage, or M4 projection work is authorized by this document.
@@ -288,10 +315,13 @@ blocked.
 
 ### Phase B — Human evidence
 
-1. Product identifies the provider and intended users.
-2. Legal/contract owner reviews the actual terms or agreement.
-3. Human Product and Legal decisions plus controlled evidence references are
-   supplied.
+1. Product's selected provider, intended users, and Product approval are
+   recorded above from the supplied decision.
+2. Legal/contract owner reviews the actual terms or agreement for the exact
+   Twelve Data product/plan.
+3. Human Legal decision plus controlled evidence references are supplied for
+   retrieval, display, intended-user use, storage/retention, attribution, and
+   redistribution.
 4. This same document and PR are updated and re-reviewed.
 5. Change the status to `APPROVED` only when every mandatory row is
    `VERIFIED`.
@@ -303,12 +333,12 @@ Do not open `M3-CONTRACT-001` before Phase B completes.
 | Requirement                              | Status     |
 | ---------------------------------------- | ---------- |
 | M3 plan merged                           | COVERED    |
-| Provider explicitly selected             | MISSING    |
-| Intended users explicitly defined        | MISSING    |
-| Product approval                         | MISSING    |
-| Retrieval rights                         | MISSING    |
-| Display rights                           | MISSING    |
-| Intended-use rights                      | MISSING    |
+| Provider explicitly selected             | COVERED    |
+| Intended users explicitly defined        | COVERED    |
+| Product approval                         | COVERED    |
+| Retrieval rights                         | UNRESOLVED |
+| Display rights                           | UNRESOLVED |
+| Intended-use rights                      | UNRESOLVED |
 | Retention/storage                        | UNRESOLVED |
 | Attribution                              | UNRESOLVED |
 | Redistribution                           | UNRESOLVED |
