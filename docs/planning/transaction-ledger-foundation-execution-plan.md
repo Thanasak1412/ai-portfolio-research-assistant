@@ -331,9 +331,11 @@ M3 event families are:
 
 Payloads contain stable references only; future consumers re-read the ledger
 and never rely on a duplicated complete financial payload. Delivery is
-at-least-once. Consumers must deduplicate by consumer name and event ID, in
-line with the existing Worker Event Standard. M3 provides delivery and safe
-observability but does not implement M4 projection consumers.
+at-least-once. M3 introduces consumer deduplication by
+`(consumer_name, event_id)` as a Platform invariant required to support
+idempotent internal-event consumption under ADR-004. `M3-PLATFORM-001` owns the
+persistence and interface design for this invariant. M3 does not implement any
+M4 projection consumer.
 
 ## 6. Architecture and contract direction
 
