@@ -318,14 +318,14 @@ before the gate can be approved.
 
 ### Legal/contract approval
 
-| Field                                            | Value                                                                                                                      |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Legal/contract approver name / role              | Artemis, Technical Support, Twelve Data                                                                                    |
-| Provider contractual confirmation contact / role | Artemis, Technical Support, Twelve Data                                                                                    |
-| Confirmation                                     | VERIFIED for the stated Venture private-beta use case                                                                      |
-| Contractual basis                                | Current Twelve Data Terms of Use and written Twelve Data confirmation dated 2026-08-31                                     |
-| Date                                             | 2026-08-31                                                                                                                 |
-| Evidence reference                               | Owner-held Twelve Data written contractual usage-rights confirmation; current Terms of Use identified as contractual basis |
+| Field                                            | Value                                                                               |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Legal/contract approver name / role              | Artemis, Technical Support, Twelve Data                                             |
+| Provider contractual confirmation contact / role | Artemis, Technical Support, Twelve Data                                             |
+| Confirmation                                     | VERIFIED for the stated Venture private-beta use case                               |
+| Contractual basis                                | Current Twelve Data Terms of Use; written Twelve Data confirmation dated 2026-08-31 |
+| Date                                             | 2026-08-31                                                                          |
+| Evidence reference                               | Owner-held Twelve Data written contractual usage-rights confirmation                |
 
 An AI-generated self-review is not Product or Legal approval. Codex must not
 populate approver names or `APPROVED` without an actual human-approved source.
