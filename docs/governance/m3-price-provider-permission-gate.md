@@ -182,14 +182,14 @@ Terms that are silent are `UNRESOLVED` until Legal records an interpretation.
 
 ### Attribution and branding
 
-| Requirement                            | Status   | Evidence / restriction                                                                                                              |
-| -------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Attribution required                   | VERIFIED | Required on every display of data or charts derived from it                                                                         |
-| Approved attribution wording/reference | VERIFIED | `Data provided by Twelve Data` or `Source: Twelve Data`                                                                             |
-| Logo requirement                       | VERIFIED | Not required; if a logo is later used, follow Twelve Data Brand Guidelines without modification, recoloring, or implied endorsement |
-| Source-link requirement                | VERIFIED | Attribution must include a dofollow link to Twelve Data attribution guidance                                                        |
-| Placement requirement                  | VERIFIED | On every display of data or charts derived from it                                                                                  |
-| Branding restrictions                  | VERIFIED | Do not modify or recolor a logo or imply endorsement, partnership, or affiliation; no logo is planned for this version              |
+| Requirement                            | Status   | Evidence / restriction                                                                                                                                   |
+| -------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attribution required                   | VERIFIED | Required on every display of data or charts derived from it                                                                                              |
+| Approved attribution wording/reference | VERIFIED | `Data provided by Twelve Data` or `Source: Twelve Data`                                                                                                  |
+| Logo requirement                       | VERIFIED | Not required; if a logo is later used, follow Twelve Data Brand Guidelines without modification, recoloring, or implied endorsement                      |
+| Source-link requirement                | VERIFIED | Attribution must include a dofollow link to the main Twelve Data website, subject to any later exchange-specific requirement communicated by Twelve Data |
+| Placement requirement                  | VERIFIED | On every display of data or charts derived from it                                                                                                       |
+| Branding restrictions                  | VERIFIED | Do not modify or recolor a logo or imply endorsement, partnership, or affiliation; no logo is planned for this version                                   |
 
 No provider logo or copyrighted attribution asset is included in this
 repository. A later Price/UI task must implement only the verified requirements.
@@ -288,17 +288,17 @@ approval** and paired with a Legal interpretation/approval record.
 
 ## Required approval table
 
-| Requirement                            | Evidence                                                                           | Owner                     | Status   |
-| -------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------- | -------- |
-| Provider selected                      | Supplied Product decision                                                          | Product                   | VERIFIED |
-| Intended users defined                 | Supplied Product decision                                                          | Product                   | VERIFIED |
-| Official-close retrieval permitted     | Written Twelve Data Technical Support confirmation, 2026-08-31                     | Provider / contract owner | VERIFIED |
-| Official-close display permitted       | Written Twelve Data Technical Support confirmation, 2026-08-31                     | Provider / contract owner | VERIFIED |
-| Commercial/intended-user use permitted | Venture external-display rights for explicitly invited authenticated beta users    | Provider / contract owner | VERIFIED |
-| Storage/retention rules known          | Active-subscription retention; raw-data deletion within 30 days after termination  | Provider / contract owner | VERIFIED |
-| Attribution rules known                | Required textual attribution and dofollow link on every data/derived-chart display | Provider / contract owner | VERIFIED |
-| Redistribution rules known             | No public access, raw-data API, raw export, or redistribution                      | Product / provider        | VERIFIED |
-| Engineering constraints captured       | This document §C                                                                   | Engineering               | VERIFIED |
+| Requirement                            | Evidence                                                                                                                                                                | Owner                     | Status   |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | -------- |
+| Provider selected                      | Supplied Product decision                                                                                                                                               | Product                   | VERIFIED |
+| Intended users defined                 | Supplied Product decision                                                                                                                                               | Product                   | VERIFIED |
+| Official-close retrieval permitted     | Written Twelve Data Technical Support confirmation, 2026-08-31                                                                                                          | Provider / contract owner | VERIFIED |
+| Official-close display permitted       | Written Twelve Data Technical Support confirmation, 2026-08-31                                                                                                          | Provider / contract owner | VERIFIED |
+| Commercial/intended-user use permitted | Venture external-display rights for explicitly invited authenticated beta users                                                                                         | Provider / contract owner | VERIFIED |
+| Storage/retention rules known          | Active-subscription retention; raw-data deletion within 30 days after termination                                                                                       | Provider / contract owner | VERIFIED |
+| Attribution rules known                | Required textual attribution and dofollow main-Twelve-Data-website link on every data/derived-chart display; later exchange-specific requirements apply if communicated | Provider / contract owner | VERIFIED |
+| Redistribution rules known             | No public access, raw-data API, raw export, or redistribution                                                                                                           | Product / provider        | VERIFIED |
+| Engineering constraints captured       | This document §C                                                                                                                                                        | Engineering               | VERIFIED |
 
 The mandatory rows—provider selected, intended users defined, retrieval
 permitted, display permitted, intended-user/commercial use permitted,
@@ -318,12 +318,14 @@ before the gate can be approved.
 
 ### Legal/contract approval
 
-| Field                               | Value                                                                                                                      |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Legal/contract approver name / role | Artemis, Technical Support, Twelve Data                                                                                    |
-| Decision                            | APPROVED for the stated Venture private-beta use case                                                                      |
-| Date                                | 2026-08-31                                                                                                                 |
-| Evidence reference                  | Owner-held Twelve Data written contractual usage-rights confirmation; current Terms of Use identified as contractual basis |
+| Field                                            | Value                                                                                                                      |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Legal/contract approver name / role              | Artemis, Technical Support, Twelve Data                                                                                    |
+| Provider contractual confirmation contact / role | Artemis, Technical Support, Twelve Data                                                                                    |
+| Confirmation                                     | VERIFIED for the stated Venture private-beta use case                                                                      |
+| Contractual basis                                | Current Twelve Data Terms of Use and written Twelve Data confirmation dated 2026-08-31                                     |
+| Date                                             | 2026-08-31                                                                                                                 |
+| Evidence reference                               | Owner-held Twelve Data written contractual usage-rights confirmation; current Terms of Use identified as contractual basis |
 
 An AI-generated self-review is not Product or Legal approval. Codex must not
 populate approver names or `APPROVED` without an actual human-approved source.
