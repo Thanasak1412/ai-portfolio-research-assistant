@@ -331,7 +331,7 @@ populate approver names or `APPROVED` without an actual human-approved source.
 
 ## Gate decision
 
-**Gate Status: `APPROVED`**
+**Gate Evidence Decision: `APPROVED`**
 
 Every mandatory row is `VERIFIED`: Twelve Data and the intended private-beta
 users are selected, and written provider-contract evidence records permitted
@@ -339,10 +339,13 @@ retrieval, display, intended-user use, storage/retention, attribution, and the
 applicable redistribution restrictions. The evidence also fixes Canonical
 Official Close v1 for the initial provider.
 
-`M3-CONTRACT-001` is **UNBLOCKED**. It may begin under the approved M3 task
-sequence. This approval does not itself authorize a provider adapter, price
-ingestion, price storage implementation, or M4 projection work; those remain
-subject to their separate approved tasks and constraints.
+`M3-GATE-001` remains **PENDING MERGE**.
+
+`M3-CONTRACT-001` remains **BLOCKED UNTIL PR #48 IS MERGED**. After this PR is
+merged into protected `main`, `M3-CONTRACT-001` becomes unblocked under the
+approved M3 task sequence. This approval does not itself authorize a provider
+adapter, price ingestion, price storage implementation, or M4 projection work;
+those remain subject to their separate approved tasks and constraints.
 
 ## Two-phase workflow
 
@@ -360,23 +363,23 @@ evidence review before implementation proceeds under the changed scope.
 
 ## Self-review
 
-| Requirement                             | Status  |
-| --------------------------------------- | ------- |
-| M3 plan merged                          | COVERED |
-| Provider explicitly selected            | COVERED |
-| Intended users explicitly defined       | COVERED |
-| Product approval                        | COVERED |
-| Retrieval rights                        | COVERED |
-| Display rights                          | COVERED |
-| Intended-use rights                     | COVERED |
-| Retention/storage                       | COVERED |
-| Attribution                             | COVERED |
-| Redistribution                          | COVERED |
-| Engineering restrictions                | COVERED |
-| Evidence references                     | COVERED |
-| No credentials committed                | COVERED |
-| No confidential contract text           | COVERED |
-| No runtime changes                      | COVERED |
-| `M3-CONTRACT-001` unblocked by approval | COVERED |
+| Requirement                                      | Status  |
+| ------------------------------------------------ | ------- |
+| M3 plan merged                                   | COVERED |
+| Provider explicitly selected                     | COVERED |
+| Intended users explicitly defined                | COVERED |
+| Product approval                                 | COVERED |
+| Retrieval rights                                 | COVERED |
+| Display rights                                   | COVERED |
+| Intended-use rights                              | COVERED |
+| Retention/storage                                | COVERED |
+| Attribution                                      | COVERED |
+| Redistribution                                   | COVERED |
+| Engineering restrictions                         | COVERED |
+| Evidence references                              | COVERED |
+| No credentials committed                         | COVERED |
+| No confidential contract text                    | COVERED |
+| No runtime changes                               | COVERED |
+| `M3-CONTRACT-001` blocked until PR #48 is merged | COVERED |
 
 **M3-GATE-001 Review: Ready for Review**
