@@ -254,7 +254,7 @@ test("defines deterministic authenticated Asset discovery filters and pagination
   );
 });
 
-test("uses the existing standard error envelope and introduces no later M2 scope", () => {
+test("uses the existing standard error envelope and introduces no later scope beyond M3 Transactions", () => {
   for (const response of [
     "PortfolioNameConflict",
     "PortfolioNotFound",
@@ -272,13 +272,13 @@ test("uses the existing standard error envelope and introduces no later M2 scope
   for (const path of Object.keys(contract.paths)) {
     assert.doesNotMatch(
       path,
-      /\/(transactions|holdings|prices|valuations|allocations|dashboard|alerts|documents|ai)(?:\/|$)/i,
+      /\/(holdings|prices|valuations|allocations|dashboard|alerts|documents|ai)(?:\/|$)/i,
     );
   }
   for (const schema of Object.keys(contract.components.schemas)) {
     assert.doesNotMatch(
       schema,
-      /^(Transaction|Holding|Price|Valuation|Allocation|Dashboard|Alert|Document|AI)/,
+      /^(Holding|Price|Valuation|Allocation|Dashboard|Alert|Document|AI)/,
     );
   }
 });

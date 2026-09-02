@@ -23,11 +23,20 @@ const m2Operations = {
   "/assets/{assetId}": ["get"],
 };
 
+const m3Operations = {
+  "/portfolios/{portfolioId}/transactions": ["post", "get"],
+  "/portfolios/{portfolioId}/transactions/{transactionId}": ["get"],
+  "/portfolios/{portfolioId}/transactions/{transactionId}/corrections": [
+    "post",
+  ],
+};
+
 const expectedPaths = new Set([
   "/health/live",
   "/health/ready",
   ...Object.keys(authOperations),
   ...Object.keys(m2Operations),
+  ...Object.keys(m3Operations),
 ]);
 
 function operation(path, method) {
@@ -62,12 +71,14 @@ function propertyNames(schema, found = new Set()) {
   return found;
 }
 
-test("defines only the approved operational, Authentication, and M2 operations", () => {
+test("defines only the approved operational, Authentication, M2, and M3 operations", () => {
   assert.deepEqual(new Set(Object.keys(contract.paths)), expectedPaths);
 
   for (const [path, method] of Object.entries(authOperations))
     operation(path, method);
   for (const [path, methods] of Object.entries(m2Operations))
+    for (const method of methods) operation(path, method);
+  for (const [path, methods] of Object.entries(m3Operations))
     for (const method of methods) operation(path, method);
 
   const serverBase = contract.servers[0].url;
@@ -266,17 +277,17 @@ test("uses the standard error envelope, correlation ID, and Retry-After", () => 
   assert.equal(operation("/auth/logout", "post").responses["429"], undefined);
 });
 
-test("introduces no transaction, holding, price, valuation, allocation, dashboard, or AI contract", () => {
+test("introduces no scope beyond approved M3 Transactions", () => {
   for (const path of Object.keys(contract.paths)) {
     assert.doesNotMatch(
       path,
-      /\/(transactions|holdings|prices|valuations|allocations|dashboard|alerts|documents|ai)(?:\/|$)/i,
+      /\/(holdings|prices|valuations|allocations|dashboard|alerts|documents|ai)(?:\/|$)/i,
     );
   }
   for (const schema of Object.keys(contract.components.schemas)) {
     assert.doesNotMatch(
       schema,
-      /^(Transaction|Holding|Price|Valuation|Allocation|Dashboard|Alert|Document|AI)/,
+      /^(Holding|Price|Valuation|Allocation|Dashboard|Alert|Document|AI)/,
     );
   }
 });
