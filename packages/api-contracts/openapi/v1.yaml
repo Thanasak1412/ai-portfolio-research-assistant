@@ -476,7 +476,9 @@ paths:
         descending, portfolioSequence descending, then transactionId descending.
         The opaque cursor is a versioned encoding of that full ordering tuple;
         clients must not parse or construct it. effectiveAtFrom and
-        effectiveAtTo are inclusive UTC-Z bounds and must satisfy from <= to.
+        effectiveAtTo are inclusive UTC-Z lexical history-filter bounds and
+        must satisfy from <= to. They may be past or future instants and do
+        not perform command-time or ledger-replay validation.
         includeReversals defaults to true; false excludes only internal
         REVERSAL rows while retaining correction links on visible records.
       security:
@@ -552,7 +554,8 @@ paths:
         transaction.correct.v1 scope. An identical replay returns the previously
         committed correction result and creates no new financial fact. A target
         with an existing direct reversal returns TRANSACTION_ALREADY_CORRECTED.
-        The request body is limited to 8,192 UTF-8 bytes.
+        An internal REVERSAL target is not correctable and returns
+        TRANSACTION_NOT_CORRECTABLE. The request body is limited to 8,192 UTF-8 bytes.
       security:
         - BearerAuth: []
       parameters:
@@ -586,7 +589,7 @@ paths:
         "409":
           $ref: "#/components/responses/TransactionCorrectionConflict"
         "422":
-          $ref: "#/components/responses/TransactionCommandRejected"
+          $ref: "#/components/responses/TransactionCorrectionRejected"
         "500":
           $ref: "#/components/responses/InternalFailure"
   /assets:
@@ -799,16 +802,21 @@ components:
       name: effectiveAtFrom
       in: query
       required: false
-      description: Inclusive RFC 3339 UTC-Z lower bound for effectiveAt.
+      description: >-
+        Inclusive RFC 3339 UTC-Z lexical lower bound for effectiveAt. It may
+        be past or future and has no command-time or ledger-replay semantics.
       schema:
-        $ref: "#/components/schemas/EffectiveAt"
+        $ref: "#/components/schemas/TransactionHistoryTime"
     TransactionEffectiveAtTo:
       name: effectiveAtTo
       in: query
       required: false
-      description: Inclusive RFC 3339 UTC-Z upper bound for effectiveAt; must not precede effectiveAtFrom.
+      description: >-
+        Inclusive RFC 3339 UTC-Z lexical upper bound for effectiveAt. It may
+        be past or future, has no command-time or ledger-replay semantics, and
+        must not precede effectiveAtFrom.
       schema:
-        $ref: "#/components/schemas/EffectiveAt"
+        $ref: "#/components/schemas/TransactionHistoryTime"
     TransactionIncludeReversals:
       name: includeReversals
       in: query
@@ -1108,23 +1116,43 @@ components:
       type: string
       description: Zero or positive decimal string with at most 12 fractional digits.
       pattern: "^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,12})?$"
-    EffectiveAt:
+    TransactionEffectiveAt:
       type: string
       format: date-time
       description: >-
-        RFC 3339 UTC instant with a literal Z suffix and zero to six fractional
-        digits. Lexical validation happens at request parsing; a syntactically
-        valid future time is rejected later as INVALID_EFFECTIVE_AT, and a
-        backdated time is permitted only if whole-ledger replay remains valid.
+        Command timestamp: RFC 3339 UTC instant with a literal Z suffix and
+        zero to six fractional digits. Lexical validation happens at request
+        parsing; a syntactically valid future time is rejected later as
+        INVALID_EFFECTIVE_AT, and a backdated time is permitted only if
+        whole-ledger replay remains valid.
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,6})?Z$"
+    TransactionHistoryTime:
+      type: string
+      format: date-time
+      description: >-
+        History-filter timestamp only: RFC 3339 UTC instant with a literal Z
+        suffix and zero to six fractional digits. It is lexical validation
+        only, may be past or future, and has no command-time or ledger-replay
+        semantics.
       pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,6})?Z$"
     TransactionNote:
       type: string
+      minLength: 0
       maxLength: 2000
-      description: Optional user note. The command-body UTF-8 limit still applies.
+      description: >-
+        Optional user note. When supplied, including as an empty string, it is
+        preserved exactly as submitted without trimming or Unicode
+        normalization; absent and empty are distinct semantic values. The
+        command-body UTF-8 limit still applies.
     TransactionExternalReference:
       type: string
+      minLength: 0
       maxLength: 256
-      description: Optional user-supplied external reference; it is not an ownership or idempotency proof.
+      description: >-
+        Optional user-supplied external reference; it is not an ownership or
+        idempotency proof. When supplied, including as an empty string, it is
+        preserved exactly as submitted without trimming or Unicode
+        normalization; absent and empty are distinct semantic values.
     BuyTransactionCommand:
       type: object
       additionalProperties: false
@@ -1144,7 +1172,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1169,7 +1197,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1190,7 +1218,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1209,7 +1237,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1228,7 +1256,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1247,7 +1275,7 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         note:
           $ref: "#/components/schemas/TransactionNote"
         externalReference:
@@ -1378,17 +1406,25 @@ components:
         currency:
           $ref: "#/components/schemas/TransactionCurrency"
         effectiveAt:
-          $ref: "#/components/schemas/EffectiveAt"
+          $ref: "#/components/schemas/TransactionEffectiveAt"
         portfolioSequence:
           $ref: "#/components/schemas/PortfolioSequence"
         note:
           anyOf:
             - $ref: "#/components/schemas/TransactionNote"
             - type: "null"
+          description: >-
+            null means absent; an empty string means supplied empty. Supplied
+            values are preserved exactly, without trimming or Unicode
+            normalization.
         externalReference:
           anyOf:
             - $ref: "#/components/schemas/TransactionExternalReference"
             - type: "null"
+          description: >-
+            null means absent; an empty string means supplied empty. Supplied
+            values are preserved exactly, without trimming or Unicode
+            normalization.
         correctionLinks:
           $ref: "#/components/schemas/TransactionCorrectionLinks"
         createdAt:
@@ -1485,6 +1521,7 @@ components:
         - INVALID_BACKDATED_LEDGER
         - IDEMPOTENCY_CONFLICT
         - TRANSACTION_ALREADY_CORRECTED
+        - TRANSACTION_NOT_CORRECTABLE
         - TRANSACTION_NOT_FOUND
     CorrelationIdValue:
       type: string
@@ -1642,7 +1679,8 @@ components:
     InvalidTransactionRequest:
       description: >-
         Transaction request validation failed. Public code is INVALID_REQUEST,
-        INVALID_IDEMPOTENCY_KEY, INVALID_TRANSACTION_FIELDS, or INVALID_DECIMAL
+        INVALID_IDEMPOTENCY_KEY, INVALID_TRANSACTION_FIELDS, INVALID_DECIMAL,
+        UNSUPPORTED_TRANSACTION_KIND, or UNSUPPORTED_TRANSACTION_CURRENCY
         according to the invalid transport component; no parser, schema, or
         internal identifier details are disclosed.
       headers:
@@ -1655,9 +1693,7 @@ components:
     TransactionCommandRejected:
       description: >-
         A syntactically valid Transaction command is not permitted. Public code
-        is UNSUPPORTED_TRANSACTION_KIND, ASSET_NOT_FOUND,
-        ASSET_FINANCIALLY_INELIGIBLE,
-        UNSUPPORTED_TRANSACTION_CURRENCY, INVALID_EFFECTIVE_AT,
+        is ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT,
         INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or
         PORTFOLIO_ARCHIVED. Asset catalog/provider, ledger replay, and
         persistence internals are not disclosed.
@@ -1686,6 +1722,22 @@ components:
         for different-command key reuse or TRANSACTION_ALREADY_CORRECTED when
         the target has a direct reversal. Internal correction state is not
         disclosed beyond the safe public result.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    TransactionCorrectionRejected:
+      description: >-
+        A syntactically valid correction cannot be accepted. Public code is
+        TRANSACTION_NOT_CORRECTABLE when the path target is an internal
+        REVERSAL; otherwise it is ASSET_NOT_FOUND,
+        ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT,
+        INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or
+        PORTFOLIO_ARCHIVED for the complete replacement command. Internal
+        correction, ledger replay, and persistence details are not disclosed.
       headers:
         X-Correlation-ID:
           $ref: "#/components/headers/CorrelationId"

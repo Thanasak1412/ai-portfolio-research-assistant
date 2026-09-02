@@ -215,7 +215,7 @@ export interface paths {
         };
         /**
          * List immutable Transaction Ledger history
-         * @description Returns owner-scoped immutable ledger history ordered by effectiveAt descending, portfolioSequence descending, then transactionId descending. The opaque cursor is a versioned encoding of that full ordering tuple; clients must not parse or construct it. effectiveAtFrom and effectiveAtTo are inclusive UTC-Z bounds and must satisfy from <= to. includeReversals defaults to true; false excludes only internal REVERSAL rows while retaining correction links on visible records.
+         * @description Returns owner-scoped immutable ledger history ordered by effectiveAt descending, portfolioSequence descending, then transactionId descending. The opaque cursor is a versioned encoding of that full ordering tuple; clients must not parse or construct it. effectiveAtFrom and effectiveAtTo are inclusive UTC-Z lexical history-filter bounds and must satisfy from <= to. They may be past or future instants and do not perform command-time or ledger-replay validation. includeReversals defaults to true; false excludes only internal REVERSAL rows while retaining correction links on visible records.
          */
         get: operations["listTransactions"];
         put?: never;
@@ -261,7 +261,7 @@ export interface paths {
         put?: never;
         /**
          * Correct one immutable Transaction by reversal and replacement
-         * @description Atomically records one internal REVERSAL and one complete public replacement Transaction for the path target; it never mutates or deletes the original. This command requires Idempotency-Key in the transaction.correct.v1 scope. An identical replay returns the previously committed correction result and creates no new financial fact. A target with an existing direct reversal returns TRANSACTION_ALREADY_CORRECTED. The request body is limited to 8,192 UTF-8 bytes.
+         * @description Atomically records one internal REVERSAL and one complete public replacement Transaction for the path target; it never mutates or deletes the original. This command requires Idempotency-Key in the transaction.correct.v1 scope. An identical replay returns the previously committed correction result and creates no new financial fact. A target with an existing direct reversal returns TRANSACTION_ALREADY_CORRECTED. An internal REVERSAL target is not correctable and returns TRANSACTION_NOT_CORRECTABLE. The request body is limited to 8,192 UTF-8 bytes.
          */
         post: operations["correctTransaction"];
         delete?: never;
@@ -438,12 +438,17 @@ export interface components {
         NonNegativeDecimalString: string;
         /**
          * Format: date-time
-         * @description RFC 3339 UTC instant with a literal Z suffix and zero to six fractional digits. Lexical validation happens at request parsing; a syntactically valid future time is rejected later as INVALID_EFFECTIVE_AT, and a backdated time is permitted only if whole-ledger replay remains valid.
+         * @description Command timestamp: RFC 3339 UTC instant with a literal Z suffix and zero to six fractional digits. Lexical validation happens at request parsing; a syntactically valid future time is rejected later as INVALID_EFFECTIVE_AT, and a backdated time is permitted only if whole-ledger replay remains valid.
          */
-        EffectiveAt: string;
-        /** @description Optional user note. The command-body UTF-8 limit still applies. */
+        TransactionEffectiveAt: string;
+        /**
+         * Format: date-time
+         * @description History-filter timestamp only: RFC 3339 UTC instant with a literal Z suffix and zero to six fractional digits. It is lexical validation only, may be past or future, and has no command-time or ledger-replay semantics.
+         */
+        TransactionHistoryTime: string;
+        /** @description Optional user note. When supplied, including as an empty string, it is preserved exactly as submitted without trimming or Unicode normalization; absent and empty are distinct semantic values. The command-body UTF-8 limit still applies. */
         TransactionNote: string;
-        /** @description Optional user-supplied external reference; it is not an ownership or idempotency proof. */
+        /** @description Optional user-supplied external reference; it is not an ownership or idempotency proof. When supplied, including as an empty string, it is preserved exactly as submitted without trimming or Unicode normalization; absent and empty are distinct semantic values. */
         TransactionExternalReference: string;
         /** @description BUY requires assetId, quantity, and unitPrice. fee is optional and defaults semantically to zero; amount is forbidden. */
         BuyTransactionCommand: {
@@ -457,7 +462,7 @@ export interface components {
             unitPrice: components["schemas"]["PositiveDecimalString"];
             fee?: components["schemas"]["NonNegativeDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -473,7 +478,7 @@ export interface components {
             unitPrice: components["schemas"]["PositiveDecimalString"];
             fee?: components["schemas"]["NonNegativeDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -487,7 +492,7 @@ export interface components {
             assetId: components["schemas"]["TransactionAssetId"];
             amount: components["schemas"]["PositiveDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -500,7 +505,7 @@ export interface components {
             kind: "DEPOSIT";
             amount: components["schemas"]["PositiveDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -513,7 +518,7 @@ export interface components {
             kind: "WITHDRAWAL";
             amount: components["schemas"]["PositiveDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -526,7 +531,7 @@ export interface components {
             kind: "FEE";
             amount: components["schemas"]["PositiveDecimalString"];
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             note?: components["schemas"]["TransactionNote"];
             externalReference?: components["schemas"]["TransactionExternalReference"];
         };
@@ -562,9 +567,11 @@ export interface components {
             fee: components["schemas"]["NonNegativeDecimalString"] | null;
             amount: components["schemas"]["PositiveDecimalString"] | null;
             currency: components["schemas"]["TransactionCurrency"];
-            effectiveAt: components["schemas"]["EffectiveAt"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
             portfolioSequence: components["schemas"]["PortfolioSequence"];
+            /** @description null means absent; an empty string means supplied empty. Supplied values are preserved exactly, without trimming or Unicode normalization. */
             note: components["schemas"]["TransactionNote"] | null;
+            /** @description null means absent; an empty string means supplied empty. Supplied values are preserved exactly, without trimming or Unicode normalization. */
             externalReference: components["schemas"]["TransactionExternalReference"] | null;
             correctionLinks: components["schemas"]["TransactionCorrectionLinks"];
             createdAt: components["schemas"]["Timestamp"];
@@ -595,7 +602,7 @@ export interface components {
             correlationId: components["schemas"]["CorrelationIdValue"];
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND" | "PORTFOLIO_NAME_CONFLICT" | "PORTFOLIO_NOT_FOUND" | "PORTFOLIO_ARCHIVED" | "ASSET_NOT_FOUND" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_TRANSACTION_FIELDS" | "INVALID_DECIMAL" | "INVALID_EFFECTIVE_AT" | "UNSUPPORTED_TRANSACTION_KIND" | "ASSET_FINANCIALLY_INELIGIBLE" | "UNSUPPORTED_TRANSACTION_CURRENCY" | "INSUFFICIENT_ORDERED_ASSET_QUANTITY" | "INVALID_BACKDATED_LEDGER" | "IDEMPOTENCY_CONFLICT" | "TRANSACTION_ALREADY_CORRECTED" | "TRANSACTION_NOT_FOUND";
+        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND" | "PORTFOLIO_NAME_CONFLICT" | "PORTFOLIO_NOT_FOUND" | "PORTFOLIO_ARCHIVED" | "ASSET_NOT_FOUND" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_TRANSACTION_FIELDS" | "INVALID_DECIMAL" | "INVALID_EFFECTIVE_AT" | "UNSUPPORTED_TRANSACTION_KIND" | "ASSET_FINANCIALLY_INELIGIBLE" | "UNSUPPORTED_TRANSACTION_CURRENCY" | "INSUFFICIENT_ORDERED_ASSET_QUANTITY" | "INVALID_BACKDATED_LEDGER" | "IDEMPOTENCY_CONFLICT" | "TRANSACTION_ALREADY_CORRECTED" | "TRANSACTION_NOT_CORRECTABLE" | "TRANSACTION_NOT_FOUND";
         CorrelationIdValue: string;
         /**
          * Format: date-time
@@ -736,7 +743,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
-        /** @description Transaction request validation failed. Public code is INVALID_REQUEST, INVALID_IDEMPOTENCY_KEY, INVALID_TRANSACTION_FIELDS, or INVALID_DECIMAL according to the invalid transport component; no parser, schema, or internal identifier details are disclosed. */
+        /** @description Transaction request validation failed. Public code is INVALID_REQUEST, INVALID_IDEMPOTENCY_KEY, INVALID_TRANSACTION_FIELDS, INVALID_DECIMAL, UNSUPPORTED_TRANSACTION_KIND, or UNSUPPORTED_TRANSACTION_CURRENCY according to the invalid transport component; no parser, schema, or internal identifier details are disclosed. */
         InvalidTransactionRequest: {
             headers: {
                 "X-Correlation-ID": components["headers"]["CorrelationId"];
@@ -746,7 +753,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
-        /** @description A syntactically valid Transaction command is not permitted. Public code is UNSUPPORTED_TRANSACTION_KIND, ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, UNSUPPORTED_TRANSACTION_CURRENCY, INVALID_EFFECTIVE_AT, INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or PORTFOLIO_ARCHIVED. Asset catalog/provider, ledger replay, and persistence internals are not disclosed. */
+        /** @description A syntactically valid Transaction command is not permitted. Public code is ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT, INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or PORTFOLIO_ARCHIVED. Asset catalog/provider, ledger replay, and persistence internals are not disclosed. */
         TransactionCommandRejected: {
             headers: {
                 "X-Correlation-ID": components["headers"]["CorrelationId"];
@@ -768,6 +775,16 @@ export interface components {
         };
         /** @description The correction cannot be accepted. Public code is IDEMPOTENCY_CONFLICT for different-command key reuse or TRANSACTION_ALREADY_CORRECTED when the target has a direct reversal. Internal correction state is not disclosed beyond the safe public result. */
         TransactionCorrectionConflict: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description A syntactically valid correction cannot be accepted. Public code is TRANSACTION_NOT_CORRECTABLE when the path target is an internal REVERSAL; otherwise it is ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT, INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or PORTFOLIO_ARCHIVED for the complete replacement command. Internal correction, ledger replay, and persistence details are not disclosed. */
+        TransactionCorrectionRejected: {
             headers: {
                 "X-Correlation-ID": components["headers"]["CorrelationId"];
                 [name: string]: unknown;
@@ -814,10 +831,10 @@ export interface components {
         IdempotencyKey: string;
         /** @description Exact visible Transaction kind filter. REVERSAL is history-visible only. */
         TransactionKindFilter: components["schemas"]["TransactionVisibleKind"];
-        /** @description Inclusive RFC 3339 UTC-Z lower bound for effectiveAt. */
-        TransactionEffectiveAtFrom: components["schemas"]["EffectiveAt"];
-        /** @description Inclusive RFC 3339 UTC-Z upper bound for effectiveAt; must not precede effectiveAtFrom. */
-        TransactionEffectiveAtTo: components["schemas"]["EffectiveAt"];
+        /** @description Inclusive RFC 3339 UTC-Z lexical lower bound for effectiveAt. It may be past or future and has no command-time or ledger-replay semantics. */
+        TransactionEffectiveAtFrom: components["schemas"]["TransactionHistoryTime"];
+        /** @description Inclusive RFC 3339 UTC-Z lexical upper bound for effectiveAt. It may be past or future, has no command-time or ledger-replay semantics, and must not precede effectiveAtFrom. */
+        TransactionEffectiveAtTo: components["schemas"]["TransactionHistoryTime"];
         /** @description Include internal REVERSAL rows in history. Defaults to true. */
         TransactionIncludeReversals: boolean;
         /** @description Opaque version-1 cursor from a previous Transaction history page. Its grammar is v1. followed by unpadded base64url encoding of the canonical UTF-8 JSON tuple [effectiveAt, portfolioSequence, transactionId]; it represents effectiveAt DESC, portfolioSequence DESC, transactionId DESC. Clients must not parse, modify, or construct it. */
@@ -1215,9 +1232,9 @@ export interface operations {
             query?: {
                 /** @description Exact visible Transaction kind filter. REVERSAL is history-visible only. */
                 kind?: components["parameters"]["TransactionKindFilter"];
-                /** @description Inclusive RFC 3339 UTC-Z lower bound for effectiveAt. */
+                /** @description Inclusive RFC 3339 UTC-Z lexical lower bound for effectiveAt. It may be past or future and has no command-time or ledger-replay semantics. */
                 effectiveAtFrom?: components["parameters"]["TransactionEffectiveAtFrom"];
-                /** @description Inclusive RFC 3339 UTC-Z upper bound for effectiveAt; must not precede effectiveAtFrom. */
+                /** @description Inclusive RFC 3339 UTC-Z lexical upper bound for effectiveAt. It may be past or future, has no command-time or ledger-replay semantics, and must not precede effectiveAtFrom. */
                 effectiveAtTo?: components["parameters"]["TransactionEffectiveAtTo"];
                 /** @description Include internal REVERSAL rows in history. Defaults to true. */
                 includeReversals?: components["parameters"]["TransactionIncludeReversals"];
@@ -1362,7 +1379,7 @@ export interface operations {
             401: components["responses"]["AccessTokenUnauthorized"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["TransactionCorrectionConflict"];
-            422: components["responses"]["TransactionCommandRejected"];
+            422: components["responses"]["TransactionCorrectionRejected"];
             500: components["responses"]["InternalFailure"];
         };
     };

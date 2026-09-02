@@ -256,6 +256,11 @@ test("freezes public create kinds and the kind-discriminated field matrix", () =
       shape.properties,
       name,
     );
+    assert.equal(
+      schema.properties.effectiveAt.$ref,
+      "#/components/schemas/TransactionEffectiveAt",
+      name,
+    );
     for (const forbidden of [
       "portfolioId",
       "ownerUserId",
@@ -284,7 +289,7 @@ test("freezes public create kinds and the kind-discriminated field matrix", () =
   );
 });
 
-test("uses USD decimal strings and approved timestamp bounds", () => {
+test("uses USD decimal strings and distinct command and history timestamp rules", () => {
   for (const schemaName of [
     "DecimalString",
     "PositiveDecimalString",
@@ -297,22 +302,39 @@ test("uses USD decimal strings and approved timestamp bounds", () => {
   }
   assert.equal(contract.components.schemas.TransactionCurrency.const, "USD");
   assert.match(
-    contract.components.schemas.EffectiveAt.pattern,
+    contract.components.schemas.TransactionEffectiveAt.pattern,
     /\\\.\[0-9\]\{1,6\}.*Z\$/,
   );
   assert.match(
-    contract.components.schemas.EffectiveAt.description,
+    contract.components.schemas.TransactionEffectiveAt.description,
     /future time/i,
   );
   assert.match(
-    contract.components.schemas.EffectiveAt.description,
+    contract.components.schemas.TransactionEffectiveAt.description,
     /backdated time/i,
   );
-  assert.equal(contract.components.schemas.TransactionNote.maxLength, 2000);
-  assert.equal(
-    contract.components.schemas.TransactionExternalReference.maxLength,
-    256,
-  );
+  const historyTime = contract.components.schemas.TransactionHistoryTime;
+  assert.match(historyTime.pattern, /\\\.\[0-9\]\{1,6\}.*Z\$/);
+  assert.match(historyTime.description, /may be past or future/i);
+  assert.match(historyTime.description, /no command-time or ledger-replay/i);
+  for (const [schemaName, maxLength] of [
+    ["TransactionNote", 2000],
+    ["TransactionExternalReference", 256],
+  ]) {
+    const schema = contract.components.schemas[schemaName];
+    assert.equal(schema.minLength, 0, schemaName);
+    assert.equal(schema.maxLength, maxLength, schemaName);
+    assert.match(schema.description, /including as an empty string/i);
+    assert.match(schema.description, /preserved exactly as submitted/i);
+    assert.match(
+      schema.description,
+      /without trimming or Unicode normalization/i,
+    );
+    assert.match(
+      schema.description,
+      /absent and empty are distinct semantic values/i,
+    );
+  }
   for (const [path, method] of [
     ["/portfolios/{portfolioId}/transactions", "post"],
     [
@@ -343,6 +365,11 @@ test("freezes deterministic history ordering, filters, and cursor grammar", () =
     /effectiveAt descending, portfolioSequence descending, then transactionId descending/i,
   );
   assert.match(list.description, /from <= to/i);
+  assert.match(list.description, /may be past or future instants/i);
+  assert.match(
+    list.description,
+    /do not perform command-time or ledger-replay/i,
+  );
   assert.deepEqual(
     parameterReferences("/portfolios/{portfolioId}/transactions", "get"),
     [
@@ -379,6 +406,18 @@ test("freezes deterministic history ordering, filters, and cursor grammar", () =
     contract.components.parameters.TransactionIncludeReversals.schema.default,
     true,
   );
+  for (const parameterName of [
+    "TransactionEffectiveAtFrom",
+    "TransactionEffectiveAtTo",
+  ]) {
+    const parameter = contract.components.parameters[parameterName];
+    assert.equal(
+      parameter.schema.$ref,
+      "#/components/schemas/TransactionHistoryTime",
+    );
+    assert.match(parameter.description, /may be past or future/i);
+    assert.match(parameter.description, /no command-time or ledger-replay/i);
+  }
 });
 
 test("freezes immutable public read records and correction chains", () => {
@@ -453,6 +492,27 @@ test("freezes immutable public read records and correction chains", () => {
     ).description,
     /existing direct reversal/i,
   );
+  assert.match(
+    operation(
+      "/portfolios/{portfolioId}/transactions/{transactionId}/corrections",
+      "post",
+    ).description,
+    /internal REVERSAL target.*TRANSACTION_NOT_CORRECTABLE/i,
+  );
+  for (const field of ["note", "externalReference"]) {
+    assert.match(
+      transaction.properties[field].description,
+      /null means absent/i,
+    );
+    assert.match(
+      transaction.properties[field].description,
+      /empty string means supplied empty/i,
+    );
+    assert.match(
+      transaction.properties[field].description,
+      /without trimming or Unicode normalization/i,
+    );
+  }
 });
 
 test("freezes ownership-safe, idempotency, and ledger command error mappings", () => {
@@ -484,11 +544,28 @@ test("freezes ownership-safe, idempotency, and ledger command error mappings", (
     ),
     "#/components/responses/TransactionCorrectionConflict",
   );
+  assert.equal(
+    responseReference("/portfolios/{portfolioId}/transactions", "post", 400),
+    "#/components/responses/InvalidTransactionRequest",
+  );
+  assert.equal(
+    responseReference("/portfolios/{portfolioId}/transactions", "post", 422),
+    "#/components/responses/TransactionCommandRejected",
+  );
+  assert.equal(
+    responseReference(
+      "/portfolios/{portfolioId}/transactions/{transactionId}/corrections",
+      "post",
+      422,
+    ),
+    "#/components/responses/TransactionCorrectionRejected",
+  );
   for (const responseName of [
     "InvalidTransactionRequest",
     "TransactionCommandRejected",
     "IdempotencyConflict",
     "TransactionCorrectionConflict",
+    "TransactionCorrectionRejected",
     "TransactionNotFound",
   ]) {
     const response = contract.components.responses[responseName];
@@ -511,6 +588,7 @@ test("freezes ownership-safe, idempotency, and ledger command error mappings", (
     "INVALID_BACKDATED_LEDGER",
     "IDEMPOTENCY_CONFLICT",
     "TRANSACTION_ALREADY_CORRECTED",
+    "TRANSACTION_NOT_CORRECTABLE",
     "TRANSACTION_NOT_FOUND",
   ]) {
     assert.ok(codes.includes(code), code);
@@ -518,6 +596,18 @@ test("freezes ownership-safe, idempotency, and ledger command error mappings", (
   assert.match(
     contract.components.responses.TransactionCommandRejected.description,
     /ASSET_NOT_FOUND/i,
+  );
+  assert.doesNotMatch(
+    contract.components.responses.TransactionCommandRejected.description,
+    /UNSUPPORTED_TRANSACTION_KIND|UNSUPPORTED_TRANSACTION_CURRENCY/i,
+  );
+  assert.match(
+    contract.components.responses.InvalidTransactionRequest.description,
+    /UNSUPPORTED_TRANSACTION_KIND.*UNSUPPORTED_TRANSACTION_CURRENCY/i,
+  );
+  assert.match(
+    contract.components.responses.TransactionCorrectionRejected.description,
+    /TRANSACTION_NOT_CORRECTABLE.*internal\s+REVERSAL/i,
   );
   assert.match(
     contract.components.responses.PortfolioNotFound.description,
