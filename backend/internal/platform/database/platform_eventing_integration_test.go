@@ -3,6 +3,7 @@
 package database
 
 import (
+	"bytes"
 	"context"
 	"reflect"
 	"sync"
@@ -41,7 +42,7 @@ func TestM3PlatformAuditExtendsAuthenticationAuditWithoutMetadata(t *testing.T) 
 	} {
 		if err := store.Append(ctx, audit.Record{
 			EventID: platformEventUUID(), OccurredAt: now,
-			Action: action, Result: audit.ResultSuccess,
+			Action: action, Result: platformAuditExpectedResult(action),
 			Severity: audit.SeverityInfo, CorrelationID: "corr-m3-audit-" + uuid.NewString(),
 			PortfolioID: &portfolioID, TransactionID: &transactionID, CorrectionID: &correctionID,
 		}); err != nil {
@@ -61,6 +62,12 @@ func TestM3PlatformAuditExtendsAuthenticationAuditWithoutMetadata(t *testing.T) 
 		VALUES ($1, $2, 'free_form_action', 'failure', 'warning', $3)`,
 		platformUUID(), now, "corr-invalid-"+uuid.NewString()); err == nil {
 		t.Fatal("expected free-form audit action rejection")
+	}
+	if _, err := pool.Exec(ctx, `
+		INSERT INTO audit_logs (audit_event_id, occurred_at, action, result, severity, correlation_id)
+		VALUES ($1, $2, 'transaction_create_success', 'failure', 'info', $3)`,
+		platformUUID(), now, "corr-invalid-pair-"+uuid.NewString()); err == nil {
+		t.Fatal("expected mismatched M3 audit action/result rejection")
 	}
 	assertPlatformColumnsAbsent(t, pool, "audit_logs",
 		"request_body", "quantity", "unit_price", "amount", "fee", "note", "external_reference",
@@ -100,6 +107,18 @@ func TestPlatformOutboxAppendCanJoinCallerTransaction(t *testing.T) {
 	}
 	if countPlatformOutboxEvent(t, pool, event.ID) != 1 {
 		t.Fatal("appended outbox event missing")
+	}
+	var aggregatePosition int64
+	var payload []byte
+	if err := pool.QueryRow(ctx, `
+		SELECT aggregate_position, payload
+		FROM platform_outbox_events
+		WHERE event_id = $1`, pgUUID(event.ID)).Scan(&aggregatePosition, &payload); err != nil {
+		t.Fatalf("read persisted outbox event: %v", err)
+	}
+	if aggregatePosition != 1 || !bytes.Contains(payload, []byte(`"references"`)) ||
+		bytes.Contains(payload, []byte("quantity")) {
+		t.Fatalf("unsafe or incomplete outbox payload/position: position=%d payload=%s", aggregatePosition, payload)
 	}
 
 	invalidVersion := event
@@ -182,10 +201,11 @@ func TestPlatformOutboxClaimsAreConcurrentSafeOrderedAndLeaseRecoverable(t *test
 		t.Fatalf("published event reclaimed: items=%d err=%v", len(items), err)
 	}
 
-	// A later aggregate event cannot overtake its unpublished predecessor.
+	// Stream order is immutable even when a later append carries an earlier
+	// occurred-at timestamp. Claim uses Platform-owned aggregate_position.
 	aggregateID := platformEventUUID()
 	first := platformOutboxEvent(now.Add(2*time.Hour), aggregateID, platformEventUUID())
-	second := platformOutboxEvent(now.Add(2*time.Hour+time.Microsecond), aggregateID, platformEventUUID())
+	second := platformOutboxEvent(now.Add(time.Microsecond), aggregateID, platformEventUUID())
 	if err := store.Append(ctx, first); err != nil {
 		t.Fatalf("append first ordered event: %v", err)
 	}
@@ -194,14 +214,14 @@ func TestPlatformOutboxClaimsAreConcurrentSafeOrderedAndLeaseRecoverable(t *test
 	}
 	orderedRequest := outbox.ClaimRequest{AsOf: now.Add(2 * time.Hour), ClaimToken: platformEventUUID(), LeaseExpiresAt: now.Add(2*time.Hour + time.Minute), BatchLimit: 2}
 	items, err = store.ClaimDue(ctx, orderedRequest)
-	if err != nil || len(items) != 1 || items[0].ID != first.ID {
+	if err != nil || len(items) != 1 || items[0].ID != first.ID || items[0].AggregatePosition != 1 {
 		t.Fatalf("ordered first claim: items=%+v err=%v", items, err)
 	}
 	if ok, err := store.MarkPublished(ctx, first.ID, items[0].ClaimToken, now.Add(2*time.Hour+time.Second)); err != nil || !ok {
 		t.Fatalf("publish ordered predecessor: ok=%v err=%v", ok, err)
 	}
 	items, err = store.ClaimDue(ctx, outbox.ClaimRequest{AsOf: now.Add(2*time.Hour + 2*time.Microsecond), ClaimToken: platformEventUUID(), LeaseExpiresAt: now.Add(2*time.Hour + time.Minute), BatchLimit: 2})
-	if err != nil || len(items) != 1 || items[0].ID != second.ID {
+	if err != nil || len(items) != 1 || items[0].ID != second.ID || items[0].AggregatePosition != 2 {
 		t.Fatalf("ordered successor claim: items=%+v err=%v", items, err)
 	}
 	if ok, err := store.MarkPublished(ctx, second.ID, items[0].ClaimToken, now.Add(2*time.Hour+3*time.Microsecond)); err != nil || !ok {
@@ -244,6 +264,7 @@ func TestM3PlatformEventingSchemaOwnsOnlyPlatformObjects(t *testing.T) {
 	for _, relation := range []string{
 		"platform_outbox_events",
 		"platform_consumer_deduplications",
+		"platform_outbox_streams",
 	} {
 		var exists bool
 		if err := pool.QueryRow(ctx, `SELECT to_regclass($1) IS NOT NULL`, relation).Scan(&exists); err != nil {
@@ -257,6 +278,7 @@ func TestM3PlatformEventingSchemaOwnsOnlyPlatformObjects(t *testing.T) {
 		"platform_outbox_events_claim_pending_idx",
 		"platform_outbox_events_claim_lease_idx",
 		"platform_outbox_events_aggregate_order_idx",
+		"platform_outbox_events_aggregate_position_unique",
 		"platform_consumer_deduplications_event_idx",
 	} {
 		var exists bool
@@ -358,7 +380,21 @@ func platformOutboxEvent(now time.Time, aggregateID, eventID [16]byte) outbox.Ev
 		ID: eventID, Type: "transaction.recorded.v1", Version: 1,
 		AggregateType: "portfolio", AggregateID: aggregateID, PortfolioID: platformEventUUID(),
 		OccurredAt: now, CorrelationID: "corr-outbox-" + uuid.NewString(),
-		Payload: outbox.Payload{SchemaVersion: 1}, NextAttemptAt: now,
+		Payload: outbox.Payload{SchemaVersion: 1, References: []outbox.Reference{{
+			Role: "aggregate", ID: aggregateID,
+		}}}, NextAttemptAt: now,
+	}
+}
+
+func platformAuditExpectedResult(action audit.Action) audit.Result {
+	switch action {
+	case audit.ActionTransactionCreateFailure,
+		audit.ActionTransactionIdempotencyConflict,
+		audit.ActionTransactionCorrectionRejected,
+		audit.ActionTransactionOwnershipRejection:
+		return audit.ResultFailure
+	default:
+		return audit.ResultSuccess
 	}
 }
 
@@ -386,6 +422,9 @@ func clearPlatformOutboxEvents(t *testing.T, pool interface {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(), `DELETE FROM platform_outbox_events`); err != nil {
 		t.Fatalf("clear Platform outbox events: %v", err)
+	}
+	if _, err := pool.Exec(context.Background(), `DELETE FROM platform_outbox_streams`); err != nil {
+		t.Fatalf("clear Platform outbox streams: %v", err)
 	}
 }
 

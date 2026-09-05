@@ -1,6 +1,21 @@
 -- name: AppendPlatformOutboxEvent :one
--- The caller controls the DBTX. Supplying a pgx.Tx makes this append part of
--- the caller's authoritative write transaction.
+-- The caller controls the DBTX. Supplying a pgx.Tx makes this append and its
+-- immutable Platform stream-position allocation part of one authoritative
+-- write transaction.
+WITH allocated_stream_position AS (
+    INSERT INTO platform_outbox_streams (
+        aggregate_type,
+        aggregate_id,
+        next_position
+    ) VALUES (
+        sqlc.arg(aggregate_type),
+        sqlc.arg(aggregate_id),
+        2
+    )
+    ON CONFLICT (aggregate_type, aggregate_id) DO UPDATE
+    SET next_position = platform_outbox_streams.next_position + 1
+    RETURNING next_position - 1 AS aggregate_position
+)
 INSERT INTO platform_outbox_events (
     event_id,
     event_type,
@@ -8,36 +23,34 @@ INSERT INTO platform_outbox_events (
     aggregate_type,
     aggregate_id,
     portfolio_id,
-    transaction_id,
-    correction_id,
+    aggregate_position,
     occurred_at,
     correlation_id,
     payload,
     publication_state,
     attempt_count,
     next_attempt_at
-) VALUES (
+) SELECT
     sqlc.arg(event_id),
     sqlc.arg(event_type),
     sqlc.arg(event_version),
     sqlc.arg(aggregate_type),
     sqlc.arg(aggregate_id),
     sqlc.arg(portfolio_id),
-    sqlc.narg(transaction_id),
-    sqlc.narg(correction_id),
+    allocated_stream_position.aggregate_position,
     sqlc.arg(occurred_at),
     sqlc.arg(correlation_id),
     sqlc.arg(payload),
     'PENDING',
     0,
     sqlc.arg(next_attempt_at)
-)
+FROM allocated_stream_position
 RETURNING *;
 
 -- name: ClaimDuePlatformOutboxEvents :many
 -- This single statement uses SKIP LOCKED and an aggregate-stream predecessor
--- check, so concurrent workers cannot own the same live claim or overtake an
--- unpublished predecessor in one aggregate stream.
+-- check on immutable aggregate positions, so concurrent workers cannot own
+-- the same live claim or overtake an unpublished predecessor in one stream.
 WITH candidates AS (
     SELECT candidate.event_id
     FROM platform_outbox_events AS candidate
@@ -54,10 +67,9 @@ WITH candidates AS (
         WHERE predecessor.aggregate_type = candidate.aggregate_type
           AND predecessor.aggregate_id = candidate.aggregate_id
           AND predecessor.publication_state <> 'PUBLISHED'
-          AND (predecessor.occurred_at, predecessor.event_id)
-              < (candidate.occurred_at, candidate.event_id)
+          AND predecessor.aggregate_position < candidate.aggregate_position
     )
-    ORDER BY candidate.occurred_at ASC, candidate.event_id ASC
+    ORDER BY candidate.aggregate_type ASC, candidate.aggregate_id ASC, candidate.aggregate_position ASC
     LIMIT sqlc.arg(batch_limit)::integer
     FOR UPDATE SKIP LOCKED
 )

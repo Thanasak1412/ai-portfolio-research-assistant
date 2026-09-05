@@ -28,9 +28,15 @@ func TestM3AuditActionsAndSafeRecordBoundary(t *testing.T) {
 		ActionTransactionOwnershipRejection,
 	} {
 		record.Action = action
+		record.Result = expectedResult(action)
 		if err := record.Validate(); err != nil {
 			t.Fatalf("validate %q: %v", action, err)
 		}
+	}
+	record.Action = ActionTransactionCreateSuccess
+	record.Result = ResultFailure
+	if !errors.Is(record.Validate(), ErrInvalidRecord) {
+		t.Fatal("mismatched M3 action/result pair was accepted")
 	}
 
 	record.Action = "free_form_action"
@@ -46,5 +52,17 @@ func TestM3AuditActionsAndSafeRecordBoundary(t *testing.T) {
 		if _, exists := recordType.FieldByName(forbidden); exists {
 			t.Fatalf("platform audit record exposes forbidden field %s", forbidden)
 		}
+	}
+}
+
+func expectedResult(action Action) Result {
+	switch action {
+	case ActionTransactionCreateFailure,
+		ActionTransactionIdempotencyConflict,
+		ActionTransactionCorrectionRejected,
+		ActionTransactionOwnershipRejection:
+		return ResultFailure
+	default:
+		return ResultSuccess
 	}
 }

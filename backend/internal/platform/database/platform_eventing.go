@@ -64,8 +64,6 @@ func (store *PostgresOutboxStore) Append(ctx context.Context, event outbox.Event
 		AggregateType: event.AggregateType,
 		AggregateID:   pgUUID(event.AggregateID),
 		PortfolioID:   pgUUID(event.PortfolioID),
-		TransactionID: pgOptionalUUID(event.TransactionID),
-		CorrectionID:  pgOptionalUUID(event.CorrectionID),
 		OccurredAt:    pgTime(event.OccurredAt),
 		CorrelationID: event.CorrelationID,
 		Payload:       payload,
@@ -158,7 +156,7 @@ func (store *PostgresConsumerDeduplicator) RecordIfNew(ctx context.Context, cons
 func mapClaimedOutboxEvent(row sqlcgen.PlatformOutboxEvent) (outbox.ClaimedEvent, error) {
 	var payload outbox.Payload
 	if err := json.Unmarshal(row.Payload, &payload); err != nil || payload.SchemaVersion <= 0 ||
-		!row.EventID.Valid || !row.AggregateID.Valid || !row.PortfolioID.Valid ||
+		!row.EventID.Valid || !row.AggregateID.Valid || !row.PortfolioID.Valid || row.AggregatePosition <= 0 ||
 		!row.OccurredAt.Valid || !row.NextAttemptAt.Valid || !row.ClaimToken.Valid ||
 		!row.ClaimedAt.Valid || !row.LeaseExpiresAt.Valid {
 		return outbox.ClaimedEvent{}, fmt.Errorf("map platform outbox event: %w", outbox.ErrInvalidEvent)
@@ -167,21 +165,12 @@ func mapClaimedOutboxEvent(row sqlcgen.PlatformOutboxEvent) (outbox.ClaimedEvent
 		Event: outbox.Event{
 			ID: row.EventID.Bytes, Type: row.EventType, Version: row.EventVersion,
 			AggregateType: row.AggregateType, AggregateID: row.AggregateID.Bytes,
-			PortfolioID: row.PortfolioID.Bytes, TransactionID: optionalUUID(row.TransactionID),
-			CorrectionID: optionalUUID(row.CorrectionID), OccurredAt: row.OccurredAt.Time,
+			PortfolioID: row.PortfolioID.Bytes, OccurredAt: row.OccurredAt.Time,
 			CorrelationID: row.CorrelationID, Payload: payload, NextAttemptAt: row.NextAttemptAt.Time,
 		},
-		AttemptCount: row.AttemptCount, ClaimToken: row.ClaimToken.Bytes,
+		AggregatePosition: row.AggregatePosition, AttemptCount: row.AttemptCount, ClaimToken: row.ClaimToken.Bytes,
 		ClaimedAt: row.ClaimedAt.Time, LeaseExpiresAt: row.LeaseExpiresAt.Time,
 	}, nil
-}
-
-func optionalUUID(value pgtype.UUID) *[16]byte {
-	if !value.Valid {
-		return nil
-	}
-	result := value.Bytes
-	return &result
 }
 
 func pgText(value string) pgtype.Text {

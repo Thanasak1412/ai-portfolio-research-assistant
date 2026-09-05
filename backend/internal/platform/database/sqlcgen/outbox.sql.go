@@ -12,6 +12,20 @@ import (
 )
 
 const appendPlatformOutboxEvent = `-- name: AppendPlatformOutboxEvent :one
+WITH allocated_stream_position AS (
+    INSERT INTO platform_outbox_streams (
+        aggregate_type,
+        aggregate_id,
+        next_position
+    ) VALUES (
+        $4,
+        $5,
+        2
+    )
+    ON CONFLICT (aggregate_type, aggregate_id) DO UPDATE
+    SET next_position = platform_outbox_streams.next_position + 1
+    RETURNING next_position - 1 AS aggregate_position
+)
 INSERT INTO platform_outbox_events (
     event_id,
     event_type,
@@ -19,31 +33,29 @@ INSERT INTO platform_outbox_events (
     aggregate_type,
     aggregate_id,
     portfolio_id,
-    transaction_id,
-    correction_id,
+    aggregate_position,
     occurred_at,
     correlation_id,
     payload,
     publication_state,
     attempt_count,
     next_attempt_at
-) VALUES (
+) SELECT
     $1,
     $2,
     $3,
     $4,
     $5,
     $6,
+    allocated_stream_position.aggregate_position,
     $7,
     $8,
     $9,
-    $10,
-    $11,
     'PENDING',
     0,
-    $12
-)
-RETURNING event_id, event_type, event_version, aggregate_type, aggregate_id, portfolio_id, transaction_id, correction_id, occurred_at, correlation_id, payload, publication_state, attempt_count, next_attempt_at, claimed_at, claim_token, lease_expires_at, published_at, last_failure_code
+    $10
+FROM allocated_stream_position
+RETURNING event_id, event_type, event_version, aggregate_type, aggregate_id, portfolio_id, aggregate_position, occurred_at, correlation_id, payload, publication_state, attempt_count, next_attempt_at, claimed_at, claim_token, lease_expires_at, published_at, last_failure_code
 `
 
 type AppendPlatformOutboxEventParams struct {
@@ -53,16 +65,15 @@ type AppendPlatformOutboxEventParams struct {
 	AggregateType string
 	AggregateID   pgtype.UUID
 	PortfolioID   pgtype.UUID
-	TransactionID pgtype.UUID
-	CorrectionID  pgtype.UUID
 	OccurredAt    pgtype.Timestamptz
 	CorrelationID string
 	Payload       []byte
 	NextAttemptAt pgtype.Timestamptz
 }
 
-// The caller controls the DBTX. Supplying a pgx.Tx makes this append part of
-// the caller's authoritative write transaction.
+// The caller controls the DBTX. Supplying a pgx.Tx makes this append and its
+// immutable Platform stream-position allocation part of one authoritative
+// write transaction.
 func (q *Queries) AppendPlatformOutboxEvent(ctx context.Context, arg AppendPlatformOutboxEventParams) (PlatformOutboxEvent, error) {
 	row := q.db.QueryRow(ctx, appendPlatformOutboxEvent,
 		arg.EventID,
@@ -71,8 +82,6 @@ func (q *Queries) AppendPlatformOutboxEvent(ctx context.Context, arg AppendPlatf
 		arg.AggregateType,
 		arg.AggregateID,
 		arg.PortfolioID,
-		arg.TransactionID,
-		arg.CorrectionID,
 		arg.OccurredAt,
 		arg.CorrelationID,
 		arg.Payload,
@@ -86,8 +95,7 @@ func (q *Queries) AppendPlatformOutboxEvent(ctx context.Context, arg AppendPlatf
 		&i.AggregateType,
 		&i.AggregateID,
 		&i.PortfolioID,
-		&i.TransactionID,
-		&i.CorrectionID,
+		&i.AggregatePosition,
 		&i.OccurredAt,
 		&i.CorrelationID,
 		&i.Payload,
@@ -120,10 +128,9 @@ WITH candidates AS (
         WHERE predecessor.aggregate_type = candidate.aggregate_type
           AND predecessor.aggregate_id = candidate.aggregate_id
           AND predecessor.publication_state <> 'PUBLISHED'
-          AND (predecessor.occurred_at, predecessor.event_id)
-              < (candidate.occurred_at, candidate.event_id)
+          AND predecessor.aggregate_position < candidate.aggregate_position
     )
-    ORDER BY candidate.occurred_at ASC, candidate.event_id ASC
+    ORDER BY candidate.aggregate_type ASC, candidate.aggregate_id ASC, candidate.aggregate_position ASC
     LIMIT $4::integer
     FOR UPDATE SKIP LOCKED
 )
@@ -135,7 +142,7 @@ SET publication_state = 'PROCESSING',
     lease_expires_at = $3
 FROM candidates
 WHERE event.event_id = candidates.event_id
-RETURNING event.event_id, event.event_type, event.event_version, event.aggregate_type, event.aggregate_id, event.portfolio_id, event.transaction_id, event.correction_id, event.occurred_at, event.correlation_id, event.payload, event.publication_state, event.attempt_count, event.next_attempt_at, event.claimed_at, event.claim_token, event.lease_expires_at, event.published_at, event.last_failure_code
+RETURNING event.event_id, event.event_type, event.event_version, event.aggregate_type, event.aggregate_id, event.portfolio_id, event.aggregate_position, event.occurred_at, event.correlation_id, event.payload, event.publication_state, event.attempt_count, event.next_attempt_at, event.claimed_at, event.claim_token, event.lease_expires_at, event.published_at, event.last_failure_code
 `
 
 type ClaimDuePlatformOutboxEventsParams struct {
@@ -146,8 +153,8 @@ type ClaimDuePlatformOutboxEventsParams struct {
 }
 
 // This single statement uses SKIP LOCKED and an aggregate-stream predecessor
-// check, so concurrent workers cannot own the same live claim or overtake an
-// unpublished predecessor in one aggregate stream.
+// check on immutable aggregate positions, so concurrent workers cannot own
+// the same live claim or overtake an unpublished predecessor in one stream.
 func (q *Queries) ClaimDuePlatformOutboxEvents(ctx context.Context, arg ClaimDuePlatformOutboxEventsParams) ([]PlatformOutboxEvent, error) {
 	rows, err := q.db.Query(ctx, claimDuePlatformOutboxEvents,
 		arg.AsOf,
@@ -169,8 +176,7 @@ func (q *Queries) ClaimDuePlatformOutboxEvents(ctx context.Context, arg ClaimDue
 			&i.AggregateType,
 			&i.AggregateID,
 			&i.PortfolioID,
-			&i.TransactionID,
-			&i.CorrectionID,
+			&i.AggregatePosition,
 			&i.OccurredAt,
 			&i.CorrelationID,
 			&i.Payload,

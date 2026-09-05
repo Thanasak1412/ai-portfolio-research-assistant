@@ -66,7 +66,8 @@ var correlationIDPattern = regexp.MustCompile(`^[A-Za-z0-9._-]{1,128}$`)
 func (record Record) Validate() error {
 	if record.EventID == [16]byte{} || record.OccurredAt.IsZero() ||
 		!allowedAction(record.Action) || !allowedResult(record.Result) ||
-		!allowedSeverity(record.Severity) || !correlationIDPattern.MatchString(record.CorrelationID) {
+		!allowedActionResult(record.Action, record.Result) || !allowedSeverity(record.Severity) ||
+		!correlationIDPattern.MatchString(record.CorrelationID) {
 		return ErrInvalidRecord
 	}
 	for _, reference := range []*[16]byte{record.ActorUserID, record.PortfolioID, record.TransactionID, record.CorrectionID} {
@@ -97,6 +98,25 @@ func allowedAction(value Action) bool {
 
 func allowedResult(value Result) bool {
 	return value == ResultSuccess || value == ResultFailure
+}
+
+func allowedActionResult(action Action, result Result) bool {
+	switch action {
+	case ActionTransactionCreateSuccess,
+		ActionTransactionIdempotentReplay,
+		ActionTransactionCorrectionInitiated,
+		ActionTransactionCorrectionCompleted,
+		ActionTransactionReversalCreated,
+		ActionTransactionReplacementCreated:
+		return result == ResultSuccess
+	case ActionTransactionCreateFailure,
+		ActionTransactionIdempotencyConflict,
+		ActionTransactionCorrectionRejected,
+		ActionTransactionOwnershipRejection:
+		return result == ResultFailure
+	default:
+		return false
+	}
 }
 
 func allowedSeverity(value Severity) bool {

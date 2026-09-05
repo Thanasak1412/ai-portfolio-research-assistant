@@ -12,5 +12,7 @@ mutation mechanism. See [Portfolio and Asset Database Ownership](../../docs/arch
 Migration `00004_m3_platform_eventing.sql` extends the Platform-owned,
 append-only `audit_logs` allowlist with safe M3 reference fields and creates
 the Platform-owned `platform_outbox_events` and
-`platform_consumer_deduplications` delivery primitives. It creates no
+`platform_outbox_streams` and `platform_consumer_deduplications` delivery
+primitives. Outbox payloads contain only bounded role/UUID references and
+their immutable Platform stream position. It creates no
 Transaction ledger, idempotency, financial, provider, or projection table.

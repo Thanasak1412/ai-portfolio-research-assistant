@@ -35,23 +35,22 @@ type AuthRateLimitEvent struct {
 }
 
 type PlatformOutboxEvent struct {
-	EventID          pgtype.UUID
-	EventType        string
-	EventVersion     int32
-	AggregateType    string
-	AggregateID      pgtype.UUID
-	PortfolioID      pgtype.UUID
-	TransactionID    pgtype.UUID
-	CorrectionID     pgtype.UUID
-	OccurredAt       pgtype.Timestamptz
-	CorrelationID    string
-	Payload          []byte
-	PublicationState string
-	AttemptCount     int32
-	NextAttemptAt    pgtype.Timestamptz
-	ClaimedAt        pgtype.Timestamptz
-	ClaimToken       pgtype.UUID
-	LeaseExpiresAt   pgtype.Timestamptz
-	PublishedAt      pgtype.Timestamptz
-	LastFailureCode  pgtype.Text
+	EventID           pgtype.UUID
+	EventType         string
+	EventVersion      int32
+	AggregateType     string
+	AggregateID       pgtype.UUID
+	PortfolioID       pgtype.UUID
+	AggregatePosition int64
+	OccurredAt        pgtype.Timestamptz
+	CorrelationID     string
+	Payload           []byte
+	PublicationState  string
+	AttemptCount      int32
+	NextAttemptAt     pgtype.Timestamptz
+	ClaimedAt         pgtype.Timestamptz
+	ClaimToken        pgtype.UUID
+	LeaseExpiresAt    pgtype.Timestamptz
+	PublishedAt       pgtype.Timestamptz
+	LastFailureCode   pgtype.Text
 }
