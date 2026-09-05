@@ -8,3 +8,9 @@ Migration `00003_portfolio_asset_foundation.sql` owns the M2 persistence
 foundation. It creates Portfolio-owned `portfolios` and Asset-owned `assets`
 with no seed catalog records, holding relation, financial data, or public
 mutation mechanism. See [Portfolio and Asset Database Ownership](../../docs/architecture/portfolio-asset-database.md).
+
+Migration `00004_m3_platform_eventing.sql` extends the Platform-owned,
+append-only `audit_logs` allowlist with safe M3 reference fields and creates
+the Platform-owned `platform_outbox_events` and
+`platform_consumer_deduplications` delivery primitives. It creates no
+Transaction ledger, idempotency, financial, provider, or projection table.
