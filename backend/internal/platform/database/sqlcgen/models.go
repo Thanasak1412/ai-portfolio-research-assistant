@@ -20,6 +20,9 @@ type AuditLog struct {
 	TokenFamilyID       pgtype.UUID
 	NetworkIdentityHash pgtype.Text
 	UserAgent           pgtype.Text
+	PortfolioID         pgtype.UUID
+	TransactionID       pgtype.UUID
+	CorrectionID        pgtype.UUID
 }
 
 type AuthRateLimitEvent struct {
@@ -29,4 +32,25 @@ type AuthRateLimitEvent struct {
 	PolicyVersion string
 	OccurredAt    pgtype.Timestamptz
 	ExpiresAt     pgtype.Timestamptz
+}
+
+type PlatformOutboxEvent struct {
+	EventID           pgtype.UUID
+	EventType         string
+	EventVersion      int32
+	AggregateType     string
+	AggregateID       pgtype.UUID
+	PortfolioID       pgtype.UUID
+	AggregatePosition int64
+	OccurredAt        pgtype.Timestamptz
+	CorrelationID     string
+	Payload           []byte
+	PublicationState  string
+	AttemptCount      int32
+	NextAttemptAt     pgtype.Timestamptz
+	ClaimedAt         pgtype.Timestamptz
+	ClaimToken        pgtype.UUID
+	LeaseExpiresAt    pgtype.Timestamptz
+	PublishedAt       pgtype.Timestamptz
+	LastFailureCode   pgtype.Text
 }
