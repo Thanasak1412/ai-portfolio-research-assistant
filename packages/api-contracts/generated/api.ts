@@ -206,6 +206,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portfolios/{portfolioId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List immutable Transaction Ledger history
+         * @description Returns owner-scoped immutable ledger history ordered by effectiveAt descending, portfolioSequence descending, then transactionId descending. The opaque cursor is a versioned encoding of that full ordering tuple; clients must not parse or construct it. effectiveAtFrom and effectiveAtTo are inclusive UTC-Z lexical history-filter bounds and must satisfy from <= to. They may be past or future instants and do not perform command-time or ledger-replay validation. includeReversals defaults to true; false excludes only internal REVERSAL rows while retaining correction links on visible records.
+         */
+        get: operations["listTransactions"];
+        put?: never;
+        /**
+         * Record one immutable Transaction
+         * @description Records one immutable ledger fact for an owned ACTIVE Portfolio. The owner is derived from the Bearer access token; portfolioId is route scope only and ownership fields are not accepted. This command requires Idempotency-Key in the transaction.create.v1 scope. An identical replay returns the previously committed result without creating another financial fact; reuse with a different command returns IDEMPOTENCY_CONFLICT. The request body is limited to 8,192 UTF-8 bytes.
+         */
+        post: operations["createTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolios/{portfolioId}/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one immutable Transaction
+         * @description Returns an immutable Transaction only when both its Portfolio and the Transaction belong to the authenticated principal. An absent, cross-owner, or unrepresentable opaque transactionId returns the same TRANSACTION_NOT_FOUND response.
+         */
+        get: operations["getTransaction"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolios/{portfolioId}/transactions/{transactionId}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Correct one immutable Transaction by reversal and replacement
+         * @description Atomically records one internal REVERSAL and one complete public replacement Transaction for the path target; it never mutates or deletes the original. This command requires Idempotency-Key in the transaction.correct.v1 scope. An identical replay returns the previously committed correction result and creates no new financial fact. A target with an existing direct reversal returns TRANSACTION_ALREADY_CORRECTED. An internal REVERSAL target is not correctable and returns TRANSACTION_NOT_CORRECTABLE. The request body is limited to 8,192 UTF-8 bytes.
+         */
+        post: operations["correctTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/assets": {
         parameters: {
             query?: never;
@@ -349,6 +413,182 @@ export interface components {
             /** @description Opaque cursor for the next stable page, or null when there is no next page. */
             nextCursor: string | null;
         };
+        /**
+         * @description User-creatable immutable Transaction kinds. REVERSAL is internal-only; ADJUSTMENT is reserved and unavailable.
+         * @enum {string}
+         */
+        TransactionCreateKind: "BUY" | "SELL" | "DIVIDEND" | "DEPOSIT" | "WITHDRAWAL" | "FEE";
+        /**
+         * @description History-visible Transaction kinds. REVERSAL appears only as an internal correction record; ADJUSTMENT is absent.
+         * @enum {string}
+         */
+        TransactionVisibleKind: "BUY" | "SELL" | "DIVIDEND" | "DEPOSIT" | "WITHDRAWAL" | "FEE" | "REVERSAL";
+        /**
+         * @description The only approved M3 transaction currency.
+         * @constant
+         */
+        TransactionCurrency: "USD";
+        /** @description Immutable opaque canonical Asset identifier. Backend validation requires an existing USD EQUITY or ETF on NYSE, NASDAQ, NYSEARCA, or AMEX. CRYPTO remains searchable in M2 but is financially ineligible in M3. */
+        TransactionAssetId: string;
+        /** @description Decimal transport value. Binary floating-point JSON numbers are prohibited. */
+        DecimalString: string;
+        /** @description Strictly positive decimal string with at most 12 fractional digits. */
+        PositiveDecimalString: string;
+        /** @description Zero or positive decimal string with at most 12 fractional digits. */
+        NonNegativeDecimalString: string;
+        /**
+         * Format: date-time
+         * @description Command timestamp: RFC 3339 UTC instant with a literal Z suffix and zero to six fractional digits. Lexical validation happens at request parsing; a syntactically valid future time is rejected later as INVALID_EFFECTIVE_AT, and a backdated time is permitted only if whole-ledger replay remains valid.
+         */
+        TransactionEffectiveAt: string;
+        /**
+         * Format: date-time
+         * @description History-filter timestamp only: RFC 3339 UTC instant with a literal Z suffix and zero to six fractional digits. It is lexical validation only, may be past or future, and has no command-time or ledger-replay semantics.
+         */
+        TransactionHistoryTime: string;
+        /** @description Optional user note. When supplied, including as an empty string, it is preserved exactly as submitted without trimming or Unicode normalization; absent and empty are distinct semantic values. The command-body UTF-8 limit still applies. */
+        TransactionNote: string;
+        /** @description Optional user-supplied external reference; it is not an ownership or idempotency proof. When supplied, including as an empty string, it is preserved exactly as submitted without trimming or Unicode normalization; absent and empty are distinct semantic values. */
+        TransactionExternalReference: string;
+        /** @description BUY requires assetId, quantity, and unitPrice. fee is optional and defaults semantically to zero; amount is forbidden. */
+        BuyTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "BUY";
+            assetId: components["schemas"]["TransactionAssetId"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            unitPrice: components["schemas"]["PositiveDecimalString"];
+            fee?: components["schemas"]["NonNegativeDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description SELL requires assetId, quantity, and unitPrice. fee is optional and defaults semantically to zero; amount is forbidden. */
+        SellTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "SELL";
+            assetId: components["schemas"]["TransactionAssetId"];
+            quantity: components["schemas"]["PositiveDecimalString"];
+            unitPrice: components["schemas"]["PositiveDecimalString"];
+            fee?: components["schemas"]["NonNegativeDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description DIVIDEND requires assetId and amount; quantity, unitPrice, and fee are forbidden. */
+        DividendTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "DIVIDEND";
+            assetId: components["schemas"]["TransactionAssetId"];
+            amount: components["schemas"]["PositiveDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description DEPOSIT is a portfolio cash event. assetId, quantity, unitPrice, and fee are forbidden. */
+        DepositTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "DEPOSIT";
+            amount: components["schemas"]["PositiveDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description WITHDRAWAL is a portfolio cash event. assetId, quantity, unitPrice, and fee are forbidden. */
+        WithdrawalTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "WITHDRAWAL";
+            amount: components["schemas"]["PositiveDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description FEE is a standalone portfolio cash event. assetId, quantity, unitPrice, and fee are forbidden. */
+        FeeTransactionCommand: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "FEE";
+            amount: components["schemas"]["PositiveDecimalString"];
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            note?: components["schemas"]["TransactionNote"];
+            externalReference?: components["schemas"]["TransactionExternalReference"];
+        };
+        /** @description Complete user-creatable command. REVERSAL and ADJUSTMENT are structurally unavailable. portfolioId and owner identity are route or server-derived only and are forbidden in this body. */
+        TransactionCommand: components["schemas"]["BuyTransactionCommand"] | components["schemas"]["SellTransactionCommand"] | components["schemas"]["DividendTransactionCommand"] | components["schemas"]["DepositTransactionCommand"] | components["schemas"]["WithdrawalTransactionCommand"] | components["schemas"]["FeeTransactionCommand"];
+        /** @description Complete replacement command for the path target. It cannot submit a REVERSAL, cannot mutate the original, and cannot carry target IDs, portfolio IDs, ownership, or idempotency fields in the body. */
+        TransactionCorrectionCommand: {
+            replacement: components["schemas"]["TransactionCommand"];
+        };
+        /** @description Immutable direct correction links. A replacement can later be corrected, so replacesTransactionId can coexist with reversalTransactionId and replacementTransactionId; this supports correction chains. */
+        TransactionCorrectionLinks: {
+            /** @description Original transaction neutralized by this internal REVERSAL record. */
+            reversesTransactionId: components["schemas"]["TransactionIdValue"] | null;
+            /** @description Original transaction replaced by this public replacement record. */
+            replacesTransactionId: components["schemas"]["TransactionIdValue"] | null;
+            /** @description Direct internal reversal created when this Transaction was corrected. */
+            reversalTransactionId: components["schemas"]["TransactionIdValue"] | null;
+            /** @description Direct public replacement created when this Transaction was corrected. */
+            replacementTransactionId: components["schemas"]["TransactionIdValue"] | null;
+        };
+        /** @description Immutable opaque Transaction identifier. */
+        TransactionIdValue: string;
+        /** @description Server-assigned immutable Portfolio-local sequence used only for stable ledger ordering. */
+        PortfolioSequence: string;
+        /** @description Immutable public ledger record. It contains accepted financial facts and direct correction links only; it never exposes ownership, idempotency, audit, outbox, provider, holding, cost-basis, or valuation state. */
+        Transaction: {
+            id: components["schemas"]["TransactionIdValue"];
+            kind: components["schemas"]["TransactionVisibleKind"];
+            assetId: components["schemas"]["TransactionAssetId"] | null;
+            quantity: components["schemas"]["PositiveDecimalString"] | null;
+            unitPrice: components["schemas"]["PositiveDecimalString"] | null;
+            /** @description Accepted attached trade fee; zero when a BUY or SELL omitted fee, null for non-trade kinds. */
+            fee: components["schemas"]["NonNegativeDecimalString"] | null;
+            amount: components["schemas"]["PositiveDecimalString"] | null;
+            currency: components["schemas"]["TransactionCurrency"];
+            effectiveAt: components["schemas"]["TransactionEffectiveAt"];
+            portfolioSequence: components["schemas"]["PortfolioSequence"];
+            /** @description null means absent; an empty string means supplied empty. Supplied values are preserved exactly, without trimming or Unicode normalization. */
+            note: components["schemas"]["TransactionNote"] | null;
+            /** @description null means absent; an empty string means supplied empty. Supplied values are preserved exactly, without trimming or Unicode normalization. */
+            externalReference: components["schemas"]["TransactionExternalReference"] | null;
+            correctionLinks: components["schemas"]["TransactionCorrectionLinks"];
+            createdAt: components["schemas"]["Timestamp"];
+        };
+        /** @description Atomic correction result. original, reversal, and replacement identify one unambiguous immutable relationship. */
+        TransactionCorrectionResult: {
+            original: components["schemas"]["Transaction"];
+            reversal: components["schemas"]["Transaction"];
+            replacement: components["schemas"]["Transaction"];
+        };
+        TransactionListResponse: {
+            items: components["schemas"]["Transaction"][];
+            /** @description Opaque cursor for the next page, or null when history is exhausted. */
+            nextCursor: components["schemas"]["TransactionCursorValue"] | null;
+        };
+        /** @description Versioned opaque Transaction history cursor; clients must return it unchanged. */
+        TransactionCursorValue: string;
         HealthStatus: {
             /** @enum {string} */
             status: "alive" | "ready";
@@ -362,10 +602,8 @@ export interface components {
             correlationId: components["schemas"]["CorrelationIdValue"];
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND" | "PORTFOLIO_NAME_CONFLICT" | "PORTFOLIO_NOT_FOUND" | "PORTFOLIO_ARCHIVED" | "ASSET_NOT_FOUND";
+        ErrorCode: "INVALID_REQUEST" | "REGISTRATION_REJECTED" | "AUTHENTICATION_FAILED" | "SESSION_REFRESH_REJECTED" | "ACCESS_TOKEN_INVALID" | "BROWSER_SECURITY_REJECTED" | "RATE_LIMIT_EXCEEDED" | "AUTH_SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "NOT_READY" | "HTTP_ERROR" | "NOT_FOUND" | "PORTFOLIO_NAME_CONFLICT" | "PORTFOLIO_NOT_FOUND" | "PORTFOLIO_ARCHIVED" | "ASSET_NOT_FOUND" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_TRANSACTION_FIELDS" | "INVALID_DECIMAL" | "INVALID_EFFECTIVE_AT" | "UNSUPPORTED_TRANSACTION_KIND" | "ASSET_FINANCIALLY_INELIGIBLE" | "UNSUPPORTED_TRANSACTION_CURRENCY" | "INSUFFICIENT_ORDERED_ASSET_QUANTITY" | "INVALID_BACKDATED_LEDGER" | "IDEMPOTENCY_CONFLICT" | "TRANSACTION_ALREADY_CORRECTED" | "TRANSACTION_NOT_CORRECTABLE" | "TRANSACTION_NOT_FOUND";
         CorrelationIdValue: string;
-        /** @description Future financial decimal transport. Binary floating-point JSON numbers are prohibited. */
-        DecimalString: string;
         /**
          * Format: date-time
          * @description ISO-8601 UTC instant.
@@ -475,7 +713,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
-        /** @description Portfolio is absent or is not owned by the authenticated principal. Public code is PORTFOLIO_NOT_FOUND for both cases and does not disclose cross-owner resource existence. */
+        /** @description Portfolio is absent or is not owned by the authenticated principal. An unrepresentable opaque route value has the same public result. Public code is PORTFOLIO_NOT_FOUND for all cases and does not disclose cross-owner resource existence or internal identifier details. */
         PortfolioNotFound: {
             headers: {
                 "X-Correlation-ID": components["headers"]["CorrelationId"];
@@ -497,6 +735,66 @@ export interface components {
         };
         /** @description The requested canonical Asset is absent or unsupported. Public code is ASSET_NOT_FOUND; internal catalog lifecycle details are not disclosed. */
         AssetNotFound: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Transaction request validation failed. Public code is INVALID_REQUEST, INVALID_IDEMPOTENCY_KEY, INVALID_TRANSACTION_FIELDS, INVALID_DECIMAL, UNSUPPORTED_TRANSACTION_KIND, or UNSUPPORTED_TRANSACTION_CURRENCY according to the invalid transport component; no parser, schema, or internal identifier details are disclosed. */
+        InvalidTransactionRequest: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description A syntactically valid Transaction command is not permitted. Public code is ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT, INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or PORTFOLIO_ARCHIVED. Asset catalog/provider, ledger replay, and persistence internals are not disclosed. */
+        TransactionCommandRejected: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Idempotency-Key was previously used in this command scope with a different command. Public code is IDEMPOTENCY_CONFLICT; fingerprints, prior request contents, and persistence internals are not disclosed. */
+        IdempotencyConflict: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description The correction cannot be accepted. Public code is IDEMPOTENCY_CONFLICT for different-command key reuse or TRANSACTION_ALREADY_CORRECTED when the target has a direct reversal. Internal correction state is not disclosed beyond the safe public result. */
+        TransactionCorrectionConflict: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description A syntactically valid correction cannot be accepted. Public code is TRANSACTION_NOT_CORRECTABLE when the path target is an internal REVERSAL; otherwise it is ASSET_NOT_FOUND, ASSET_FINANCIALLY_INELIGIBLE, INVALID_EFFECTIVE_AT, INSUFFICIENT_ORDERED_ASSET_QUANTITY, INVALID_BACKDATED_LEDGER, or PORTFOLIO_ARCHIVED for the complete replacement command. Internal correction, ledger replay, and persistence details are not disclosed. */
+        TransactionCorrectionRejected: {
+            headers: {
+                "X-Correlation-ID": components["headers"]["CorrelationId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Transaction is absent, not in the route Portfolio, not owned by the authenticated principal, or cannot be represented from the opaque path value. Public code is TRANSACTION_NOT_FOUND for all cases and does not disclose cross-owner or internal identifier details. */
+        TransactionNotFound: {
             headers: {
                 "X-Correlation-ID": components["headers"]["CorrelationId"];
                 [name: string]: unknown;
@@ -527,6 +825,22 @@ export interface components {
         AssetCursor: string;
         /** @description Maximum number of Assets to return. Defaults to 25 and cannot exceed 100. */
         AssetPageLimit: number;
+        /** @description Immutable opaque Transaction identifier. */
+        TransactionId: string;
+        /** @description Opaque command key for one transaction command scope. It must be 16 to 128 ASCII characters, start with an alphanumeric character, and use only letters, digits, dot, underscore, tilde, or hyphen. The API does not expose command scope or request fingerprints. Reusing one key with an identical command replays the committed result; reuse with a different command returns IDEMPOTENCY_CONFLICT. */
+        IdempotencyKey: string;
+        /** @description Exact visible Transaction kind filter. REVERSAL is history-visible only. */
+        TransactionKindFilter: components["schemas"]["TransactionVisibleKind"];
+        /** @description Inclusive RFC 3339 UTC-Z lexical lower bound for effectiveAt. It may be past or future and has no command-time or ledger-replay semantics. */
+        TransactionEffectiveAtFrom: components["schemas"]["TransactionHistoryTime"];
+        /** @description Inclusive RFC 3339 UTC-Z lexical upper bound for effectiveAt. It may be past or future, has no command-time or ledger-replay semantics, and must not precede effectiveAtFrom. */
+        TransactionEffectiveAtTo: components["schemas"]["TransactionHistoryTime"];
+        /** @description Include internal REVERSAL rows in history. Defaults to true. */
+        TransactionIncludeReversals: boolean;
+        /** @description Opaque version-1 cursor from a previous Transaction history page. Its grammar is v1. followed by unpadded base64url encoding of the canonical UTF-8 JSON tuple [effectiveAt, portfolioSequence, transactionId]; it represents effectiveAt DESC, portfolioSequence DESC, transactionId DESC. Clients must not parse, modify, or construct it. */
+        TransactionCursor: string;
+        /** @description Maximum number of Transactions to return. Defaults to 50 and cannot exceed 100. */
+        TransactionPageLimit: number;
     };
     requestBodies: never;
     headers: {
@@ -910,6 +1224,162 @@ export interface operations {
             };
             401: components["responses"]["AccessTokenUnauthorized"];
             404: components["responses"]["PortfolioNotFound"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    listTransactions: {
+        parameters: {
+            query?: {
+                /** @description Exact visible Transaction kind filter. REVERSAL is history-visible only. */
+                kind?: components["parameters"]["TransactionKindFilter"];
+                /** @description Inclusive RFC 3339 UTC-Z lexical lower bound for effectiveAt. It may be past or future and has no command-time or ledger-replay semantics. */
+                effectiveAtFrom?: components["parameters"]["TransactionEffectiveAtFrom"];
+                /** @description Inclusive RFC 3339 UTC-Z lexical upper bound for effectiveAt. It may be past or future, has no command-time or ledger-replay semantics, and must not precede effectiveAtFrom. */
+                effectiveAtTo?: components["parameters"]["TransactionEffectiveAtTo"];
+                /** @description Include internal REVERSAL rows in history. Defaults to true. */
+                includeReversals?: components["parameters"]["TransactionIncludeReversals"];
+                /** @description Opaque version-1 cursor from a previous Transaction history page. Its grammar is v1. followed by unpadded base64url encoding of the canonical UTF-8 JSON tuple [effectiveAt, portfolioSequence, transactionId]; it represents effectiveAt DESC, portfolioSequence DESC, transactionId DESC. Clients must not parse, modify, or construct it. */
+                cursor?: components["parameters"]["TransactionCursor"];
+                /** @description Maximum number of Transactions to return. Defaults to 50 and cannot exceed 100. */
+                limit?: components["parameters"]["TransactionPageLimit"];
+            };
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-scoped page of immutable Transaction Ledger history. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionListResponse"];
+                };
+            };
+            400: components["responses"]["InvalidTransactionRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["PortfolioNotFound"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    createTransaction: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+                /** @description Opaque command key for one transaction command scope. It must be 16 to 128 ASCII characters, start with an alphanumeric character, and use only letters, digits, dot, underscore, tilde, or hyphen. The API does not expose command scope or request fingerprints. Reusing one key with an identical command replays the committed result; reuse with a different command returns IDEMPOTENCY_CONFLICT. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionCommand"];
+            };
+        };
+        responses: {
+            /** @description Immutable Transaction recorded, or a previously committed identical idempotent result returned. */
+            201: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["InvalidTransactionRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["PortfolioNotFound"];
+            409: components["responses"]["IdempotencyConflict"];
+            422: components["responses"]["TransactionCommandRejected"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    getTransaction: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+                /** @description Immutable opaque Transaction identifier. */
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner-scoped immutable Transaction with correction relationships. */
+            200: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["TransactionNotFound"];
+            500: components["responses"]["InternalFailure"];
+        };
+    };
+    correctTransaction: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller correlation identifier; the API validates or generates it. */
+                "X-Correlation-ID"?: components["parameters"]["RequestCorrelationId"];
+                /** @description Opaque command key for one transaction command scope. It must be 16 to 128 ASCII characters, start with an alphanumeric character, and use only letters, digits, dot, underscore, tilde, or hyphen. The API does not expose command scope or request fingerprints. Reusing one key with an identical command replays the committed result; reuse with a different command returns IDEMPOTENCY_CONFLICT. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Immutable opaque Portfolio identifier. */
+                portfolioId: components["parameters"]["PortfolioId"];
+                /** @description Immutable opaque Transaction identifier. */
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionCorrectionCommand"];
+            };
+        };
+        responses: {
+            /** @description Atomic original, reversal, and replacement relationship recorded, or an identical idempotent result returned. */
+            201: {
+                headers: {
+                    "X-Correlation-ID": components["headers"]["CorrelationId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionCorrectionResult"];
+                };
+            };
+            400: components["responses"]["InvalidTransactionRequest"];
+            401: components["responses"]["AccessTokenUnauthorized"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["TransactionCorrectionConflict"];
+            422: components["responses"]["TransactionCorrectionRejected"];
             500: components["responses"]["InternalFailure"];
         };
     };
