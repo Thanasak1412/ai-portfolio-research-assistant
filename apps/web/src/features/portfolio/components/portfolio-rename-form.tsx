@@ -27,20 +27,27 @@ export function PortfolioRenameForm({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
     defaultValues: { name: portfolio.name },
   });
-  useEffect(() => reset({ name: portfolio.name }), [portfolio.name, reset]);
+  // A detail-query refetch can deliver the same stale Portfolio while the user
+  // is typing. Never replace an in-progress edit with that server value.
+  // A pristine form may still adopt a newly fetched name (for example, after
+  // another browser tab has renamed it).
+  useEffect(() => {
+    if (!isDirty) reset({ name: portfolio.name });
+  }, [isDirty, portfolio.name, reset]);
 
   const submit = async (values: PortfolioNameFormValues) => {
     setSubmissionError(null);
     try {
-      await updatePortfolio.mutateAsync({
+      const updated = await updatePortfolio.mutateAsync({
         portfolioId: portfolio.id,
         input: { name: values.name },
       });
+      reset({ name: updated.name });
     } catch (error) {
       if (error instanceof ApiError && error.code === "PORTFOLIO_ARCHIVED") {
         await queryClient.invalidateQueries({

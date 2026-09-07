@@ -132,6 +132,26 @@ describe("PortfolioDetailScreen", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("preserves an in-progress rename when a stale detail refetch renders", () => {
+    usePortfolio.mockReturnValue(queryState());
+    const { rerender } = renderScreen();
+    const input = screen.getByLabelText("Portfolio name");
+    fireEvent.change(input, { target: { value: "Typing a new name" } });
+
+    // Mimic React Query supplying the still-current server record during a
+    // refetch. The controlled edit must not snap back to `Growth`.
+    usePortfolio.mockReturnValue(queryState({ data: { ...active } }));
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <PortfolioDetailScreen portfolioId="portfolio-1" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByLabelText("Portfolio name")).toHaveValue(
+      "Typing a new name",
+    );
+  });
+
   it("renders archived Portfolios read-only without mutation controls", () => {
     usePortfolio.mockReturnValue(queryState({ data: archived }));
     renderScreen();
