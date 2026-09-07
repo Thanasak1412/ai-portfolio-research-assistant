@@ -5,7 +5,9 @@ package database
 import (
 	"bytes"
 	"context"
+	"os"
 	"reflect"
+	"regexp"
 	"sync"
 	"testing"
 	"time"
@@ -289,14 +291,19 @@ func TestM3PlatformEventingSchemaOwnsOnlyPlatformObjects(t *testing.T) {
 			t.Fatalf("required Platform index %s is missing", index)
 		}
 	}
-	for _, forbidden := range []string{"transactions", "transaction_idempotency"} {
-		var exists bool
-		if err := pool.QueryRow(ctx, `SELECT to_regclass($1) IS NOT NULL`, forbidden).Scan(&exists); err != nil {
-			t.Fatalf("read relation %s: %v", forbidden, err)
-		}
-		if exists {
-			t.Fatalf("M3-PLATFORM-001 must not create %s", forbidden)
-		}
+	// Scope this historical ownership guard to migration 00004, not the latest
+	// schema: M3-DB-001 now legitimately creates Transaction-owned tables in 00005.
+	migration, err := os.ReadFile("../../../migrations/00004_m3_platform_eventing.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	created := regexp.MustCompile(`(?i)CREATE\s+TABLE\s+([a-z_]+)`).FindAllSubmatch(migration, -1)
+	var names []string
+	for _, match := range created {
+		names = append(names, string(match[1]))
+	}
+	if !reflect.DeepEqual(names, []string{"platform_outbox_streams", "platform_outbox_events", "platform_consumer_deduplications"}) {
+		t.Fatalf("M3-PLATFORM-001 table ownership changed: %v", names)
 	}
 }
 
