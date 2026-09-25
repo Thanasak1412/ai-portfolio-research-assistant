@@ -169,6 +169,9 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     await page.getByRole("button", { name: "Save name" }).click();
     const response = await renameResponse;
     expect(response.ok()).toBe(true);
+    expect(response.request().postDataJSON()).toMatchObject({
+      name: renamedPortfolioName,
+    });
     await expect(response.json()).resolves.toMatchObject({
       name: renamedPortfolioName,
     });
