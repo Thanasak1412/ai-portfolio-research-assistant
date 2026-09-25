@@ -154,24 +154,6 @@ describe("PortfolioDetailScreen", () => {
     );
   });
 
-  it("adopts a changed server name when the rename field is untouched", () => {
-    usePortfolio.mockReturnValue(queryState());
-    const { rerender } = renderScreen();
-
-    usePortfolio.mockReturnValue(
-      queryState({ data: { ...active, name: "Server-side rename" } }),
-    );
-    rerender(
-      <QueryClientProvider client={new QueryClient()}>
-        <PortfolioDetailScreen portfolioId="portfolio-1" />
-      </QueryClientProvider>,
-    );
-
-    expect(screen.getByLabelText("Portfolio name")).toHaveValue(
-      "Server-side rename",
-    );
-  });
-
   it("renders archived Portfolios read-only without mutation controls", () => {
     usePortfolio.mockReturnValue(queryState({ data: archived }));
     renderScreen();

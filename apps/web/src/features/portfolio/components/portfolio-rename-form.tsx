@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -27,25 +27,11 @@ export function PortfolioRenameForm({
     register,
     handleSubmit,
     reset,
-    getValues,
     formState: { errors },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
     defaultValues: { name: portfolio.name },
   });
-  const previousPortfolioName = useRef(portfolio.name);
-  // A detail-query refetch can deliver the same stale Portfolio while the user
-  // is typing. Adopt a changed server name only while the current field still
-  // matches the previous server value. This avoids relying on the timing of
-  // React Hook Form's isDirty update and skips the initial reset entirely.
-  useEffect(() => {
-    const previousName = previousPortfolioName.current;
-    if (previousName === portfolio.name) return;
-    previousPortfolioName.current = portfolio.name;
-    if (getValues("name") === previousName) {
-      reset({ name: portfolio.name });
-    }
-  }, [getValues, portfolio.name, reset]);
 
   const submit = async (values: PortfolioNameFormValues) => {
     setSubmissionError(null);

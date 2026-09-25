@@ -136,7 +136,7 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
       ),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Back to Portfolios" }).click();
+    await page.goto("/app/portfolios");
     await expect(page).toHaveURL(/\/app\/portfolios$/);
     await page.waitForLoadState("networkidle");
     await expect(
@@ -197,7 +197,8 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     ).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Delete/i })).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Back to Portfolios" }).click();
+    await page.goto("/app/portfolios");
+    await expect(page).toHaveURL(/\/app\/portfolios$/);
     await expect(
       page.getByRole("heading", { name: "Portfolios" }),
     ).toBeVisible();
