@@ -27,7 +27,7 @@ export function PortfolioRenameForm({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isReady },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
     defaultValues: { name: portfolio.name },
@@ -73,6 +73,7 @@ export function PortfolioRenameForm({
           </label>
           <Input
             id="rename-portfolio-name"
+            disabled={!isReady}
             aria-invalid={!!errors.name}
             aria-describedby={
               errors.name ? "rename-portfolio-name-error" : undefined
@@ -91,7 +92,7 @@ export function PortfolioRenameForm({
         </div>
         <Button
           type="submit"
-          disabled={updatePortfolio.isPending}
+          disabled={!isReady || updatePortfolio.isPending}
           className="sm:mt-6"
         >
           {updatePortfolio.isPending ? "Saving…" : "Save name"}
