@@ -132,15 +132,17 @@ describe("PortfolioDetailScreen", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("preserves an in-progress rename when a stale detail refetch renders", () => {
+  it("preserves an in-progress rename when detail data changes during refetch", () => {
     usePortfolio.mockReturnValue(queryState());
     const { rerender } = renderScreen();
     const input = screen.getByLabelText("Portfolio name");
     fireEvent.change(input, { target: { value: "Typing a new name" } });
 
-    // Mimic React Query supplying the still-current server record during a
-    // refetch. The controlled edit must not snap back to `Growth`.
-    usePortfolio.mockReturnValue(queryState({ data: { ...active } }));
+    // Mimic another query result arriving while the user edits. The changed
+    // server value must not replace the local draft.
+    usePortfolio.mockReturnValue(
+      queryState({ data: { ...active, name: "Server-side rename" } }),
+    );
     rerender(
       <QueryClientProvider client={new QueryClient()}>
         <PortfolioDetailScreen portfolioId="portfolio-1" />
@@ -149,6 +151,24 @@ describe("PortfolioDetailScreen", () => {
 
     expect(screen.getByLabelText("Portfolio name")).toHaveValue(
       "Typing a new name",
+    );
+  });
+
+  it("adopts a changed server name when the rename field is untouched", () => {
+    usePortfolio.mockReturnValue(queryState());
+    const { rerender } = renderScreen();
+
+    usePortfolio.mockReturnValue(
+      queryState({ data: { ...active, name: "Server-side rename" } }),
+    );
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <PortfolioDetailScreen portfolioId="portfolio-1" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByLabelText("Portfolio name")).toHaveValue(
+      "Server-side rename",
     );
   });
 

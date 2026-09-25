@@ -27,23 +27,25 @@ export function PortfolioRenameForm({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isDirty },
+    getValues,
+    formState: { errors },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
     defaultValues: { name: portfolio.name },
   });
   const previousPortfolioName = useRef(portfolio.name);
   // A detail-query refetch can deliver the same stale Portfolio while the user
-  // is typing. Never replace an in-progress edit with that server value.
-  // A pristine form may still adopt a newly fetched name (for example, after
-  // another browser tab has renamed it). Skip the initial effect: defaultValues
-  // already initialized the form, and a delayed initial reset could overwrite
-  // the user's first edit.
+  // is typing. Adopt a changed server name only while the current field still
+  // matches the previous server value. This avoids relying on the timing of
+  // React Hook Form's isDirty update and skips the initial reset entirely.
   useEffect(() => {
-    if (previousPortfolioName.current === portfolio.name || isDirty) return;
+    const previousName = previousPortfolioName.current;
+    if (previousName === portfolio.name) return;
     previousPortfolioName.current = portfolio.name;
-    reset({ name: portfolio.name });
-  }, [isDirty, portfolio.name, reset]);
+    if (getValues("name") === previousName) {
+      reset({ name: portfolio.name });
+    }
+  }, [getValues, portfolio.name, reset]);
 
   const submit = async (values: PortfolioNameFormValues) => {
     setSubmissionError(null);
