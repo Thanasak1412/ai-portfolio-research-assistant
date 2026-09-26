@@ -204,14 +204,34 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
       ),
     ).toHaveCount(0);
 
-    await returnToPortfolioList(page);
+    // await returnToPortfolioList(page);
+    // await page.getByLabel("Portfolio name").fill(originalPortfolioName);
+    // await page.getByRole("button", { name: "Create Portfolio" }).click();
+    // await expect(
+    //   page.getByText("An active portfolio with this name already exists.", {
+    //     exact: true,
+    //   }),
+    // ).toBeVisible();
+
+    const duplicateResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === "/api/v1/portfolios",
+    );
+
     await page.getByLabel("Portfolio name").fill(originalPortfolioName);
     await page.getByRole("button", { name: "Create Portfolio" }).click();
+
+    const res = await duplicateResponse;
+
+    expect(res.status()).toBe(409);
+
     await expect(
       page.getByText("An active portfolio with this name already exists.", {
         exact: true,
       }),
     ).toBeVisible();
+
     await expect(page).toHaveURL(/\/app\/portfolios$/);
     await openPortfolioFromList(page, originalPortfolioName);
     const renameInput = page.getByLabel("Portfolio name");
