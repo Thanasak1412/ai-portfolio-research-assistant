@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +27,17 @@ function getServerSnapshot() {
 
 export function PortfolioRenameForm({
   portfolio,
-}: Readonly<{ portfolio: Portfolio }>) {
+  name,
+  onNameChange,
+}: Readonly<{
+  portfolio: Portfolio;
+  name: string;
+  onNameChange: (name: string) => void;
+}>) {
   const updatePortfolio = useUpdatePortfolio();
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const editedName = useRef<string | null>(null);
   const isHydrated = useSyncExternalStore(
     subscribeToNothing,
     getClientSnapshot,
@@ -43,7 +48,7 @@ export function PortfolioRenameForm({
     event.preventDefault();
     setSubmissionError(null);
     const values = portfolioNameFormSchema.safeParse({
-      name: editedName.current ?? new FormData(event.currentTarget).get("name"),
+      name: new FormData(event.currentTarget).get("name"),
     });
     if (!values.success) {
       setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
@@ -93,9 +98,9 @@ export function PortfolioRenameForm({
               validationError ? "rename-portfolio-name-error" : undefined
             }
             name="name"
-            defaultValue={portfolio.name}
+            value={name}
             onChange={(event) => {
-              editedName.current = event.currentTarget.value;
+              onNameChange(event.currentTarget.value);
               setValidationError(null);
             }}
           />
