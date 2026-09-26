@@ -16,3 +16,10 @@ the Platform-owned `platform_outbox_events` and
 primitives. Outbox payloads contain only bounded role/UUID references and
 their immutable Platform stream position. It creates no
 Transaction ledger, idempotency, financial, provider, or projection table.
+
+Migration `00005_m3_transaction_ledger.sql` creates Transaction-owned immutable
+`transactions` and `transaction_corrections`, plus
+`transaction_portfolio_sequences` and completed `transaction_idempotency` state.
+Its Down migration refuses any retained state. It does not alter migrations
+00001–00004 or Platform eventing. See
+[Transaction Ledger Database Foundation](../../docs/architecture/transaction-database.md).
