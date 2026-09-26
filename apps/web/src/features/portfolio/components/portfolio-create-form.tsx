@@ -21,7 +21,6 @@ export function PortfolioCreateForm() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
@@ -35,7 +34,6 @@ export function PortfolioCreateForm() {
         name: values.name,
         baseCurrency: "USD",
       });
-      reset();
       router.push(`/app/portfolios/${encodeURIComponent(portfolio.id)}`);
     } catch (error) {
       setSubmissionError(portfolioErrorMessage(error));
