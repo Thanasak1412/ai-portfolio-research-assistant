@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,18 @@ import { portfolioKeys } from "@/features/portfolio/model/portfolio-query-keys";
 import { ApiError } from "@/platform/api/api-error";
 import { portfolioNameFormSchema } from "@/features/portfolio/model/portfolio-validation";
 
+function subscribeToNothing() {
+  return () => {};
+}
+
+function getClientSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 export function PortfolioRenameForm({
   portfolio,
 }: Readonly<{ portfolio: Portfolio }>) {
@@ -21,6 +33,11 @@ export function PortfolioRenameForm({
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [name, setName] = useState(portfolio.name);
+  const isInteractive = useSyncExternalStore(
+    subscribeToNothing,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,6 +88,7 @@ export function PortfolioRenameForm({
           </label>
           <Input
             id="rename-portfolio-name"
+            disabled={!isInteractive}
             aria-invalid={!!validationError}
             aria-describedby={
               validationError ? "rename-portfolio-name-error" : undefined
@@ -94,7 +112,7 @@ export function PortfolioRenameForm({
         </div>
         <Button
           type="submit"
-          disabled={updatePortfolio.isPending}
+          disabled={!isInteractive || updatePortfolio.isPending}
           className="sm:mt-6"
         >
           {updatePortfolio.isPending ? "Saving…" : "Save name"}
