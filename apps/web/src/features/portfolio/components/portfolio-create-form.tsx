@@ -18,10 +18,10 @@ export function PortfolioCreateForm() {
   const router = useRouter();
   const createPortfolio = useCreatePortfolio();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<PortfolioNameFormValues>({
     resolver: zodResolver(portfolioNameFormSchema),
@@ -35,7 +35,7 @@ export function PortfolioCreateForm() {
         name: values.name,
         baseCurrency: "USD",
       });
-      reset();
+      setIsNavigating(true);
       router.push(`/app/portfolios/${encodeURIComponent(portfolio.id)}`);
     } catch (error) {
       setSubmissionError(portfolioErrorMessage(error));
@@ -80,10 +80,14 @@ export function PortfolioCreateForm() {
         </div>
         <Button
           type="submit"
-          disabled={createPortfolio.isPending}
+          disabled={createPortfolio.isPending || isNavigating}
           className="sm:mt-6"
         >
-          {createPortfolio.isPending ? "Creating…" : "Create Portfolio"}
+          {createPortfolio.isPending
+            ? "Creating…"
+            : isNavigating
+              ? "Opening…"
+              : "Create Portfolio"}
         </Button>
       </form>
       {submissionError && (

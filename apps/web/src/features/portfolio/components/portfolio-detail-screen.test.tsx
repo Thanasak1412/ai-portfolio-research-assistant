@@ -132,6 +132,43 @@ describe("PortfolioDetailScreen", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("preserves and submits an in-progress rename when detail data changes during refetch", async () => {
+    const update = vi.fn().mockResolvedValue({
+      ...active,
+      name: "Typing a new name",
+    });
+    useUpdatePortfolio.mockReturnValue({
+      isPending: false,
+      mutateAsync: update,
+    });
+    usePortfolio.mockReturnValue(queryState());
+    const { rerender } = renderScreen();
+    const input = screen.getByLabelText("Portfolio name");
+    fireEvent.change(input, { target: { value: "Typing a new name" } });
+
+    // Mimic another query result arriving while the user edits. The changed
+    // server value must not replace the local draft.
+    usePortfolio.mockReturnValue(
+      queryState({ data: { ...active, name: "Server-side rename" } }),
+    );
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <PortfolioDetailScreen portfolioId="portfolio-1" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByLabelText("Portfolio name")).toHaveValue(
+      "Typing a new name",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save name" }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({
+        portfolioId: "portfolio-1",
+        input: { name: "Typing a new name" },
+      }),
+    );
+  });
+
   it("renders archived Portfolios read-only without mutation controls", () => {
     usePortfolio.mockReturnValue(queryState({ data: archived }));
     renderScreen();

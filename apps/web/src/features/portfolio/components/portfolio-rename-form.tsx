@@ -1,9 +1,8 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,35 +10,45 @@ import type { Portfolio } from "@/features/portfolio/api/portfolio-api";
 import { portfolioErrorMessage } from "@/features/portfolio/components/portfolio-error";
 import { useUpdatePortfolio } from "@/features/portfolio/model/portfolio-queries";
 import { portfolioKeys } from "@/features/portfolio/model/portfolio-query-keys";
+import { portfolioNameFormSchema } from "@/features/portfolio/model/portfolio-validation";
 import { ApiError } from "@/platform/api/api-error";
-import {
-  portfolioNameFormSchema,
-  type PortfolioNameFormValues,
-} from "@/features/portfolio/model/portfolio-validation";
 
 export function PortfolioRenameForm({
   portfolio,
-}: Readonly<{ portfolio: Portfolio }>) {
+  name,
+  onNameChange,
+}: Readonly<{
+  portfolio: Portfolio;
+  name: string;
+  onNameChange: (name: string) => void;
+}>) {
   const updatePortfolio = useUpdatePortfolio();
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<PortfolioNameFormValues>({
-    resolver: zodResolver(portfolioNameFormSchema),
-    defaultValues: { name: portfolio.name },
-  });
-  useEffect(() => reset({ name: portfolio.name }), [portfolio.name, reset]);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const submit = async (values: PortfolioNameFormValues) => {
+  useEffect(() => {
+    // Keep the input disabled until client event handlers are attached.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsHydrated(true);
+  }, []);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setSubmissionError(null);
+    const values = portfolioNameFormSchema.safeParse({
+      name: new FormData(event.currentTarget).get("name"),
+    });
+    if (!values.success) {
+      setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
+      return;
+    }
+    setValidationError(null);
     try {
       await updatePortfolio.mutateAsync({
         portfolioId: portfolio.id,
-        input: { name: values.name },
+        input: { name: values.data.name },
       });
     } catch (error) {
       if (error instanceof ApiError && error.code === "PORTFOLIO_ARCHIVED") {
@@ -61,7 +70,7 @@ export function PortfolioRenameForm({
       </h2>
       <form
         className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start"
-        onSubmit={handleSubmit(submit)}
+        onSubmit={submit}
         noValidate
       >
         <div className="min-w-0 flex-1">
@@ -73,25 +82,31 @@ export function PortfolioRenameForm({
           </label>
           <Input
             id="rename-portfolio-name"
-            aria-invalid={!!errors.name}
+            disabled={!isHydrated}
+            aria-invalid={!!validationError}
             aria-describedby={
-              errors.name ? "rename-portfolio-name-error" : undefined
+              validationError ? "rename-portfolio-name-error" : undefined
             }
-            {...register("name")}
+            name="name"
+            value={name}
+            onChange={(event) => {
+              onNameChange(event.currentTarget.value);
+              setValidationError(null);
+            }}
           />
-          {errors.name && (
+          {validationError && (
             <p
               id="rename-portfolio-name-error"
               role="alert"
               className="mt-1 text-sm text-red-700"
             >
-              {errors.name.message}
+              {validationError}
             </p>
           )}
         </div>
         <Button
           type="submit"
-          disabled={updatePortfolio.isPending}
+          disabled={!isHydrated || updatePortfolio.isPending}
           className="sm:mt-6"
         >
           {updatePortfolio.isPending ? "Saving…" : "Save name"}
