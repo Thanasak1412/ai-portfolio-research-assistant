@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/platform/api/api-error";
@@ -14,6 +15,7 @@ export function PortfolioDetailScreen({
   portfolioId,
 }: Readonly<{ portfolioId: string }>) {
   const portfolio = usePortfolio(portfolioId);
+  const [renameDraft, setRenameDraft] = useState<string | null>(null);
   if (portfolio.isLoading)
     return (
       <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -79,7 +81,11 @@ export function PortfolioDetailScreen({
         </section>
       ) : (
         <>
-          <PortfolioRenameForm portfolio={data} />
+          <PortfolioRenameForm
+            portfolio={data}
+            name={renameDraft ?? data.name}
+            onNameChange={setRenameDraft}
+          />
           <PortfolioArchiveConfirmation portfolio={data} />
         </>
       )}

@@ -23,11 +23,79 @@ async function register(page: Page, email: string): Promise<void> {
 async function createPortfolio(page: Page, name: string): Promise<string> {
   await page.goto("/app/portfolios");
   await page.getByLabel("Portfolio name").fill(name);
+  const createResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/v1/portfolios",
+  );
+  const detailNavigation = page.waitForResponse((response) => {
+    const request = response.request();
+    const url = new URL(response.url());
+    return (
+      request.method() === "GET" &&
+      request.headers().rsc === "1" &&
+      /^\/app\/portfolios\/[^/]+$/.test(url.pathname)
+    );
+  });
   await page.getByRole("button", { name: "Create Portfolio" }).click();
+  const [created, navigated] = await Promise.all([
+    createResponse,
+    detailNavigation,
+  ]);
+  expect(created.status()).toBe(201);
+  expect(navigated.ok()).toBe(true);
 
   await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
+  await expect(page.getByText("Base currency: USD")).toBeVisible();
+  await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
+  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   return page.url();
+}
+
+async function returnToPortfolioList(page: Page): Promise<void> {
+  const listNavigation = page.waitForResponse((response) => {
+    const request = response.request();
+    const url = new URL(response.url());
+    return (
+      request.method() === "GET" &&
+      request.headers().rsc === "1" &&
+      url.pathname === "/app/portfolios"
+    );
+  });
+  await page.getByRole("link", { name: "Back to Portfolios" }).click();
+  const navigation = await listNavigation;
+  expect(navigation.ok()).toBe(true);
+  await expect(page).toHaveURL(/\/app\/portfolios$/);
+  await expect(page.getByRole("heading", { name: "Portfolios" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
+}
+
+async function openPortfolioFromList(page: Page, name: string): Promise<void> {
+  const portfolioLink = page.getByRole("link", { name });
+  const href = await portfolioLink.getAttribute("href");
+  expect(href).toMatch(/^\/app\/portfolios\/[^/]+$/);
+  const portfolioId = href?.split("/").at(-1);
+  expect(portfolioId).toBeTruthy();
+  expect(href).toBe(`/app/portfolios/${portfolioId}`);
+  const detailNavigation = page.waitForResponse((response) => {
+    const request = response.request();
+    const url = new URL(response.url());
+    return (
+      request.method() === "GET" &&
+      request.headers().rsc === "1" &&
+      url.pathname === href
+    );
+  });
+  await portfolioLink.click();
+  const navigation = await detailNavigation;
+  expect(navigation.ok()).toBe(true);
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
+  await expect(page.getByLabel("Portfolio name")).toBeEnabled();
 }
 
 async function assertAssetCatalog(page: Page): Promise<void> {
@@ -136,25 +204,35 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
       ),
     ).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Back to Portfolios" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Portfolios" }),
-    ).toBeVisible();
+    await returnToPortfolioList(page);
+
     await page.getByLabel("Portfolio name").fill(originalPortfolioName);
+
+    const duplicateResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === "/api/v1/portfolios",
+    );
+
     await page.getByRole("button", { name: "Create Portfolio" }).click();
+
+    const res = await duplicateResponse;
+
+    expect(res.status()).toBe(409);
+    expect(res.request().postDataJSON()).toMatchObject({
+      name: originalPortfolioName,
+      baseCurrency: "USD",
+    });
+
     await expect(
       page.getByText("An active portfolio with this name already exists.", {
         exact: true,
       }),
     ).toBeVisible();
 
-    await page.getByRole("link", { name: originalPortfolioName }).click();
-    await expect(
-      page.getByRole("heading", { name: originalPortfolioName }),
-    ).toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await expect(page).toHaveURL(/\/app\/portfolios$/);
+    await openPortfolioFromList(page, originalPortfolioName);
     const renameInput = page.getByLabel("Portfolio name");
-    await expect(renameInput).toHaveValue(originalPortfolioName);
     await renameInput.fill(renamedPortfolioName);
     await expect(renameInput).toHaveValue(renamedPortfolioName);
     const renameResponse = page.waitForResponse(
@@ -165,6 +243,9 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     await page.getByRole("button", { name: "Save name" }).click();
     const response = await renameResponse;
     expect(response.ok()).toBe(true);
+    expect(response.request().postDataJSON()).toMatchObject({
+      name: renamedPortfolioName,
+    });
     await expect(response.json()).resolves.toMatchObject({
       name: renamedPortfolioName,
     });
@@ -190,10 +271,7 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     ).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Delete/i })).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Back to Portfolios" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Portfolios" }),
-    ).toBeVisible();
+    await returnToPortfolioList(page);
     await page.getByRole("button", { name: "Archived" }).click();
     await expect(
       page.getByRole("link", { name: renamedPortfolioName }),
@@ -212,10 +290,7 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
 
     const archivedPortfolioPath = new URL(archivedPortfolioURL).pathname;
-    await page.goto("/app/portfolios");
-    await expect(
-      page.getByRole("heading", { name: "Portfolios" }),
-    ).toBeVisible();
+    await returnToPortfolioList(page);
     await page.getByRole("button", { name: "Archived" }).click();
     const archivedPortfolioLink = page.getByRole("link", {
       name: renamedPortfolioName,
