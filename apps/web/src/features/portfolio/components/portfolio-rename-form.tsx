@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,20 +10,8 @@ import type { Portfolio } from "@/features/portfolio/api/portfolio-api";
 import { portfolioErrorMessage } from "@/features/portfolio/components/portfolio-error";
 import { useUpdatePortfolio } from "@/features/portfolio/model/portfolio-queries";
 import { portfolioKeys } from "@/features/portfolio/model/portfolio-query-keys";
-import { ApiError } from "@/platform/api/api-error";
 import { portfolioNameFormSchema } from "@/features/portfolio/model/portfolio-validation";
-
-function subscribeToNothing() {
-  return () => {};
-}
-
-function getClientSnapshot() {
-  return true;
-}
-
-function getServerSnapshot() {
-  return false;
-}
+import { ApiError } from "@/platform/api/api-error";
 
 export function PortfolioRenameForm({
   portfolio,
@@ -32,12 +20,6 @@ export function PortfolioRenameForm({
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [name, setName] = useState(portfolio.name);
-  const isInteractive = useSyncExternalStore(
-    subscribeToNothing,
-    getClientSnapshot,
-    getServerSnapshot,
-  );
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -51,11 +33,10 @@ export function PortfolioRenameForm({
     }
     setValidationError(null);
     try {
-      const updated = await updatePortfolio.mutateAsync({
+      await updatePortfolio.mutateAsync({
         portfolioId: portfolio.id,
         input: { name: values.data.name },
       });
-      setName(updated.name);
     } catch (error) {
       if (error instanceof ApiError && error.code === "PORTFOLIO_ARCHIVED") {
         await queryClient.invalidateQueries({
@@ -88,17 +69,13 @@ export function PortfolioRenameForm({
           </label>
           <Input
             id="rename-portfolio-name"
-            disabled={!isInteractive}
             aria-invalid={!!validationError}
             aria-describedby={
               validationError ? "rename-portfolio-name-error" : undefined
             }
             name="name"
-            value={name}
-            onChange={(event) => {
-              setName(event.currentTarget.value);
-              setValidationError(null);
-            }}
+            defaultValue={portfolio.name}
+            onChange={() => setValidationError(null)}
           />
           {validationError && (
             <p
@@ -112,7 +89,7 @@ export function PortfolioRenameForm({
         </div>
         <Button
           type="submit"
-          disabled={!isInteractive || updatePortfolio.isPending}
+          disabled={updatePortfolio.isPending}
           className="sm:mt-6"
         >
           {updatePortfolio.isPending ? "Saving…" : "Save name"}

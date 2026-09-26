@@ -132,7 +132,15 @@ describe("PortfolioDetailScreen", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("preserves an in-progress rename when detail data changes during refetch", () => {
+  it("preserves and submits an in-progress rename when detail data changes during refetch", async () => {
+    const update = vi.fn().mockResolvedValue({
+      ...active,
+      name: "Typing a new name",
+    });
+    useUpdatePortfolio.mockReturnValue({
+      isPending: false,
+      mutateAsync: update,
+    });
     usePortfolio.mockReturnValue(queryState());
     const { rerender } = renderScreen();
     const input = screen.getByLabelText("Portfolio name");
@@ -151,6 +159,13 @@ describe("PortfolioDetailScreen", () => {
 
     expect(screen.getByLabelText("Portfolio name")).toHaveValue(
       "Typing a new name",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save name" }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({
+        portfolioId: "portfolio-1",
+        input: { name: "Typing a new name" },
+      }),
     );
   });
 
