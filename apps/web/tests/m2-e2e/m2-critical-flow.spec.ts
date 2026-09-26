@@ -204,14 +204,9 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
       ),
     ).toHaveCount(0);
 
-    // await returnToPortfolioList(page);
-    // await page.getByLabel("Portfolio name").fill(originalPortfolioName);
-    // await page.getByRole("button", { name: "Create Portfolio" }).click();
-    // await expect(
-    //   page.getByText("An active portfolio with this name already exists.", {
-    //     exact: true,
-    //   }),
-    // ).toBeVisible();
+    await returnToPortfolioList(page);
+
+    await page.getByLabel("Portfolio name").fill(originalPortfolioName);
 
     const duplicateResponse = page.waitForResponse(
       (response) =>
@@ -219,7 +214,6 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
         new URL(response.url()).pathname === "/api/v1/portfolios",
     );
 
-    await page.getByLabel("Portfolio name").fill(originalPortfolioName);
     await page.getByRole("button", { name: "Create Portfolio" }).click();
 
     const res = await duplicateResponse;
