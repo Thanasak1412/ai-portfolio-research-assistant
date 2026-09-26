@@ -28,13 +28,26 @@ async function createPortfolio(page: Page, name: string): Promise<string> {
       response.request().method() === "POST" &&
       new URL(response.url()).pathname === "/api/v1/portfolios",
   );
+  const detailNavigation = page.waitForResponse((response) => {
+    const request = response.request();
+    const url = new URL(response.url());
+    return (
+      request.method() === "GET" &&
+      request.headers().rsc === "1" &&
+      /^\/app\/portfolios\/[^/]+$/.test(url.pathname)
+    );
+  });
   await page.getByRole("button", { name: "Create Portfolio" }).click();
-  expect((await createResponse).status()).toBe(201);
+  const [created, navigated] = await Promise.all([
+    createResponse,
+    detailNavigation,
+  ]);
+  expect(created.status()).toBe(201);
+  expect(navigated.ok()).toBe(true);
 
   await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
-  await page.waitForLoadState("networkidle");
   await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   return page.url();
 }
