@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ export function PortfolioRenameForm({
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const editedName = useRef<string | null>(null);
   const isHydrated = useSyncExternalStore(
     subscribeToNothing,
     getClientSnapshot,
@@ -42,7 +43,7 @@ export function PortfolioRenameForm({
     event.preventDefault();
     setSubmissionError(null);
     const values = portfolioNameFormSchema.safeParse({
-      name: new FormData(event.currentTarget).get("name"),
+      name: editedName.current ?? new FormData(event.currentTarget).get("name"),
     });
     if (!values.success) {
       setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
@@ -93,7 +94,10 @@ export function PortfolioRenameForm({
             }
             name="name"
             defaultValue={portfolio.name}
-            onChange={() => setValidationError(null)}
+            onChange={(event) => {
+              editedName.current = event.currentTarget.value;
+              setValidationError(null);
+            }}
           />
           {validationError && (
             <p
