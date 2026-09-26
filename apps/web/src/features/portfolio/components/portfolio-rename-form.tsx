@@ -3,7 +3,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +11,7 @@ import { portfolioErrorMessage } from "@/features/portfolio/components/portfolio
 import { useUpdatePortfolio } from "@/features/portfolio/model/portfolio-queries";
 import { portfolioKeys } from "@/features/portfolio/model/portfolio-query-keys";
 import { ApiError } from "@/platform/api/api-error";
-import {
-  portfolioNameFormSchema,
-  type PortfolioNameFormValues,
-} from "@/features/portfolio/model/portfolio-validation";
+import { portfolioNameFormSchema } from "@/features/portfolio/model/portfolio-validation";
 
 export function PortfolioRenameForm({
   portfolio,
@@ -24,22 +20,12 @@ export function PortfolioRenameForm({
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const {
-    register,
-    reset,
-    formState: { isReady },
-  } = useForm<PortfolioNameFormValues>({
-    defaultValues: { name: portfolio.name },
-  });
-
-  const nameField = register("name");
+  const [name, setName] = useState(portfolio.name);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmissionError(null);
-    const values = portfolioNameFormSchema.safeParse({
-      name: new FormData(event.currentTarget).get("name"),
-    });
+    const values = portfolioNameFormSchema.safeParse({ name });
     if (!values.success) {
       setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
       return;
@@ -50,7 +36,7 @@ export function PortfolioRenameForm({
         portfolioId: portfolio.id,
         input: { name: values.data.name },
       });
-      reset({ name: updated.name });
+      setName(updated.name);
     } catch (error) {
       if (error instanceof ApiError && error.code === "PORTFOLIO_ARCHIVED") {
         await queryClient.invalidateQueries({
@@ -83,14 +69,14 @@ export function PortfolioRenameForm({
           </label>
           <Input
             id="rename-portfolio-name"
-            disabled={!isReady}
             aria-invalid={!!validationError}
             aria-describedby={
               validationError ? "rename-portfolio-name-error" : undefined
             }
-            {...nameField}
+            name="name"
+            value={name}
             onChange={(event) => {
-              nameField.onChange(event);
+              setName(event.currentTarget.value);
               setValidationError(null);
             }}
           />
@@ -106,7 +92,7 @@ export function PortfolioRenameForm({
         </div>
         <Button
           type="submit"
-          disabled={!isReady || updatePortfolio.isPending}
+          disabled={updatePortfolio.isPending}
           className="sm:mt-6"
         >
           {updatePortfolio.isPending ? "Saving…" : "Save name"}
