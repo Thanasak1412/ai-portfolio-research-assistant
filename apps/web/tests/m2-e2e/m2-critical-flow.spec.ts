@@ -23,11 +23,19 @@ async function register(page: Page, email: string): Promise<void> {
 async function createPortfolio(page: Page, name: string): Promise<string> {
   await page.goto("/app/portfolios");
   await page.getByLabel("Portfolio name").fill(name);
+  const createResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/v1/portfolios",
+  );
   await page.getByRole("button", { name: "Create Portfolio" }).click();
+  expect((await createResponse).status()).toBe(201);
 
   await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  await page.waitForLoadState("networkidle");
+  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   return page.url();
 }
 
