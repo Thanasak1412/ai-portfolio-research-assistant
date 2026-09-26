@@ -219,6 +219,10 @@ test.describe.serial("M2 Portfolio and Asset real-stack critical flow", () => {
     const res = await duplicateResponse;
 
     expect(res.status()).toBe(409);
+    expect(res.request().postDataJSON()).toMatchObject({
+      name: originalPortfolioName,
+      baseCurrency: "USD",
+    });
 
     await expect(
       page.getByText("An active portfolio with this name already exists.", {
