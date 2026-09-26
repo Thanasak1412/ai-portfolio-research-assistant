@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,18 +12,6 @@ import { useUpdatePortfolio } from "@/features/portfolio/model/portfolio-queries
 import { portfolioKeys } from "@/features/portfolio/model/portfolio-query-keys";
 import { portfolioNameFormSchema } from "@/features/portfolio/model/portfolio-validation";
 import { ApiError } from "@/platform/api/api-error";
-
-function subscribeToNothing() {
-  return () => {};
-}
-
-function getClientSnapshot() {
-  return true;
-}
-
-function getServerSnapshot() {
-  return false;
-}
 
 export function PortfolioRenameForm({
   portfolio,
@@ -38,11 +26,13 @@ export function PortfolioRenameForm({
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const isHydrated = useSyncExternalStore(
-    subscribeToNothing,
-    getClientSnapshot,
-    getServerSnapshot,
-  );
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    // Keep the input disabled until client event handlers are attached.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsHydrated(true);
+  }, []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
