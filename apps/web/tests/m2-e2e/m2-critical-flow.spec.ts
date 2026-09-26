@@ -27,6 +27,7 @@ async function createPortfolio(page: Page, name: string): Promise<string> {
 
   await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await expect(page.getByLabel("Portfolio name")).toBeEnabled();
   return page.url();
 }
 
