@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import type { FormEvent } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -23,22 +23,32 @@ export function PortfolioRenameForm({
   const updatePortfolio = useUpdatePortfolio();
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const {
     register,
-    handleSubmit,
     reset,
-    formState: { errors, isReady },
+    formState: { isReady },
   } = useForm<PortfolioNameFormValues>({
-    resolver: zodResolver(portfolioNameFormSchema),
     defaultValues: { name: portfolio.name },
   });
 
-  const submit = async (values: PortfolioNameFormValues) => {
+  const nameField = register("name");
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setSubmissionError(null);
+    const values = portfolioNameFormSchema.safeParse({
+      name: new FormData(event.currentTarget).get("name"),
+    });
+    if (!values.success) {
+      setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
+      return;
+    }
+    setValidationError(null);
     try {
       const updated = await updatePortfolio.mutateAsync({
         portfolioId: portfolio.id,
-        input: { name: values.name },
+        input: { name: values.data.name },
       });
       reset({ name: updated.name });
     } catch (error) {
@@ -61,7 +71,7 @@ export function PortfolioRenameForm({
       </h2>
       <form
         className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start"
-        onSubmit={handleSubmit(submit)}
+        onSubmit={submit}
         noValidate
       >
         <div className="min-w-0 flex-1">
@@ -74,19 +84,23 @@ export function PortfolioRenameForm({
           <Input
             id="rename-portfolio-name"
             disabled={!isReady}
-            aria-invalid={!!errors.name}
+            aria-invalid={!!validationError}
             aria-describedby={
-              errors.name ? "rename-portfolio-name-error" : undefined
+              validationError ? "rename-portfolio-name-error" : undefined
             }
-            {...register("name")}
+            {...nameField}
+            onChange={(event) => {
+              nameField.onChange(event);
+              setValidationError(null);
+            }}
           />
-          {errors.name && (
+          {validationError && (
             <p
               id="rename-portfolio-name-error"
               role="alert"
               className="mt-1 text-sm text-red-700"
             >
-              {errors.name.message}
+              {validationError}
             </p>
           )}
         </div>
