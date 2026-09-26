@@ -25,7 +25,9 @@ export function PortfolioRenameForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmissionError(null);
-    const values = portfolioNameFormSchema.safeParse({ name });
+    const values = portfolioNameFormSchema.safeParse({
+      name: new FormData(event.currentTarget).get("name"),
+    });
     if (!values.success) {
       setValidationError(values.error.issues[0]?.message ?? "Invalid name.");
       return;
