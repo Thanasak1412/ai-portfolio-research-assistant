@@ -45,6 +45,7 @@
 - [ADR-019 — Refresh Token Representation and Digest](adr/ADR-019-refresh-token-representation-and-digest.md)
 - [ADR-020 — Authentication HMAC Key Representation and Derivation](adr/ADR-020-authentication-hmac-key-representation-and-derivation.md)
 - [ADR-021 — Trusted HTTPS Scheme Attestation](adr/ADR-021-trusted-https-scheme-attestation.md)
+- [ADR-022 — Transaction Outbox Delivery Operational Policy](adr/ADR-022-transaction-outbox-delivery-operational-policy.md) (proposed; M3-BE-002 delivery gate)
 
 ## Operational contracts
 
