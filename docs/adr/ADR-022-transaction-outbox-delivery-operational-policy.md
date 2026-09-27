@@ -88,7 +88,7 @@ consumers use the durable `(consumer_name, event_id)` deduplication invariant.
 | `OUTBOX_POLL_INTERVAL` | `2s` |
 
 Configuration validation must reject non-positive durations, a retry maximum
-below its base, a maximum-attempt count below one, and a batch size outside
+below its base, a maximum delivery-invocation count below one, and a batch size outside
 `1..100`. Overrides must preserve the delivery algorithm and ordering
 invariants. Changes to the algorithm, at-least-once guarantee, dead-letter
 semantics, or aggregate ordering require architecture review. No M4 consumer
@@ -107,10 +107,13 @@ is authorized by this configuration contract.
 
 ## Approval and implementation gate
 
-This ADR is **proposed**, not an implementation approval, until its policy text
-has been reviewed, all seven ADR-013 checks pass on the current PR head, the
-branch is current with protected `main`, review conversations are resolved,
-the maintainer completes self-review, and the PR merges into protected `main`.
-Before merge, update its status to `Accepted` only after that review evidence
-exists. The existing M3-BE-002 branch may incorporate it only after the ADR PR
-merges. Until then, production outbox delivery wiring remains paused.
+This ADR is accepted as `OUTBOX_DELIVERY-v1`.
+
+It was reviewed under ADR-013 and authorizes M3-BE-002 to implement the
+approved outbox delivery policy.
+
+Changes to the delivery algorithm, at-least-once guarantee, dead-letter
+semantics, aggregate ordering, or the approved operational defaults require
+architecture review.
+
+M3-BE-002 may now implement this policy. M3-BE-003 and M4 remain outside scope.
