@@ -36,12 +36,24 @@ retryDelay       = a uniform random duration in [0, retryCap(attempt)]
 ```
 
 The base is **5 seconds**, multiplier **2**, and maximum cap **5 minutes**.
-`attempt` is the durable `attempt_count` incremented by Platform's `ClaimDue`
-operation, not a process-local counter. Attempts 1 through 9 are rescheduled
-after a retryable failure. Failure of attempt **10** marks the event
-`DEAD_LETTER`; it is not rescheduled. Claim cycles are paced by the poll
-interval below, including when a jitter result is zero, so retries cannot
-form a tight loop.
+The maximum is **10 delivery invocations** of the publisher. Platform's
+`ClaimDue` increments durable `attempt_count` on every claim, including an
+expired-lease reclaim, so that count is not itself the number of publisher
+invocations. For a claimed event with `attempt_count` from 1 through 10, the
+worker may invoke the publisher once. Retryable failures after invocations 1
+through 9 are rescheduled. A retryable failure after invocation 10 marks the
+event `DEAD_LETTER` and is not rescheduled.
+
+An expired final claim can be reclaimed after the former worker may have
+invoked the publisher but failed to acknowledge. If such a recovery claim has
+`attempt_count > 10`, the worker must not invoke the publisher. It immediately
+marks its currently owned claim `DEAD_LETTER` with the bounded safe failure
+code `delivery_attempts_exhausted`. This administrative recovery is not a
+delivery invocation. Durable `attempt_count` may exceed 10 only in this final
+lease-expiry recovery case. The uncertain external outcome is sent to manual
+review; no automatic redelivery or dead-letter replay is authorized. Claim
+cycles are paced by the poll interval below, including when a jitter result is
+zero, so retries cannot form a tight loop.
 
 A `DEAD_LETTER` event is not `PUBLISHED`. Platform's predecessor check therefore
 blocks later events in the same aggregate stream. This is an operational
@@ -71,7 +83,7 @@ consumers use the durable `(consumer_name, event_id)` deduplication invariant.
 | `OUTBOX_LEASE_DURATION` | `60s` |
 | `OUTBOX_RETRY_BASE_DELAY` | `5s` |
 | `OUTBOX_RETRY_MAX_DELAY` | `5m` |
-| `OUTBOX_MAX_ATTEMPTS` | `10` |
+| `OUTBOX_MAX_DELIVERY_INVOCATIONS` | `10` |
 | `OUTBOX_BATCH_SIZE` | `50` |
 | `OUTBOX_POLL_INTERVAL` | `2s` |
 
