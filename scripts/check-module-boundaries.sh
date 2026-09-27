@@ -92,4 +92,12 @@ if [ -n "$asset_transport_violations" ]; then
   exit 1
 fi
 
+transaction_domain_violations=$(rg -n --glob '*.go' \
+  '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/transaction/(application|infrastructure|transport)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/(asset|portfolio|identity)/(application|infrastructure|transport)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen' \
+  "$backend_root/transaction/domain" || true)
+if [ -n "$transaction_domain_violations" ]; then
+  echo "Transaction domain imports a forbidden outer layer or module implementation:$transaction_domain_violations" >&2
+  exit 1
+fi
+
 echo "Module boundary check passed"
