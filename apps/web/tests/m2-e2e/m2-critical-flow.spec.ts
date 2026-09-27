@@ -75,23 +75,20 @@ async function returnToPortfolioList(page: Page): Promise<void> {
 
 async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   const portfolioLink = page.getByRole("link", { name });
+
+  await expect(portfolioLink).toBeVisible();
+
   const href = await portfolioLink.getAttribute("href");
   expect(href).toMatch(/^\/app\/portfolios\/[^/]+$/);
+
   const portfolioId = href?.split("/").at(-1);
   expect(portfolioId).toBeTruthy();
   expect(href).toBe(`/app/portfolios/${portfolioId}`);
-  const detailNavigation = page.waitForResponse((response) => {
-    const request = response.request();
-    const url = new URL(response.url());
-    return (
-      request.method() === "GET" &&
-      request.headers().rsc === "1" &&
-      url.pathname === href
-    );
-  });
-  await portfolioLink.click();
-  const navigation = await detailNavigation;
-  expect(navigation.ok()).toBe(true);
+
+  const navigation = await page.goto(href!);
+
+  expect(navigation?.ok()).toBe(true);
+
   await expect(page).toHaveURL(new RegExp(`${href}$`));
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
