@@ -1,6 +1,6 @@
 # ADR-022 — Transaction Outbox Delivery Operational Policy
 
-**Status:** Proposed (pending ADR-013 review and merge)
+**Status:** Accepted
 **Date:** 2026-09-27
 
 ## Context
@@ -116,4 +116,4 @@ Changes to the delivery algorithm, at-least-once guarantee, dead-letter
 semantics, aggregate ordering, or the approved operational defaults require
 architecture review.
 
-M3-BE-002 may now implement this policy. M3-BE-003 and M4 remain outside scope.
+M3-BE-002 may proceed. M3-BE-003 and M4 remain outside scope.
