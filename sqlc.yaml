@@ -2,6 +2,16 @@ version: "2"
 sql:
   - engine: "postgresql"
     schema: "backend/migrations"
+    queries: "backend/queries/transaction"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "backend/internal/transaction/infrastructure/database/sqlcgen"
+        sql_package: "pgx/v5"
+        emit_empty_slices: true
+        omit_unused_structs: true
+  - engine: "postgresql"
+    schema: "backend/migrations"
     queries: "backend/queries/platform"
     gen:
       go:
