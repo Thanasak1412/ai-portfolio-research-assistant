@@ -73,10 +73,7 @@ async function returnToPortfolioList(page: Page): Promise<void> {
   await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
 }
 
-async function openPortfolioFromList(
-  page: Page,
-  name: string,
-): Promise<void> {
+async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   const portfolioLink = page.getByRole("link", { name });
 
   await expect(portfolioLink).toBeVisible();
@@ -93,9 +90,7 @@ async function openPortfolioFromList(
   expect(navigation?.ok()).toBe(true);
 
   await expect(page).toHaveURL(new RegExp(`${href}$`));
-  await expect(
-    page.getByRole("heading", { name, exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
 }
