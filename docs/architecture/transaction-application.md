@@ -78,11 +78,26 @@ acknowledge with a bounded context and its original token. Other interrupted
 work recovers through lease expiry. A dead-letter predecessor continues to
 block its aggregate. There is no automatic dead-letter replay.
 
-`RunWithDelivery` supervises heartbeat and delivery with an explicit publisher.
-**Runtime composition remains pending a receiver decision:** the repository has
-no publisher destination or registered event consumers. `cmd/worker` still runs
-its heartbeat and does not claim events. No logging/no-op publisher has been
-installed. M3-BE-002 is not complete until this activation decision is resolved.
+Accepted ADR-023 governs activation independently of the ADR-022 engine.
+`cmd/worker` calls `RunConfigured` without a publisher: it reports Transaction
+publication as inactive and runs heartbeat only. It neither constructs an
+outbox store nor starts a delivery runner. No receiver means zero claim cycles,
+zero attempts, zero publisher invocations, and no retry, dead-letter, or
+publication transitions. Pending events remain durable and ledger writes remain
+available with their required atomic outbox persistence.
+
+When a separately reviewed real receiver is supplied, `RunConfigured` constructs
+the existing engine and `RunWithDelivery` supervises heartbeat and delivery.
+Missing active dependencies remain errors, not an implicit disable fallback.
+There is no enable flag, fake receiver, or logging/no-op publisher. Concrete
+Transaction publication is NOT active; no active end-to-end delivery is claimed.
+
+Unit tests run synchronized heartbeat cycles with a store spy and prove zero
+claims. The PostgreSQL integration test commits a real Transaction command,
+runs the same composition boundary as `cmd/worker`, and compares the entire
+outbox row before and after: `PENDING`, attempt count zero, and all metadata
+unchanged. Testing this boundary avoids subprocess lifecycle scaffolding while
+exercising the actual runtime activation decision.
 
 No M4 consumer, external broker, financial projection, provider integration,
 frontend change, or public Transaction route is introduced.
