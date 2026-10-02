@@ -53,6 +53,7 @@
 - [Portfolio and Asset Database Ownership](architecture/portfolio-asset-database.md)
 - [Transaction Ledger Database Foundation](architecture/transaction-database.md) (M3-DB-001; persistence only)
 - [Transaction Ledger Domain Foundation](architecture/transaction-domain.md) (M3-BE-001; pure domain only)
+- [Transaction Application and Delivery Foundation](architecture/transaction-application.md) (M3-BE-002; runtime publisher composition pending)
 - [Authentication Local HTTPS](engineering/authentication-local-https.md)
 - [Authentication Deployment Contract](engineering/authentication-deployment-contract.md)
 - [Authentication Backend Runtime](engineering/authentication-backend-runtime.md)
