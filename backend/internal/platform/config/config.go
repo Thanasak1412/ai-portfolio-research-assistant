@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/worker"
 )
 
 type LookupFunc func(string) (string, bool)
@@ -21,6 +23,7 @@ type Config struct {
 	LogLevel                string
 	ShutdownTimeout         time.Duration
 	WorkerHeartbeatInterval time.Duration
+	OutboxDelivery          worker.DeliveryConfig
 }
 
 func Load(lookup LookupFunc) (Config, error) {
@@ -53,6 +56,18 @@ func Load(lookup LookupFunc) (Config, error) {
 	config.DatabaseConnectTimeout = duration(lookup, "DB_CONNECT_TIMEOUT", 5*time.Second, &problems)
 	config.ShutdownTimeout = duration(lookup, "SHUTDOWN_TIMEOUT", 10*time.Second, &problems)
 	config.WorkerHeartbeatInterval = duration(lookup, "WORKER_HEARTBEAT_INTERVAL", 30*time.Second, &problems)
+	defaults := worker.DefaultDeliveryConfig()
+	config.OutboxDelivery = worker.DeliveryConfig{
+		LeaseDuration:          duration(lookup, "OUTBOX_LEASE_DURATION", defaults.LeaseDuration, &problems),
+		RetryBaseDelay:         duration(lookup, "OUTBOX_RETRY_BASE_DELAY", defaults.RetryBaseDelay, &problems),
+		RetryMaxDelay:          duration(lookup, "OUTBOX_RETRY_MAX_DELAY", defaults.RetryMaxDelay, &problems),
+		MaxDeliveryInvocations: int32(integer(lookup, "OUTBOX_MAX_DELIVERY_INVOCATIONS", int(defaults.MaxDeliveryInvocations), 1, int(worker.MaximumDeliveryInvocations), &problems)),
+		BatchSize:              int32(integer(lookup, "OUTBOX_BATCH_SIZE", int(defaults.BatchSize), 1, 100, &problems)),
+		PollInterval:           duration(lookup, "OUTBOX_POLL_INTERVAL", defaults.PollInterval, &problems),
+	}
+	if config.OutboxDelivery.RetryMaxDelay < config.OutboxDelivery.RetryBaseDelay {
+		problems = append(problems, "OUTBOX_RETRY_MAX_DELAY cannot be below OUTBOX_RETRY_BASE_DELAY")
+	}
 
 	if config.DatabaseMinConnections > config.DatabaseMaxConnections {
 		problems = append(problems, "DB_MIN_CONNS cannot exceed DB_MAX_CONNS")
