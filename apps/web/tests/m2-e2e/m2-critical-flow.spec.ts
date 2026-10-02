@@ -63,11 +63,8 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   expect(portfolioId).toBeTruthy();
   expect(href).toBe(`/app/portfolios/${portfolioId}`);
 
-  const navigation = await page.goto(href!);
-
-  expect(navigation?.ok()).toBe(true);
-
-  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  await portfolioLink.click();
+  await expect(page).toHaveURL((url) => url.pathname === href);
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
