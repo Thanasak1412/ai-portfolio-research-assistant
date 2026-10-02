@@ -28,47 +28,25 @@ async function createPortfolio(page: Page, name: string): Promise<string> {
       response.request().method() === "POST" &&
       new URL(response.url()).pathname === "/api/v1/portfolios",
   );
-  const detailNavigation = page.waitForResponse((response) => {
-    const request = response.request();
-    const url = new URL(response.url());
-    return (
-      request.method() === "GET" &&
-      request.headers().rsc === "1" &&
-      /^\/app\/portfolios\/[^/]+$/.test(url.pathname)
-    );
-  });
   await page.getByRole("button", { name: "Create Portfolio" }).click();
-  const [created, navigated] = await Promise.all([
-    createResponse,
-    detailNavigation,
-  ]);
+  const created = await createResponse;
   expect(created.status()).toBe(201);
-  expect(navigated.ok()).toBe(true);
+  const createdPortfolio = (await created.json()) as { id: string };
+  expect(createdPortfolio.id).toBeTruthy();
+  const detailPath = `/app/portfolios/${encodeURIComponent(createdPortfolio.id)}`;
 
-  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
+  await expect(page).toHaveURL((url) => url.pathname === detailPath);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
   await expect(page.getByText("Base currency: USD")).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
-  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   return page.url();
 }
 
 async function returnToPortfolioList(page: Page): Promise<void> {
-  const listNavigation = page.waitForResponse((response) => {
-    const request = response.request();
-    const url = new URL(response.url());
-    return (
-      request.method() === "GET" &&
-      request.headers().rsc === "1" &&
-      url.pathname === "/app/portfolios"
-    );
-  });
   await page.getByRole("link", { name: "Back to Portfolios" }).click();
-  const navigation = await listNavigation;
-  expect(navigation.ok()).toBe(true);
-  await expect(page).toHaveURL(/\/app\/portfolios$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/app/portfolios");
   await expect(page.getByRole("heading", { name: "Portfolios" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
 }
