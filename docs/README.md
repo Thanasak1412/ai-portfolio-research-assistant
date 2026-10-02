@@ -46,6 +46,7 @@
 - [ADR-020 — Authentication HMAC Key Representation and Derivation](adr/ADR-020-authentication-hmac-key-representation-and-derivation.md)
 - [ADR-021 — Trusted HTTPS Scheme Attestation](adr/ADR-021-trusted-https-scheme-attestation.md)
 - [ADR-022 — Transaction Outbox Delivery Operational Policy](adr/ADR-022-transaction-outbox-delivery-operational-policy.md) (accepted; M3-BE-002 delivery gate)
+- [ADR-023 — Transaction Outbox Publication Activation Prerequisite](adr/ADR-023-transaction-publication-activation-prerequisite.md) (accepted; M3-BE-002 receiver prerequisite)
 
 ## Operational contracts
 

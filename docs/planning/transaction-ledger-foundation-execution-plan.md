@@ -337,6 +337,17 @@ idempotent internal-event consumption under ADR-004. `M3-PLATFORM-001` owns the
 persistence and interface design for this invariant. M3 does not implement any
 M4 projection consumer.
 
+Accepted
+[ADR-023](../adr/ADR-023-transaction-publication-activation-prerequisite.md)
+defines the activation prerequisite. M3-BE-002 establishes the
+complete `OUTBOX_DELIVERY-v1` publication engine. Without an approved concrete
+receiver, runtime publication remains inactive: no claim cycles, attempts,
+retries, dead-letter transitions, or publication acknowledgements occur because
+of receiver absence. New events remain durably `PENDING`; existing state is not
+reset. Ledger/idempotency/audit/outbox writes remain atomic and independent of
+receiver availability. Real publication activation requires a separately
+reviewed receiver and handoff contract. No M4 consumer or broker is authorized.
+
 ## 6. Architecture and contract direction
 
 ### 6.1 Module boundaries
@@ -455,7 +466,7 @@ review conversations resolved under ADR-013.
 | `M3-PLATFORM-001` | Contract merged                          | Extend Platform audit allowlist and create versioned transactional outbox/consumer-dedup persistence and interfaces.                                  | Large      | Existing audit schema and heartbeat-only worker are insufficient.          |
 | `M3-DB-001`       | Contract and Platform persistence merged | Transaction migrations, sqlc target/queries, sequence/idempotency/correction constraints, migration/query integration tests.                          | Large      | Must prove cross-connection concurrency and no unsafe sequence allocation. |
 | `M3-BE-001`       | DB merged                                | Transaction domain, decimal adapters, field rules, transient replay, immutable correction model, focused unit tests.                                  | Large      | Must not persist projections or business rules in SQL.                     |
-| `M3-BE-002`       | BE-001 and Platform merged               | Application operations, owner/Asset public ports, PostgreSQL transactor/repositories, idempotency, audit/outbox atomic write, worker outbox delivery. | Large      | Exactly-once financial mutation and at-least-once event delivery.          |
+| `M3-BE-002`       | BE-001 and Platform merged               | Application operations, owner/Asset public ports, PostgreSQL transactor/repositories, idempotency, audit/outbox atomic write, complete `OUTBOX_DELIVERY-v1` publication engine; runtime-safe inactive publication without an approved receiver under accepted ADR-023. | Large      | Exactly-once financial mutation; at-least-once publication engine. Concrete runtime activation requires a separately approved receiver under ADR-023. |
 | `M3-BE-003`       | BE-002 merged                            | HTTP transport, DTO/error mapping, route composition, API/integration security tests.                                                                 | Medium     | No route mounts without all security dependencies.                         |
 | `M3-FE-001`       | BE-003 merged                            | Ledger history and create-entry flow using generated contract types, query keys, accessible forms, memory-only retry key.                             | Large      | No derived financial UI or client calculations.                            |
 | `M3-FE-002`       | FE-001 merged                            | Correction/history relationship UI, retry/error UX, focused frontend tests.                                                                           | Medium     | No Edit/Delete semantics.                                                  |
@@ -510,8 +521,10 @@ M3 can close only when evidence proves all of the following:
 - correction atomically records traceable reversal and replacement while
   retaining original history;
 - principal-scoped ownership, decimal/currency policy, audit, outbox, worker
-  delivery, deterministic cursor history, and standard error/correlation
-  behavior all pass;
+  publication-engine behavior, deterministic cursor history, and standard
+  error/correlation behavior all pass; under accepted ADR-023, verify
+  runtime-safe inactivity without a receiver rather than claim active end-to-end
+  delivery; concrete publication requires the approved receiver prerequisite;
 - frontend remains non-authoritative and omits financial projections;
 - real HTTPS E2E, migrations/sqlc drift, security scanning, and every required
   remote CI job pass; and
