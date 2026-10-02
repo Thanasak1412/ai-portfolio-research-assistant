@@ -181,6 +181,36 @@ func (q *Queries) ListOwnedPortfoliosByStatus(ctx context.Context, arg ListOwned
 	return items, nil
 }
 
+const lockOwnedPortfolioForFinancialCommand = `-- name: LockOwnedPortfolioForFinancialCommand :one
+SELECT portfolio_id, owner_user_id, name, normalized_name, base_currency, status, archived_at, created_at, updated_at FROM portfolios
+WHERE portfolio_id = $1 AND owner_user_id = $2
+FOR SHARE
+`
+
+type LockOwnedPortfolioForFinancialCommandParams struct {
+	PortfolioID pgtype.UUID
+	OwnerUserID pgtype.UUID
+}
+
+// Portfolio-owned boundary. Caller supplies its pgx.Tx; FOR SHARE prevents
+// concurrent archive/ownership updates until that caller commits or rolls back.
+func (q *Queries) LockOwnedPortfolioForFinancialCommand(ctx context.Context, arg LockOwnedPortfolioForFinancialCommandParams) (Portfolio, error) {
+	row := q.db.QueryRow(ctx, lockOwnedPortfolioForFinancialCommand, arg.PortfolioID, arg.OwnerUserID)
+	var i Portfolio
+	err := row.Scan(
+		&i.PortfolioID,
+		&i.OwnerUserID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.BaseCurrency,
+		&i.Status,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateOwnedActivePortfolioName = `-- name: UpdateOwnedActivePortfolioName :one
 UPDATE portfolios
 SET
