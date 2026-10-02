@@ -1,6 +1,6 @@
 # ADR-023 — Transaction Outbox Publication Activation Prerequisite
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-10-02
 
 ## Context
@@ -18,17 +18,15 @@ implementation provides an injected publisher/delivery engine, not a concrete
 receiver. Treating a no-op publisher as success would falsely acknowledge
 pending events and release subsequent aggregate events without a real handoff.
 
-## Proposed decision
+## Decision
 
-On acceptance, M3-BE-002 establishes the Transaction application, atomic
+M3-BE-002 establishes the Transaction application, atomic
 ledger/audit/outbox persistence, and the complete publication engine implementing
 `OUTBOX_DELIVERY-v1`.
 
 This ADR supersedes only the unconditional delivery-activation expectation in
 ADR-022 and the corresponding M3-BE-002 execution-plan acceptance wording. It
-does not supersede or alter ADR-022's delivery algorithm. While this ADR is
-Proposed, the clarification is not effective and the implementation remains
-paused pending acceptance and merge.
+does not supersede or alter ADR-022's delivery algorithm.
 
 ### Successful publication
 
@@ -100,7 +98,7 @@ an M4 consumer, nor an external broker.
 
 ### Scope and completion effect
 
-After acceptance, M3-BE-002 may be completed as Transaction application
+M3-BE-002 may be completed as Transaction application
 orchestration, exactly-once financial mutation, atomic audit/outbox persistence,
 a complete `OUTBOX_DELIVERY-v1` delivery engine, and runtime-safe inactive
 publication when no approved receiver exists. It must not be described as
@@ -120,7 +118,7 @@ acceptance of this ADR alone does not complete M3-BE-002 or authorize M4 work.
 - Engine tests can establish ADR-022 behavior without claiming that a production
   receiver exists. Future activation must supply real handoff evidence.
 - Accepted ADR-022 remains historically intact; this ADR narrows only its
-  activation expectation upon acceptance under ADR-013 governance.
+  activation expectation under ADR-013 governance.
 
 ## Sources
 
