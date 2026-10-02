@@ -38,9 +38,9 @@ export function useCreatePortfolio() {
   return useMutation({
     mutationFn: (input: CreatePortfolioRequest) =>
       runAuthenticated((token) => portfolioApi.create(token, input)),
-    onSuccess: async (portfolio) => {
+    onSuccess: (portfolio) => {
       queryClient.setQueryData(portfolioKeys.detail(portfolio.id), portfolio);
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: portfolioKeys.list("ACTIVE"),
       });
     },
