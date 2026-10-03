@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "auditLevel": "high",
+  "exceptions": [
+    {
+      "id": "SECURITY_EXCEPTION-001",
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "severity": "high",
+      "vulnerableVersions": "<=3.0.3",
+      "resolvedVersion": "3.0.3",
+      "manifestPath": "apps/web/package.json",
+      "topLevelDependency": "eslint-config-next",
+      "allowedPaths": [
+        "apps__web>eslint-config-next>@next/eslint-plugin-next>fast-glob>micromatch>braces"
+      ],
+      "expiresOn": "2026-10-31"
+    }
+  ]
+}

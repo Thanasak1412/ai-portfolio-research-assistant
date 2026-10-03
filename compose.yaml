@@ -131,7 +131,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-      target: development
+      target: ${WEB_BUILD_TARGET:-development}
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://app.localhost:3443/api/v1}
     environment:
       NEXT_PUBLIC_API_BASE_URL: https://app.localhost:3443/api/v1
     ports:

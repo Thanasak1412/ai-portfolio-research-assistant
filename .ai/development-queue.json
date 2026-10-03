@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "repository": "Thanasak1412/ai-portfolio-research-assistant",
+  "milestone": "M3",
+  "sourceOfTruth": {
+    "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
+    "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
+  },
+  "activeTaskId": "M3-BE-002",
+  "tasks": [
+    {
+      "id": "M2-STABILITY-PR63",
+      "kind": "stability_follow_up",
+      "status": "merged",
+      "branch": "codex/m2-portfolio-create-navigation-stability",
+      "pullRequest": 63,
+      "currentObjective": "Resolve Portfolio list-to-detail navigation instability and obtain clean retry-free M2 evidence.",
+      "dependsOn": [],
+      "acceptance": [
+        "required_checks_7_of_7",
+        "m2_4_of_4_passed",
+        "m2_zero_flaky",
+        "m2_zero_retries",
+        "zero_unresolved_review_threads",
+        "maintainer_final_review",
+        "merged_to_main"
+      ],
+      "scope": {
+        "writePatterns": [
+          "apps/web/src/features/portfolio/**",
+          "apps/web/tests/m2-e2e/**",
+          "apps/web/playwright.m2.config.ts"
+        ],
+        "readOnlyDiagnosticPatterns": [
+          "Dockerfile.web",
+          "compose.yaml",
+          "scripts/prepare-auth-e2e-env.sh",
+          "scripts/collect-auth-ops-diagnostics.sh",
+          ".github/workflows/ci.yml"
+        ],
+        "expansionRequiresHuman": true
+      },
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-BE-002",
+      "planTask": "M3-BE-002",
+      "status": "in_progress",
+      "implementationStatus": "complete",
+      "branch": "codex/m3-be-002-transaction-application-outbox",
+      "pullRequest": 64,
+      "currentObjective": "After PR #63 merges, merge protected main into this branch and rerun full verification.",
+      "dependsOn": [
+        {
+          "task": "M2-STABILITY-PR63",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-BE-003",
+      "planTask": "M3-BE-003",
+      "status": "blocked",
+      "branchHint": "codex/m3-be-003-transaction-http",
+      "dependsOn": [
+        {
+          "task": "M3-BE-002",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-FE-001",
+      "planTask": "M3-FE-001",
+      "status": "blocked",
+      "dependsOn": [
+        {
+          "task": "M3-BE-003",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-FE-002",
+      "planTask": "M3-FE-002",
+      "status": "blocked",
+      "dependsOn": [
+        {
+          "task": "M3-FE-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-E2E-001",
+      "planTask": "M3-E2E-001",
+      "status": "blocked",
+      "dependsOn": [
+        {
+          "task": "M3-FE-002",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M3-VERIFY-001",
+      "planTask": "M3-VERIFY-001",
+      "status": "blocked",
+      "dependsOn": [
+        {
+          "task": "M3-E2E-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    }
+  ],
+  "temporaryGovernance": [
+    {
+      "id": "SECURITY_EXCEPTION-001",
+      "status": "accepted_temporary_risk",
+      "expiresOn": "2026-10-31",
+      "rule": "Do not extend, suppress, or call remediated without a separate maintainer decision."
+    }
+  ]
+}
