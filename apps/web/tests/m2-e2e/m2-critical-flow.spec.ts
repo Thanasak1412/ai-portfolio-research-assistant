@@ -65,6 +65,9 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
 
   await portfolioLink.click();
   await expect(page).toHaveURL((url) => url.pathname === href);
+  await expect(
+    page.getByRole("heading", { name: "Rename Portfolio" }),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
