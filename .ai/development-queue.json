@@ -6,12 +6,12 @@
     "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
     "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
   },
-  "activeTaskId": "M2-STABILITY-PR63",
+  "activeTaskId": "M3-BE-002",
   "tasks": [
     {
       "id": "M2-STABILITY-PR63",
       "kind": "stability_follow_up",
-      "status": "in_progress",
+      "status": "merged",
       "branch": "codex/m2-portfolio-create-navigation-stability",
       "pullRequest": 63,
       "currentObjective": "Resolve Portfolio list-to-detail navigation instability and obtain clean retry-free M2 evidence.",
@@ -45,7 +45,7 @@
     {
       "id": "M3-BE-002",
       "planTask": "M3-BE-002",
-      "status": "blocked",
+      "status": "in_progress",
       "implementationStatus": "complete",
       "branch": "codex/m3-be-002-transaction-application-outbox",
       "pullRequest": 64,
