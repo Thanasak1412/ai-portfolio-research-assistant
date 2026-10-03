@@ -1,4 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Frame,
+  type Page,
+  type Request,
+  type Response,
+  type ConsoleMessage,
+} from "@playwright/test";
 
 const validPassword = "x".repeat(16);
 
@@ -28,49 +36,83 @@ async function createPortfolio(page: Page, name: string): Promise<string> {
       response.request().method() === "POST" &&
       new URL(response.url()).pathname === "/api/v1/portfolios",
   );
-  const detailNavigation = page.waitForResponse((response) => {
-    const request = response.request();
-    const url = new URL(response.url());
-    return (
-      request.method() === "GET" &&
-      request.headers().rsc === "1" &&
-      /^\/app\/portfolios\/[^/]+$/.test(url.pathname)
-    );
-  });
   await page.getByRole("button", { name: "Create Portfolio" }).click();
-  const [created, navigated] = await Promise.all([
-    createResponse,
-    detailNavigation,
-  ]);
+  const created = await createResponse;
   expect(created.status()).toBe(201);
-  expect(navigated.ok()).toBe(true);
+  const createdPortfolio = (await created.json()) as { id: string };
+  expect(createdPortfolio.id).toBeTruthy();
+  const detailPath = `/app/portfolios/${encodeURIComponent(createdPortfolio.id)}`;
 
-  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
+  await expect(page).toHaveURL((url) => url.pathname === detailPath);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
   await expect(page.getByText("Base currency: USD")).toBeVisible();
   await expect(page.getByLabel("Portfolio name")).toBeEnabled();
   await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
-  await expect(page).toHaveURL(/\/app\/portfolios\/[^/]+$/);
   return page.url();
 }
 
 async function returnToPortfolioList(page: Page): Promise<void> {
-  const listNavigation = page.waitForResponse((response) => {
-    const request = response.request();
+  const navigationEvents: string[] = [];
+  const recordNavigation = (frame: Frame) => {
+    if (frame === page.mainFrame()) {
+      navigationEvents.push(`url ${new URL(frame.url()).pathname}`);
+    }
+  };
+  const recordRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/app/portfolios")) {
+      const headers = request.headers();
+      navigationEvents.push(
+        `request ${request.method()} ${url.pathname} type=${request.resourceType()} navigation=${request.isNavigationRequest()} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
+      );
+    }
+  };
+  const recordResponse = (response: Response) => {
     const url = new URL(response.url());
-    return (
-      request.method() === "GET" &&
-      request.headers().rsc === "1" &&
-      url.pathname === "/app/portfolios"
+    if (url.pathname.startsWith("/app/portfolios")) {
+      const headers = response.headers();
+      navigationEvents.push(
+        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${headers["content-type"] ?? "-"} location=${headers.location ?? "-"} next-redirect=${headers["x-nextjs-redirect"] ?? "-"}`,
+      );
+    }
+  };
+  const recordRequestFailure = (request: Request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/app/portfolios")) {
+      navigationEvents.push(
+        `request-failed ${request.method()} ${url.pathname} ${request.failure()?.errorText ?? "unknown"}`,
+      );
+    }
+  };
+  const recordPageError = (error: Error) => {
+    navigationEvents.push(`page-error ${error.name}: ${error.message}`);
+  };
+
+  page.on("framenavigated", recordNavigation);
+  page.on("request", recordRequest);
+  page.on("response", recordResponse);
+  page.on("requestfailed", recordRequestFailure);
+  page.on("pageerror", recordPageError);
+  try {
+    await page.getByRole("link", { name: "Back to Portfolios" }).click();
+    await expect(page).toHaveURL((url) => url.pathname === "/app/portfolios");
+    await expect(
+      page.getByRole("heading", { name: "Portfolios" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
+  } catch (error) {
+    console.error(
+      `[M2 portfolio back navigation diagnostics]\n${navigationEvents.join("\n")}`,
     );
-  });
-  await page.getByRole("link", { name: "Back to Portfolios" }).click();
-  const navigation = await listNavigation;
-  expect(navigation.ok()).toBe(true);
-  await expect(page).toHaveURL(/\/app\/portfolios$/);
-  await expect(page.getByRole("heading", { name: "Portfolios" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
+    throw error;
+  } finally {
+    page.off("framenavigated", recordNavigation);
+    page.off("request", recordRequest);
+    page.off("response", recordResponse);
+    page.off("requestfailed", recordRequestFailure);
+    page.off("pageerror", recordPageError);
+  }
 }
 
 async function openPortfolioFromList(page: Page, name: string): Promise<void> {
@@ -85,14 +127,91 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   expect(portfolioId).toBeTruthy();
   expect(href).toBe(`/app/portfolios/${portfolioId}`);
 
-  const navigation = await page.goto(href!);
+  const navigationEvents: string[] = [];
+  const recordNavigation = (frame: Frame) => {
+    if (frame === page.mainFrame()) {
+      navigationEvents.push(`url ${new URL(frame.url()).pathname}`);
+    }
+  };
+  const recordPortfolioRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      const headers = request.headers();
+      navigationEvents.push(
+        `request ${request.method()} ${url.pathname} type=${request.resourceType()} navigation=${request.isNavigationRequest()} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
+      );
+    }
+  };
+  const recordPortfolioResponse = (response: Response) => {
+    const url = new URL(response.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      const headers = response.headers();
+      navigationEvents.push(
+        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${headers["content-type"] ?? "-"} location=${headers.location ?? "-"} next-redirect=${headers["x-nextjs-redirect"] ?? "-"}`,
+      );
+    }
+  };
+  const recordFailedRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      navigationEvents.push(
+        `request-failed ${request.method()} ${url.pathname} ${request.failure()?.errorText ?? "unknown"}`,
+      );
+    }
+  };
+  const recordPageError = (error: Error) => {
+    navigationEvents.push(`page-error ${error.name}: ${error.message}`);
+  };
+  const recordConsoleError = (message: ConsoleMessage) => {
+    if (
+      message.type() === "error" &&
+      /hydration|segment|router|navigation|flight|chunk|invariant/i.test(
+        message.text(),
+      )
+    ) {
+      navigationEvents.push(`console-error ${message.text().slice(0, 300)}`);
+    }
+  };
 
-  expect(navigation?.ok()).toBe(true);
-
-  await expect(page).toHaveURL(new RegExp(`${href}$`));
-  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
-  await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
-  await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  page.on("framenavigated", recordNavigation);
+  page.on("request", recordPortfolioRequest);
+  page.on("response", recordPortfolioResponse);
+  page.on("requestfailed", recordFailedRequest);
+  page.on("pageerror", recordPageError);
+  page.on("console", recordConsoleError);
+  try {
+    await portfolioLink.click();
+    await expect(page).toHaveURL((url) => url.pathname === href);
+    await expect(
+      page.getByRole("heading", { name: "Rename Portfolio" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
+    await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  } catch (error) {
+    console.error(
+      `[M2 portfolio detail navigation diagnostics]\n${navigationEvents.join("\n")}`,
+    );
+    throw error;
+  } finally {
+    page.off("framenavigated", recordNavigation);
+    page.off("request", recordPortfolioRequest);
+    page.off("response", recordPortfolioResponse);
+    page.off("requestfailed", recordFailedRequest);
+    page.off("pageerror", recordPageError);
+    page.off("console", recordConsoleError);
+  }
 }
 
 async function assertAssetCatalog(page: Page): Promise<void> {

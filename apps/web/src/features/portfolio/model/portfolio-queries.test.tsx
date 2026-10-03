@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { AuthApiError, type AuthApi } from "@/features/auth/api/auth-api";
@@ -115,7 +116,61 @@ function MutationProbe() {
   );
 }
 
+function CreateCompletionProbe() {
+  const { establishSession } = useAuthSession();
+  const createMutation = useCreatePortfolio();
+  const [completed, setCompleted] = useState(false);
+  return (
+    <>
+      <output>{completed ? "create settled" : "creating"}</output>
+      <button
+        onClick={async () => {
+          establishSession(session);
+          await createMutation.mutateAsync({
+            name: "Growth",
+            baseCurrency: "USD",
+          });
+          setCompleted(true);
+        }}
+      >
+        create and wait
+      </button>
+    </>
+  );
+}
+
 describe("Portfolio React Query mutations", () => {
+  it("does not wait for list invalidation before successful create settles", async () => {
+    portfolioApiSpies.create.mockResolvedValue(active);
+    let finishInvalidation!: () => void;
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidate = vi.spyOn(client, "invalidateQueries").mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishInvalidation = resolve;
+        }),
+    );
+    render(
+      <QueryClientProvider client={client}>
+        <AuthSessionProvider api={rejectedBootstrapApi()}>
+          <CreateCompletionProbe />
+        </AuthSessionProvider>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "create and wait" }));
+    await waitFor(() => expect(invalidate).toHaveBeenCalled());
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["portfolios", "list", "ACTIVE"],
+    });
+    expect(client.getQueryData(["portfolios", "detail", active.id])).toEqual(
+      active,
+    );
+    await screen.findByText("create settled");
+    finishInvalidation();
+  });
+
   it("uses backend responses to update detail state and invalidate the required lists", async () => {
     portfolioApiSpies.create.mockResolvedValue(active);
     portfolioApiSpies.update.mockResolvedValue({
