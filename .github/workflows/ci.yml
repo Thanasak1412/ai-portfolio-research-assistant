@@ -127,7 +127,49 @@ jobs:
       - run: sh scripts/verify-auth-https-stack.sh .compose.auth.e2e.env
       - run: PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:auth
       - run: sh scripts/reset-e2e-auth-rate-limits.sh .compose.auth.e2e.env
-      - run: PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:m2
+      - name: Compare M2 navigation in development and production runtimes
+        run: |
+          set -eu
+          failures=0
+          run_m2() {
+            label=$1
+            shift
+            echo "$label"
+            if "$@"; then
+              echo "$label: PASS"
+            else
+              result=$?
+              echo "$label: FAIL (exit ${result})"
+              failures=$((failures + 1))
+            fi
+          }
+
+          run_m2 'M2 full suite: development runtime' \
+            env PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:m2
+          iteration=1
+          while [ "$iteration" -le 10 ]; do
+            sh scripts/reset-e2e-auth-rate-limits.sh .compose.auth.e2e.env
+            run_m2 "M2 lifecycle development run ${iteration}/10" \
+              env PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm --filter @portfolio/web exec playwright test --config playwright.m2.config.ts tests/m2-e2e/m2-critical-flow.spec.ts --retries=0 --workers=1
+            iteration=$((iteration + 1))
+          done
+          WEB_BUILD_TARGET=production \
+            NEXT_PUBLIC_API_BASE_URL=https://app.localhost:3443/api/v1 \
+            docker compose --env-file .compose.auth.e2e.env --profile auth-https up --build -d --wait --wait-timeout 120 web
+          sh scripts/reset-e2e-auth-rate-limits.sh .compose.auth.e2e.env
+          run_m2 'M2 full suite: production runtime' \
+            env PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm test:e2e:m2
+          iteration=1
+          while [ "$iteration" -le 10 ]; do
+            sh scripts/reset-e2e-auth-rate-limits.sh .compose.auth.e2e.env
+            run_m2 "M2 lifecycle production run ${iteration}/10" \
+              env PLAYWRIGHT_AUTH_E2E_IGNORE_HTTPS_ERRORS=true pnpm --filter @portfolio/web exec playwright test --config playwright.m2.config.ts tests/m2-e2e/m2-critical-flow.spec.ts --retries=0 --workers=1
+            iteration=$((iteration + 1))
+          done
+          if [ "$failures" -gt 0 ]; then
+            echo "M2 runtime comparison had ${failures} failing invocation(s)."
+            exit 1
+          fi
       - if: failure()
         run: sh scripts/collect-auth-ops-diagnostics.sh .compose.auth.e2e.env
       - if: always()
