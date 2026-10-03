@@ -84,7 +84,7 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
     ) {
       const headers = request.headers();
       navigationEvents.push(
-        `request ${request.method()} ${url.pathname} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
+        `request ${request.method()} ${url.pathname} type=${request.resourceType()} navigation=${request.isNavigationRequest()} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
       );
     }
   };
@@ -95,7 +95,7 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
       url.pathname.startsWith("/api/v1/portfolios")
     ) {
       navigationEvents.push(
-        `response ${response.status()} ${response.request().method()} ${url.pathname}`,
+        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${response.headers()["content-type"] ?? "-"}`,
       );
     }
   };
@@ -110,11 +110,15 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
       );
     }
   };
+  const recordPageError = (error: Error) => {
+    navigationEvents.push(`page-error ${error.name}: ${error.message}`);
+  };
 
   page.on("framenavigated", recordNavigation);
   page.on("request", recordPortfolioRequest);
   page.on("response", recordPortfolioResponse);
   page.on("requestfailed", recordFailedRequest);
+  page.on("pageerror", recordPageError);
   try {
     await portfolioLink.click();
     await expect(page).toHaveURL((url) => url.pathname === href);
@@ -136,6 +140,7 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
     page.off("request", recordPortfolioRequest);
     page.off("response", recordPortfolioResponse);
     page.off("requestfailed", recordFailedRequest);
+    page.off("pageerror", recordPageError);
   }
 }
 
