@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "protectedBranch": "main",
+  "requiredChecks": [
+    "frontend",
+    "backend",
+    "contracts-and-generation",
+    "database-integration",
+    "browser-e2e",
+    "compose-smoke",
+    "secrets"
+  ],
+  "autoAllowed": [
+    "inspect_repository",
+    "inspect_pr",
+    "inspect_ci",
+    "inspect_non_secret_artifacts",
+    "edit_within_task_scope",
+    "run_tests",
+    "create_feature_branch",
+    "commit_task_scoped_changes",
+    "push_feature_branch",
+    "open_or_update_draft_pr",
+    "merge_main_into_feature_branch",
+    "rerun_ci",
+    "collect_failure_evidence",
+    "update_pr_evidence"
+  ],
+  "humanRequired": [
+    "merge_protected_main",
+    "accept_or_change_adr",
+    "change_task_graph",
+    "start_task_with_unmerged_dependency",
+    "accept_or_extend_security_exception",
+    "weaken_required_gate",
+    "change_secrets_or_permissions",
+    "destructive_database_operation",
+    "production_deploy",
+    "introduce_unapproved_external_infrastructure"
+  ],
+  "forbidden": [
+    "force_push_main",
+    "direct_write_main",
+    "mask_flake_with_retries",
+    "weaken_test_to_green",
+    "suppress_security_finding_without_decision",
+    "log_secrets",
+    "fake_successful_external_handoff",
+    "mix_unrelated_refactor"
+  ],
+  "branchPolicy": {
+    "preferMergeMainIntoFeature": true,
+    "preserveExistingTaskCommitShas": true,
+    "forcePushFeatureBranches": false
+  },
+  "ciPolicy": {
+    "allRequiredChecksMustPass": true,
+    "taskSpecificAcceptanceAlsoRequired": true,
+    "flakyOrRetryIsNotCleanWhenTaskForbidsIt": true,
+    "doNotHideHistoricalFailureEvidence": true
+  },
+  "scopePolicy": {
+    "scopeExpansionRequiresHuman": true,
+    "unrelatedRefactorForbidden": true
+  }
+}

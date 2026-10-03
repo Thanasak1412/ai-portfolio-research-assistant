@@ -51,6 +51,7 @@
 
 ## Operational contracts
 
+- [Continuous AI Development Agent](engineering/ai-continuous-development-agent.md)
 - [Authentication Database Ownership](architecture/authentication-database.md)
 - [Portfolio and Asset Database Ownership](architecture/portfolio-asset-database.md)
 - [Transaction Ledger Database Foundation](architecture/transaction-database.md) (M3-DB-001; persistence only)
