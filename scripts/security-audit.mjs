@@ -25,7 +25,14 @@ try {
       maxBuffer: 16 * 1024 * 1024,
     },
   );
-  if (audit.error || audit.signal || ![0, 1].includes(audit.status)) {
+  // This policy requires one reported High finding, so pnpm must exit nonzero.
+  // Treat success or diagnostic stderr as an unexpected scanner result.
+  if (
+    audit.error ||
+    audit.signal ||
+    audit.status !== 1 ||
+    audit.stderr.trim()
+  ) {
     throw new Error("pnpm audit process failed unexpectedly");
   }
   const report = JSON.parse(audit.stdout);
