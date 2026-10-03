@@ -1,4 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Frame,
+  type Page,
+  type Request,
+  type Response,
+} from "@playwright/test";
 
 const validPassword = "x".repeat(16);
 
@@ -63,14 +70,73 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   expect(portfolioId).toBeTruthy();
   expect(href).toBe(`/app/portfolios/${portfolioId}`);
 
-  await portfolioLink.click();
-  await expect(page).toHaveURL((url) => url.pathname === href);
-  await expect(
-    page.getByRole("heading", { name: "Rename Portfolio" }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
-  await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
-  await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  const navigationEvents: string[] = [];
+  const recordNavigation = (frame: Frame) => {
+    if (frame === page.mainFrame()) {
+      navigationEvents.push(`url ${new URL(frame.url()).pathname}`);
+    }
+  };
+  const recordPortfolioRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      const headers = request.headers();
+      navigationEvents.push(
+        `request ${request.method()} ${url.pathname} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
+      );
+    }
+  };
+  const recordPortfolioResponse = (response: Response) => {
+    const url = new URL(response.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      navigationEvents.push(
+        `response ${response.status()} ${response.request().method()} ${url.pathname}`,
+      );
+    }
+  };
+  const recordFailedRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (
+      url.pathname.startsWith("/app/portfolios") ||
+      url.pathname.startsWith("/api/v1/portfolios")
+    ) {
+      navigationEvents.push(
+        `request-failed ${request.method()} ${url.pathname} ${request.failure()?.errorText ?? "unknown"}`,
+      );
+    }
+  };
+
+  page.on("framenavigated", recordNavigation);
+  page.on("request", recordPortfolioRequest);
+  page.on("response", recordPortfolioResponse);
+  page.on("requestfailed", recordFailedRequest);
+  try {
+    await portfolioLink.click();
+    await expect(page).toHaveURL((url) => url.pathname === href);
+    await expect(
+      page.getByRole("heading", { name: "Rename Portfolio" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Portfolio name")).toHaveValue(name);
+    await expect(page.getByLabel("Portfolio name")).toBeEnabled();
+  } catch (error) {
+    console.error(
+      `[M2 portfolio detail navigation diagnostics]\n${navigationEvents.join("\n")}`,
+    );
+    throw error;
+  } finally {
+    page.off("framenavigated", recordNavigation);
+    page.off("request", recordPortfolioRequest);
+    page.off("response", recordPortfolioResponse);
+    page.off("requestfailed", recordFailedRequest);
+  }
 }
 
 async function assertAssetCatalog(page: Page): Promise<void> {
