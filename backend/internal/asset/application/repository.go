@@ -4,7 +4,12 @@ import (
 	"context"
 
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/domain"
+	identity "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/domain"
 )
+
+type LookupReader interface {
+	GetAsset(context.Context, identity.Principal, domain.AssetID) (domain.Asset, error)
+}
 
 type CursorPosition struct {
 	Symbol   string

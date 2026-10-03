@@ -3,6 +3,7 @@ package composition
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/application"
@@ -10,6 +11,11 @@ import (
 	assethttp "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/transport/http"
 	identitydomain "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/domain"
 )
+
+func BindLookup(tx pgx.Tx) application.LookupReader {
+	service, _ := application.NewService(assetdatabase.NewTransactionRepository(tx))
+	return service
+}
 
 func BuildHTTP(pool *pgxpool.Pool, bearer fiber.Handler, principal func(*fiber.Ctx) (identitydomain.Principal, bool)) (*assethttp.Handler, error) {
 	service, err := application.NewService(assetdatabase.NewPostgresAssetRepository(pool))

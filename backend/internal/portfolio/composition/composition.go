@@ -4,6 +4,7 @@ package composition
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	identitydomain "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/identity/domain"
@@ -12,6 +13,12 @@ import (
 	portfolioruntime "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/infrastructure/runtime"
 	portfoliohttp "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/transport/http"
 )
+
+// BindOwnership exposes the Portfolio public read boundary on a caller-owned
+// transaction without exporting Portfolio SQL or generated persistence types.
+func BindOwnership(tx pgx.Tx) application.OwnershipReader {
+	return portfoliodatabase.NewOwnershipReader(tx)
+}
 
 func BuildHTTP(pool *pgxpool.Pool, bearer fiber.Handler, principal func(*fiber.Ctx) (identitydomain.Principal, bool)) (*portfoliohttp.Handler, error) {
 	repository := portfoliodatabase.NewPostgresPortfolioRepository(pool)
