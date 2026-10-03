@@ -53,10 +53,66 @@ async function createPortfolio(page: Page, name: string): Promise<string> {
 }
 
 async function returnToPortfolioList(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Back to Portfolios" }).click();
-  await expect(page).toHaveURL((url) => url.pathname === "/app/portfolios");
-  await expect(page.getByRole("heading", { name: "Portfolios" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
+  const navigationEvents: string[] = [];
+  const recordNavigation = (frame: Frame) => {
+    if (frame === page.mainFrame()) {
+      navigationEvents.push(`url ${new URL(frame.url()).pathname}`);
+    }
+  };
+  const recordRequest = (request: Request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/app/portfolios")) {
+      const headers = request.headers();
+      navigationEvents.push(
+        `request ${request.method()} ${url.pathname} type=${request.resourceType()} navigation=${request.isNavigationRequest()} rsc=${headers.rsc ?? "-"} prefetch=${headers["next-router-prefetch"] ?? "-"}`,
+      );
+    }
+  };
+  const recordResponse = (response: Response) => {
+    const url = new URL(response.url());
+    if (url.pathname.startsWith("/app/portfolios")) {
+      const headers = response.headers();
+      navigationEvents.push(
+        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${headers["content-type"] ?? "-"} location=${headers.location ?? "-"} next-redirect=${headers["x-nextjs-redirect"] ?? "-"}`,
+      );
+    }
+  };
+  const recordRequestFailure = (request: Request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/app/portfolios")) {
+      navigationEvents.push(
+        `request-failed ${request.method()} ${url.pathname} ${request.failure()?.errorText ?? "unknown"}`,
+      );
+    }
+  };
+  const recordPageError = (error: Error) => {
+    navigationEvents.push(`page-error ${error.name}: ${error.message}`);
+  };
+
+  page.on("framenavigated", recordNavigation);
+  page.on("request", recordRequest);
+  page.on("response", recordResponse);
+  page.on("requestfailed", recordRequestFailure);
+  page.on("pageerror", recordPageError);
+  try {
+    await page.getByRole("link", { name: "Back to Portfolios" }).click();
+    await expect(page).toHaveURL((url) => url.pathname === "/app/portfolios");
+    await expect(
+      page.getByRole("heading", { name: "Portfolios" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Active" })).toBeVisible();
+  } catch (error) {
+    console.error(
+      `[M2 portfolio back navigation diagnostics]\n${navigationEvents.join("\n")}`,
+    );
+    throw error;
+  } finally {
+    page.off("framenavigated", recordNavigation);
+    page.off("request", recordRequest);
+    page.off("response", recordResponse);
+    page.off("requestfailed", recordRequestFailure);
+    page.off("pageerror", recordPageError);
+  }
 }
 
 async function openPortfolioFromList(page: Page, name: string): Promise<void> {
