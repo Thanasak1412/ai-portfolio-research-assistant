@@ -5,6 +5,7 @@ import {
   type Page,
   type Request,
   type Response,
+  type ConsoleMessage,
 } from "@playwright/test";
 
 const validPassword = "x".repeat(16);
@@ -94,8 +95,9 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
       url.pathname.startsWith("/app/portfolios") ||
       url.pathname.startsWith("/api/v1/portfolios")
     ) {
+      const headers = response.headers();
       navigationEvents.push(
-        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${response.headers()["content-type"] ?? "-"}`,
+        `response ${response.status()} ${response.request().method()} ${url.pathname} content-type=${headers["content-type"] ?? "-"} location=${headers.location ?? "-"} next-redirect=${headers["x-nextjs-redirect"] ?? "-"}`,
       );
     }
   };
@@ -113,12 +115,23 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
   const recordPageError = (error: Error) => {
     navigationEvents.push(`page-error ${error.name}: ${error.message}`);
   };
+  const recordConsoleError = (message: ConsoleMessage) => {
+    if (
+      message.type() === "error" &&
+      /hydration|segment|router|navigation|flight|chunk|invariant/i.test(
+        message.text(),
+      )
+    ) {
+      navigationEvents.push(`console-error ${message.text().slice(0, 300)}`);
+    }
+  };
 
   page.on("framenavigated", recordNavigation);
   page.on("request", recordPortfolioRequest);
   page.on("response", recordPortfolioResponse);
   page.on("requestfailed", recordFailedRequest);
   page.on("pageerror", recordPageError);
+  page.on("console", recordConsoleError);
   try {
     await portfolioLink.click();
     await expect(page).toHaveURL((url) => url.pathname === href);
@@ -141,6 +154,7 @@ async function openPortfolioFromList(page: Page, name: string): Promise<void> {
     page.off("response", recordPortfolioResponse);
     page.off("requestfailed", recordFailedRequest);
     page.off("pageerror", recordPageError);
+    page.off("console", recordConsoleError);
   }
 }
 
