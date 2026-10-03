@@ -27,7 +27,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - run: pnpm audit --audit-level high
+      - run: pnpm security:audit:test
+      - run: pnpm security:audit
 
   backend:
     runs-on: ubuntu-latest
