@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "repository": "Thanasak1412/ai-portfolio-research-assistant",
-  "milestone": "M3",
+  "milestone": "M4",
   "sourceOfTruth": {
     "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
     "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
   },
-  "activeTaskId": "M3-VERIFY-001",
+  "activeTaskId": "M4-PLAN-001",
   "tasks": [
     {
       "id": "M2-STABILITY-PR63",
@@ -110,10 +110,24 @@
     {
       "id": "M3-VERIFY-001",
       "planTask": "M3-VERIFY-001",
-      "status": "in_progress",
+      "status": "merged",
       "dependsOn": [
         {
           "task": "M3-E2E-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-PLAN-001",
+      "planTask": "M4-PLAN-001",
+      "status": "in_progress",
+      "branchHint": "codex/m4-plan-001-price-holding-projection",
+      "currentObjective": "Define and obtain approval for the M4 Price Data and Holding Projection execution plan. Planning only; no runtime implementation.",
+      "dependsOn": [
+        {
+          "task": "M3-VERIFY-001",
           "requiredStatus": "merged"
         }
       ],
