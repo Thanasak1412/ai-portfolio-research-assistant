@@ -2,6 +2,7 @@ import type { Asset } from "@/features/asset/api/asset-api";
 import type {
   Transaction,
   TransactionCommand,
+  TransactionCorrectionResult,
 } from "@/features/transaction/api/transaction-api";
 
 export const command = {
@@ -38,6 +39,36 @@ export const asset: Asset = {
   assetType: "EQUITY",
   exchange: "NYSE",
   currency: "USD",
+};
+export const correction: TransactionCorrectionResult = {
+  original: {
+    ...transaction,
+    correctionLinks: {
+      ...transaction.correctionLinks,
+      reversalTransactionId: "reversal-1",
+      replacementTransactionId: "replacement-1",
+    },
+  },
+  reversal: {
+    ...transaction,
+    id: "reversal-1",
+    kind: "REVERSAL",
+    portfolioSequence: "12345678901234567891",
+    correctionLinks: {
+      ...transaction.correctionLinks,
+      reversesTransactionId: transaction.id,
+    },
+  },
+  replacement: {
+    ...transaction,
+    id: "replacement-1",
+    amount: "20.123456789012",
+    portfolioSequence: "12345678901234567892",
+    correctionLinks: {
+      ...transaction.correctionLinks,
+      replacesTransactionId: transaction.id,
+    },
+  },
 };
 export const portfolio = {
   id: "portfolio-1",

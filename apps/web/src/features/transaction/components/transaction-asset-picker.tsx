@@ -12,10 +12,12 @@ export function TransactionAssetPicker({
   selected,
   onSelect,
   validationError,
+  idPrefix = "entry",
 }: Readonly<{
   selected: Asset | null;
   onSelect: (asset: Asset) => void;
   validationError?: string | null;
+  idPrefix?: string;
 }>) {
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState<string>();
@@ -29,11 +31,11 @@ export function TransactionAssetPicker({
     <fieldset
       className="space-y-3 rounded border p-4"
       aria-invalid={!!validationError}
-      aria-describedby={validationError ? "entry-asset-error" : undefined}
+      aria-describedby={validationError ? `${idPrefix}-asset-error` : undefined}
     >
       <legend className="font-medium">Canonical Asset</legend>
       {validationError && (
-        <p role="alert" id="entry-asset-error">
+        <p role="alert" id={`${idPrefix}-asset-error`}>
           {validationError}
         </p>
       )}
@@ -41,9 +43,9 @@ export function TransactionAssetPicker({
         Select a USD Equity or ETF on NYSE, NASDAQ, NYSEARCA, or AMEX.
         Eligibility is verified by the server.
       </p>
-      <label htmlFor="entry-asset-type">Asset type</label>
+      <label htmlFor={`${idPrefix}-asset-type`}>Asset type</label>
       <select
-        id="entry-asset-type"
+        id={`${idPrefix}-asset-type`}
         className="block rounded border p-2"
         value={assetType}
         onChange={(event) =>
@@ -53,13 +55,13 @@ export function TransactionAssetPicker({
         <option value="EQUITY">EQUITY</option>
         <option value="ETF">ETF</option>
       </select>
-      <label htmlFor="entry-asset-search">Search Assets</label>
+      <label htmlFor={`${idPrefix}-asset-search`}>Search Assets</label>
       <Input
-        id="entry-asset-search"
+        id={`${idPrefix}-asset-search`}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         aria-invalid={!!error}
-        aria-describedby={error ? "entry-asset-search-error" : undefined}
+        aria-describedby={error ? `${idPrefix}-asset-search-error` : undefined}
       />
       <Button
         type="button"
@@ -73,7 +75,7 @@ export function TransactionAssetPicker({
         Search
       </Button>
       {error && (
-        <p role="alert" id="entry-asset-search-error">
+        <p role="alert" id={`${idPrefix}-asset-search-error`}>
           {error}
         </p>
       )}

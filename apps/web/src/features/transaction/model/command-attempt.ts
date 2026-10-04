@@ -19,6 +19,20 @@ function identity(command: TransactionCommand): string {
   });
 }
 
+// Separate from create attempts. Target identity is part of correction scope.
+export class CorrectionAttempt {
+  private attempt: { identity: string; key: string } | null = null;
+  keyFor(targetId: string, replacement: TransactionCommand): string {
+    const next = JSON.stringify([targetId, identity(replacement)]);
+    if (this.attempt?.identity !== next)
+      this.attempt = { identity: next, key: crypto.randomUUID() };
+    return this.attempt.key;
+  }
+  clear() {
+    this.attempt = null;
+  }
+}
+
 // One instance per mounted entry form; no browser persistence or token access.
 export class CommandAttempt {
   private attempt: { identity: string; key: string } | null = null;

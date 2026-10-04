@@ -3,24 +3,39 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { TransactionFilters } from "@/features/transaction/api/transaction-api";
+import type {
+  Transaction,
+  TransactionFilters,
+} from "@/features/transaction/api/transaction-api";
 import { useTransactionHistory } from "@/features/transaction/model/transaction-queries";
 import {
   historyFiltersSchema,
   visibleKinds,
 } from "@/features/transaction/model/transaction-validation";
 import { TransactionError } from "@/features/transaction/components/transaction-error";
-import { TransactionFacts } from "@/features/transaction/components/transaction-facts";
+import {
+  TransactionRecord,
+  transactionAnchor,
+} from "@/features/transaction/components/transaction-record";
+import { TransactionRelatedRecord } from "@/features/transaction/components/transaction-related-record";
 
 export function TransactionHistory({
   portfolioId,
-}: Readonly<{ portfolioId: string }>) {
+  onCorrect,
+  correctionPending = false,
+}: Readonly<{
+  portfolioId: string;
+  onCorrect?: (transaction: Transaction) => void;
+  correctionPending?: boolean;
+}>) {
+  const [relatedId, setRelatedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<TransactionFilters>({
     includeReversals: true,
   });
   const [filterError, setFilterError] = useState<string | null>(null);
   const history = useTransactionHistory(portfolioId, filters);
   const rows = history.data?.pages.flatMap((page) => page.items) ?? [];
+  const loadedIds = new Set(rows.map((row) => row.id));
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +57,7 @@ export function TransactionHistory({
   return (
     <section aria-labelledby="history-title" className="space-y-4">
       <header>
-        <h2 id="history-title" className="text-xl font-semibold">
+        <h2 id="history-title" tabIndex={-1} className="text-xl font-semibold">
           Ledger history
         </h2>
         <p className="text-sm text-slate-600">
@@ -111,6 +126,21 @@ export function TransactionHistory({
           </Button>
         </div>
       </form>
+      {relatedId && (
+        <TransactionRelatedRecord
+          key={relatedId}
+          portfolioId={portfolioId}
+          transactionId={relatedId}
+          loadedIds={loadedIds}
+          onNavigate={setRelatedId}
+          onCorrect={onCorrect}
+          correctionPending={correctionPending}
+          onClose={() => {
+            setRelatedId(null);
+            document.getElementById("history-title")?.focus();
+          }}
+        />
+      )}
       {history.isLoading && <p role="status">Loading transactions…</p>}
       {history.isError && (
         <div className="space-y-2">
@@ -134,12 +164,17 @@ export function TransactionHistory({
         {rows.map((transaction) => (
           <li
             key={transaction.id}
+            id={transactionAnchor(transaction.id)}
+            tabIndex={-1}
             className="space-y-3 rounded-lg border bg-white p-4"
           >
-            <h3 className="break-all font-semibold">
-              {transaction.kind} · {transaction.id}
-            </h3>
-            <TransactionFacts transaction={transaction} />
+            <TransactionRecord
+              transaction={transaction}
+              loadedIds={loadedIds}
+              onNavigate={setRelatedId}
+              onCorrect={onCorrect}
+              correctionPending={correctionPending}
+            />
           </li>
         ))}
       </ol>
