@@ -15,6 +15,7 @@ export default defineConfig({
       "tests/e2e/**",
       "tests/auth-e2e/**",
       "tests/m2-e2e/**",
+      "tests/m3-e2e/**",
       "node_modules/**",
       ".next/**",
     ],
