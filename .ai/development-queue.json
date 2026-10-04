@@ -6,7 +6,7 @@
     "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
     "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
   },
-  "activeTaskId": "M3-E2E-001",
+  "activeTaskId": "M3-VERIFY-001",
   "tasks": [
     {
       "id": "M2-STABILITY-PR63",
@@ -98,7 +98,7 @@
     {
       "id": "M3-E2E-001",
       "planTask": "M3-E2E-001",
-      "status": "in_progress",
+      "status": "merged",
       "dependsOn": [
         {
           "task": "M3-FE-002",
@@ -110,7 +110,7 @@
     {
       "id": "M3-VERIFY-001",
       "planTask": "M3-VERIFY-001",
-      "status": "blocked",
+      "status": "in_progress",
       "dependsOn": [
         {
           "task": "M3-E2E-001",
