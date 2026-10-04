@@ -6,7 +6,7 @@
     "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
     "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
   },
-  "activeTaskId": "M3-BE-002",
+  "activeTaskId": "M3-BE-003",
   "tasks": [
     {
       "id": "M2-STABILITY-PR63",
@@ -45,7 +45,7 @@
     {
       "id": "M3-BE-002",
       "planTask": "M3-BE-002",
-      "status": "in_progress",
+      "status": "merged",
       "implementationStatus": "complete",
       "branch": "codex/m3-be-002-transaction-application-outbox",
       "pullRequest": 64,
@@ -61,7 +61,7 @@
     {
       "id": "M3-BE-003",
       "planTask": "M3-BE-003",
-      "status": "blocked",
+      "status": "in_progress",
       "branchHint": "codex/m3-be-003-transaction-http",
       "dependsOn": [
         {
