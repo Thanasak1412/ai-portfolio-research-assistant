@@ -9,6 +9,7 @@
 - [Authentication Implementation Gate](planning/authentication-implementation-gate.md)
 - [Portfolio & Asset Foundation — Execution Plan](planning/portfolio-asset-foundation-execution-plan.md) (approved; M2-PLAN-001)
 - [Transaction Ledger Foundation — Execution Plan](planning/transaction-ledger-foundation-execution-plan.md) (proposed; M3-PLAN-001)
+- [Price Data and Holding Projection — Execution Plan](planning/price-data-holding-projection-execution-plan.md) (proposed; M4-PLAN-001; planning only, implementation gated)
 - [M3 Primary US Price Provider Permission Gate](governance/m3-price-provider-permission-gate.md) (approved for Twelve Data Venture private-beta scope; M3-GATE-001)
 - [SECURITY_EXCEPTION-001 — Temporary braces audit exception](governance/security-exception-001-braces.md) (accepted temporary risk; expires 2026-10-31)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
