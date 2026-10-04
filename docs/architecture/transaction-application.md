@@ -4,7 +4,8 @@ Task: `M3-BE-002`. Base: `dfda4b4b677e540a5392e80a2d181ba6e0a27c3f`.
 
 The Transaction application exposes create, correct, list, and get operations
 using the existing authenticated principal and immutable domain values. HTTP
-DTOs, cursor encoding, handlers, and route activation remain `M3-BE-003`.
+DTOs, cursor encoding, handlers, and route activation are implemented separately
+by [M3-BE-003](transaction-http.md); they remain outside the application layer.
 
 ## Authority and transaction boundary
 
