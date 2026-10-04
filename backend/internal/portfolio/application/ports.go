@@ -18,6 +18,12 @@ type PortfolioRepository interface {
 
 type Clock interface{ Now() time.Time }
 
+// OwnershipReader is the public owner-scoped read boundary. A transaction-bound
+// implementation may hold a shared lock until its caller's financial write ends.
+type OwnershipReader interface {
+	GetPortfolio(context.Context, identitydomain.Principal, domain.PortfolioID) (domain.Portfolio, error)
+}
+
 type IDGenerator interface {
 	PortfolioID() (domain.PortfolioID, error)
 }

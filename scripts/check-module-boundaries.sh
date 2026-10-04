@@ -100,4 +100,14 @@ if [ -n "$transaction_domain_violations" ]; then
   exit 1
 fi
 
+if [ -d "$backend_root/transaction/application" ]; then
+  transaction_application_violations=$(rg -n --glob '*.go' \
+    '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/[^/]+/(infrastructure|transport|composition)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database|"github.com/gofiber/|"github.com/jackc/pgx/|/sqlcgen' \
+    "$backend_root/transaction/application" || true)
+  if [ -n "$transaction_application_violations" ]; then
+    echo "Transaction application bypasses public module boundaries:$transaction_application_violations" >&2
+    exit 1
+  fi
+fi
+
 echo "Module boundary check passed"

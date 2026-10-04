@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -40,5 +41,11 @@ func main() {
 	}
 	defer pool.Close()
 
-	workerruntime.Run(ctx, logger, poolChecker{ping: pool.Ping}, applicationConfig.WorkerHeartbeatInterval)
+	// No concrete receiver is approved. ADR-023 keeps publication inactive;
+	// deliberately do not construct an outbox store or a placeholder publisher.
+	err = workerruntime.RunConfigured(ctx, logger, poolChecker{ping: pool.Ping}, applicationConfig.WorkerHeartbeatInterval, applicationConfig.OutboxDelivery, workerruntime.DeliveryDependencies{})
+	if err != nil && !errors.Is(err, context.Canceled) {
+		logger.Error("worker runtime failed")
+		os.Exit(1)
+	}
 }

@@ -35,6 +35,13 @@ WHERE
     AND status = sqlc.arg(status)
 ORDER BY updated_at DESC, portfolio_id ASC;
 
+-- name: LockOwnedPortfolioForFinancialCommand :one
+-- Portfolio-owned boundary. Caller supplies its pgx.Tx; FOR SHARE prevents
+-- concurrent archive/ownership updates until that caller commits or rolls back.
+SELECT * FROM portfolios
+WHERE portfolio_id = sqlc.arg(portfolio_id) AND owner_user_id = sqlc.arg(owner_user_id)
+FOR SHARE;
+
 -- name: UpdateOwnedActivePortfolioName :one
 -- The caller must classify no-row and uniqueness outcomes without exposing
 -- database details as public HTTP errors.

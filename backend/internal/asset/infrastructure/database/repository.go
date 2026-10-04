@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/asset/application"
@@ -11,6 +12,10 @@ import (
 )
 
 type PostgresAssetRepository struct{ queries *sqlcgen.Queries }
+
+func NewTransactionRepository(tx pgx.Tx) *PostgresAssetRepository {
+	return &PostgresAssetRepository{queries: sqlcgen.New(tx)}
+}
 
 func NewPostgresAssetRepository(pool *pgxpool.Pool) *PostgresAssetRepository {
 	return &PostgresAssetRepository{queries: sqlcgen.New(pool)}
