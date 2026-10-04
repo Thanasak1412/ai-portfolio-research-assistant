@@ -67,6 +67,13 @@ export function PortfolioDetailScreen({
           Base currency: {data.baseCurrency}
         </p>
       </header>
+      <Button asChild variant="outline">
+        <Link
+          href={`/app/portfolios/${encodeURIComponent(data.id)}/transactions`}
+        >
+          Transactions
+        </Link>
+      </Button>
       <dl className="grid gap-3 rounded-lg border border-slate-200 bg-white p-5 text-sm shadow-sm sm:grid-cols-2">
         <Metadata label="Created" value={formatTimestamp(data.createdAt)} />
         <Metadata label="Updated" value={formatTimestamp(data.updatedAt)} />
