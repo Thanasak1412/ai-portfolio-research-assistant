@@ -1,11 +1,18 @@
 import type { components, operations } from "@portfolio/api-contracts";
 import { z } from "zod";
 
-import { transactionSchema } from "@/features/transaction/model/transaction-validation";
+import {
+  correctionResultSchema,
+  transactionSchema,
+} from "@/features/transaction/model/transaction-validation";
 import { ApiError } from "@/platform/api/api-error";
 
 export type Transaction = components["schemas"]["Transaction"];
 export type TransactionCommand = components["schemas"]["TransactionCommand"];
+export type TransactionCorrectionCommand =
+  components["schemas"]["TransactionCorrectionCommand"];
+export type TransactionCorrectionResult =
+  components["schemas"]["TransactionCorrectionResult"];
 export type TransactionListResponse =
   components["schemas"]["TransactionListResponse"];
 export type TransactionListParams = NonNullable<
@@ -29,6 +36,43 @@ const path = (id: string) =>
   `/api/v1/portfolios/${encodeURIComponent(id)}/transactions`;
 
 export const transactionApi = {
+  get(
+    accessToken: string,
+    portfolioId: string,
+    transactionId: string,
+  ): Promise<Transaction> {
+    return request(
+      `${path(portfolioId)}/${encodeURIComponent(transactionId)}`,
+      accessToken,
+      {},
+      200,
+      transactionSchema.refine((record) => record.id === transactionId),
+    );
+  },
+  correct(
+    accessToken: string,
+    portfolioId: string,
+    transactionId: string,
+    command: TransactionCorrectionCommand,
+    idempotencyKey: string,
+  ): Promise<TransactionCorrectionResult> {
+    return request(
+      `${path(portfolioId)}/${encodeURIComponent(transactionId)}/corrections`,
+      accessToken,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify(command),
+      },
+      201,
+      correctionResultSchema.refine(
+        (result) => result.original.id === transactionId,
+      ),
+    );
+  },
   list(
     accessToken: string,
     portfolioId: string,

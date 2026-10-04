@@ -6,9 +6,16 @@ import { transactionApi } from "@/features/transaction/api/transaction-api";
 import { transactionKeys } from "@/features/transaction/model/transaction-query-keys";
 import {
   useCreateTransaction,
+  useCorrectTransaction,
+  useTransaction,
   useTransactionHistory,
 } from "@/features/transaction/model/transaction-queries";
-import { command, transaction } from "@/features/transaction/test-fixtures";
+import {
+  command,
+  correction,
+  transaction,
+} from "@/features/transaction/test-fixtures";
+import { ApiError } from "@/platform/api/api-error";
 
 const auth = vi.hoisted(() => ({
   runAuthenticated: vi.fn(),
@@ -18,7 +25,12 @@ vi.mock("@/features/auth/model/auth-session-provider", () => ({
   useAuthSession: () => auth,
 }));
 vi.mock("@/features/transaction/api/transaction-api", () => ({
-  transactionApi: { list: vi.fn(), create: vi.fn() },
+  transactionApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    correct: vi.fn(),
+    get: vi.fn(),
+  },
 }));
 const wrapper = (client: QueryClient) =>
   function Wrapper({ children }: { children: ReactNode }) {
@@ -35,6 +47,97 @@ beforeEach(() => {
 });
 
 describe("Transaction query model", () => {
+  it("loads related facts with Portfolio-scoped detail keys and authenticated reads", async () => {
+    vi.mocked(transactionApi.get).mockResolvedValue(transaction);
+    const client = new QueryClient();
+    const { result, unmount } = renderHook(
+      () => useTransaction("p", transaction.id),
+      { wrapper: wrapper(client) },
+    );
+    await waitFor(() => expect(result.current.data).toEqual(transaction));
+    expect(transactionApi.get).toHaveBeenCalledWith(
+      "memory-access",
+      "p",
+      transaction.id,
+    );
+    expect(transactionKeys.detail("p", transaction.id)).toEqual([
+      "transactions",
+      "p",
+      "detail",
+      transaction.id,
+    ]);
+    expect(transactionKeys.detail("other", transaction.id)).not.toEqual(
+      transactionKeys.detail("p", transaction.id),
+    );
+    unmount();
+    client.clear();
+    auth.state.status = "unauthenticated";
+    vi.mocked(transactionApi.get).mockClear();
+    renderHook(() => useTransaction("p", transaction.id), {
+      wrapper: wrapper(client),
+    });
+    expect(transactionApi.get).not.toHaveBeenCalled();
+    client.clear();
+  });
+  it("shows correction success without waiting on background history/detail invalidation", async () => {
+    vi.mocked(transactionApi.correct).mockResolvedValue(correction);
+    const client = new QueryClient();
+    const invalidate = vi
+      .spyOn(client, "invalidateQueries")
+      .mockReturnValue(new Promise(() => {}));
+    const { result } = renderHook(() => useCorrectTransaction("p"), {
+      wrapper: wrapper(client),
+    });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({
+          transactionId: transaction.id,
+          command: { replacement: command },
+          key: "correction-attempt-key",
+        }),
+      ).resolves.toEqual(correction);
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: transactionKeys.histories("p"),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: transactionKeys.details("p"),
+    });
+    client.clear();
+  });
+  it.each(["INTERNAL_ERROR", "TRANSACTION_ALREADY_CORRECTED"])(
+    "never automatically retries %s; refreshes already-corrected history",
+    async (code) => {
+      vi.mocked(transactionApi.correct).mockRejectedValue(
+        new ApiError(code === "INTERNAL_ERROR" ? 500 : 409, code, "private"),
+      );
+      const client = new QueryClient({
+        defaultOptions: { mutations: { retry: 3, retryDelay: 0 } },
+      });
+      const invalidate = vi
+        .spyOn(client, "invalidateQueries")
+        .mockResolvedValue();
+      const { result } = renderHook(() => useCorrectTransaction("p"), {
+        wrapper: wrapper(client),
+      });
+      await act(async () => {
+        await expect(
+          result.current.mutateAsync({
+            transactionId: transaction.id,
+            command: { replacement: command },
+            key: "correction-attempt-key",
+          }),
+        ).rejects.toMatchObject({ code });
+      });
+      expect(transactionApi.correct).toHaveBeenCalledTimes(1);
+      if (code === "TRANSACTION_ALREADY_CORRECTED")
+        expect(invalidate).toHaveBeenCalledWith({
+          queryKey: transactionKeys.histories("p"),
+        });
+      else expect(invalidate).not.toHaveBeenCalled();
+      client.clear();
+    },
+  );
   it("normalizes default keys and includes every filter and Portfolio scope", () => {
     expect(transactionKeys.history("p", {})).toEqual(
       transactionKeys.history("p", { limit: 50, includeReversals: true }),

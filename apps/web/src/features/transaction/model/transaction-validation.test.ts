@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   commandSchema,
+  correctionCommandSchema,
   createKinds,
   decimal,
   positiveDecimal,
@@ -11,6 +12,26 @@ import {
 import { asset, command } from "@/features/transaction/test-fixtures";
 
 describe("Transaction usability validation", () => {
+  it("includes the correction wrapper in the byte limit and prohibits hidden target fields", () => {
+    expect(correctionCommandSchema.parse({ replacement: command })).toEqual({
+      replacement: command,
+    });
+    const base = { ...command, note: "😀".repeat(2000) };
+    const bytes = new TextEncoder().encode(
+      JSON.stringify({ ...base, externalReference: "" }),
+    ).length;
+    const nearLimit = { ...base, externalReference: "x".repeat(8192 - bytes) };
+    expect(commandSchema.safeParse(nearLimit).success).toBe(true);
+    expect(
+      correctionCommandSchema.safeParse({ replacement: nearLimit }).success,
+    ).toBe(false);
+    expect(
+      correctionCommandSchema.safeParse({
+        replacement: command,
+        transactionId: "hidden",
+      }).success,
+    ).toBe(false);
+  });
   it.each(createKinds)("freezes %s required and forbidden fields", (kind) => {
     const trade = kind === "BUY" || kind === "SELL";
     const candidate = {

@@ -106,6 +106,14 @@ export function isEligibleAsset(asset: Asset): boolean {
   );
 }
 
+export const correctionCommandSchema = z
+  .strictObject({ replacement: commandSchema })
+  .refine(
+    (command) =>
+      new TextEncoder().encode(JSON.stringify(command)).length <= 8192,
+    "The correction, including its wrapper, must fit within 8,192 UTF-8 bytes.",
+  );
+
 export const historyFiltersSchema = z
   .object({
     kind: z.enum(visibleKinds).optional(),
@@ -146,3 +154,21 @@ export const transactionSchema = z.strictObject({
   }),
   createdAt: z.iso.datetime(),
 });
+
+export const correctionResultSchema = z
+  .strictObject({
+    original: transactionSchema,
+    reversal: transactionSchema,
+    replacement: transactionSchema,
+  })
+  .refine(
+    ({ original, reversal, replacement }) =>
+      new Set([original.id, reversal.id, replacement.id]).size === 3 &&
+      original.kind !== "REVERSAL" &&
+      replacement.kind !== "REVERSAL" &&
+      reversal.kind === "REVERSAL" &&
+      original.correctionLinks.reversalTransactionId === reversal.id &&
+      original.correctionLinks.replacementTransactionId === replacement.id &&
+      reversal.correctionLinks.reversesTransactionId === original.id &&
+      replacement.correctionLinks.replacesTransactionId === original.id,
+  );
