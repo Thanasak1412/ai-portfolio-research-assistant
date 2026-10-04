@@ -17,6 +17,7 @@
     "test:e2e": "pnpm --filter @portfolio/web test:e2e",
     "test:e2e:auth": "pnpm --filter @portfolio/web test:e2e:auth",
     "test:e2e:m2": "pnpm --filter @portfolio/web test:e2e:m2",
+    "test:e2e:m3": "pnpm --filter @portfolio/web test:e2e:m3",
     "security:audit": "node scripts/security-audit.mjs",
     "security:audit:test": "node --test scripts/security-audit.test.mjs",
     "agent:validate": "node scripts/validate-agent-control.mjs",
