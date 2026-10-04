@@ -339,11 +339,12 @@ retrieval, display, intended-user use, storage/retention, attribution, and the
 applicable redistribution restrictions. The evidence also fixes Canonical
 Official Close v1 for the initial provider.
 
-`M3-GATE-001` remains **PENDING MERGE**.
+`M3-GATE-001` was merged through [PR #48](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/48)
+at `0300f194b505b5dbec2af1a991438aead23a5785`.
 
-`M3-CONTRACT-001` remains **BLOCKED UNTIL PR #48 IS MERGED**. After this PR is
-merged into protected `main`, `M3-CONTRACT-001` becomes unblocked under the
-approved M3 task sequence. This approval does not itself authorize a provider
+That protected-main merge satisfied the provider-permission prerequisite for
+`M3-CONTRACT-001` under the approved M3 task sequence. This approval does not
+itself authorize a provider
 adapter, price ingestion, price storage implementation, or M4 projection work;
 those remain subject to their separate approved tasks and constraints.
 
@@ -380,6 +381,6 @@ evidence review before implementation proceeds under the changed scope.
 | No credentials committed                         | COVERED |
 | No confidential contract text                    | COVERED |
 | No runtime changes                               | COVERED |
-| `M3-CONTRACT-001` blocked until PR #48 is merged | COVERED |
+| `M3-CONTRACT-001` prerequisite satisfied by merged PR #48 | COVERED |
 
-**M3-GATE-001 Review: Ready for Review**
+**M3-GATE-001: Approved evidence merged through PR #48.**
