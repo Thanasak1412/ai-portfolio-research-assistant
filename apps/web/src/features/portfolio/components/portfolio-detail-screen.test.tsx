@@ -49,6 +49,24 @@ function renderScreen() {
 }
 
 describe("PortfolioDetailScreen", () => {
+  it("links active and archived Portfolios to their ledger", () => {
+    usePortfolio.mockReturnValue(queryState());
+    const { rerender } = renderScreen();
+    expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute(
+      "href",
+      "/app/portfolios/portfolio-1/transactions",
+    );
+    usePortfolio.mockReturnValue(queryState({ data: archived }));
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <PortfolioDetailScreen portfolioId="portfolio-1" />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute(
+      "href",
+      "/app/portfolios/portfolio-1/transactions",
+    );
+  });
   beforeEach(() => {
     useUpdatePortfolio.mockReturnValue({
       isPending: false,
