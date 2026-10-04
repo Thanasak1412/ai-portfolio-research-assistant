@@ -178,6 +178,7 @@ describe("reviewed Transaction entry", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Record another entry" }),
     );
+    expect(screen.getByLabelText("Transaction kind")).toHaveFocus();
     deposit();
     fill("Amount (USD)", "11");
     await review();
