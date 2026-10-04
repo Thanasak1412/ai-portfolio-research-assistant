@@ -110,4 +110,14 @@ if [ -d "$backend_root/transaction/application" ]; then
   fi
 fi
 
+if [ -d "$backend_root/transaction/transport" ]; then
+  transaction_transport_violations=$(rg -n --glob '*.go' --glob '!**/*_test.go' \
+    '"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/[^/]+/(infrastructure|composition)|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/(identity|portfolio|asset)/transport|"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/database|"github.com/jackc/pgx/|/sqlcgen' \
+    "$backend_root/transaction/transport" || true)
+  if [ -n "$transaction_transport_violations" ]; then
+    echo "Transaction transport bypasses public module boundaries:$transaction_transport_violations" >&2
+    exit 1
+  fi
+fi
+
 echo "Module boundary check passed"

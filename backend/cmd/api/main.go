@@ -14,6 +14,7 @@ import (
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/httpserver"
 	"github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/platform/logging"
 	portfoliocomposition "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/portfolio/composition"
+	transactioncomposition "github.com/Thanasak1412/ai-portfolio-research-assistant/backend/internal/transaction/composition"
 )
 
 type poolReadiness struct {
@@ -58,7 +59,14 @@ func main() {
 		logger.Error("asset configuration failed", "error", err)
 		os.Exit(1)
 	}
-	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler, portfolioHandler, assetHandler)
+	transactionHandler, err := transactioncomposition.BuildHTTP(pool, portfoliocomposition.BindOwnership, assetcomposition.BindLookup, authHandler.BearerMiddleware(), authHandler.PrincipalExtractor())
+	if err != nil {
+		logger.Error("transaction configuration failed", "error", err)
+		os.Exit(1)
+	}
+	// Mount nested Transaction routes before Portfolio's prefix middleware so
+	// each request resolves its Identity principal exactly once.
+	server := httpserver.New(logger, poolReadiness{ping: pool.Ping}, authHandler, transactionHandler, portfolioHandler, assetHandler)
 	serveErrors := make(chan error, 1)
 	go func() { serveErrors <- server.Listen(applicationConfig.HTTPAddress()) }()
 	logger.Info("api started", "address", applicationConfig.HTTPAddress(), "environment", applicationConfig.Environment)
