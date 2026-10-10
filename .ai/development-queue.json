@@ -4,9 +4,9 @@
   "milestone": "M4",
   "sourceOfTruth": {
     "governance": "docs/adr/ADR-013-solo-maintainer-merge-governance.md",
-    "executionPlan": "docs/planning/transaction-ledger-foundation-execution-plan.md"
+    "executionPlan": "docs/planning/price-data-holding-projection-execution-plan.md"
   },
-  "activeTaskId": "M4-PLAN-001",
+  "activeTaskId": "M4-GATE-001",
   "tasks": [
     {
       "id": "M2-STABILITY-PR63",
@@ -122,12 +122,156 @@
     {
       "id": "M4-PLAN-001",
       "planTask": "M4-PLAN-001",
-      "status": "in_progress",
+      "status": "merged",
       "branchHint": "codex/m4-plan-001-price-holding-projection",
       "currentObjective": "Define and obtain approval for the M4 Price Data and Holding Projection execution plan. Planning only; no runtime implementation.",
       "dependsOn": [
         {
           "task": "M3-VERIFY-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-GATE-001",
+      "planTask": "M4-GATE-001",
+      "status": "in_progress",
+      "branchHint": "codex/m4-gate-001-implementation-readiness",
+      "currentObjective": "Close the M4 implementation-readiness gate for provider operations, receiver handoff, financial compatibility, retention, credentials, calendar, and private-beta delivery.",
+      "dependsOn": [
+        {
+          "task": "M4-PLAN-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-CONTRACT-001",
+      "planTask": "M4-CONTRACT-001",
+      "status": "blocked",
+      "currentObjective": "Freeze the approved Holding and selected-price read contracts, projection states, decimal strings, pagination, errors, and no-store bounds; add contract tests and deterministic TypeScript generation.",
+      "dependsOn": [
+        {
+          "task": "M4-GATE-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-PLATFORM-001",
+      "planTask": "M4-PLATFORM-001",
+      "status": "blocked",
+      "currentObjective": "Establish generic durable job persistence and interfaces, leases, fencing, idempotency, retry, safe observability, and caller-owned handoff atomicity with real concurrency tests; no business rules or delivery activation.",
+      "dependsOn": [
+        {
+          "task": "M4-CONTRACT-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-DB-001",
+      "planTask": "M4-DB-001",
+      "status": "blocked",
+      "currentObjective": "Create the reviewed Price and Holdings persistence foundation, separate sqlc targets, constraints, query-plan, retention, and migration tests, and the Transaction-owned snapshot query seam; no financial calculations in SQL or M3 write changes.",
+      "dependsOn": [
+        {
+          "task": "M4-PLATFORM-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-BE-001",
+      "planTask": "M4-BE-001",
+      "status": "blocked",
+      "currentObjective": "Implement the pure FIFO and rebuild calculator using approved precision and compatibility vectors, calculation provenance, atomic generation publication, and Transaction public snapshot/checkpoint ports; no Price/network, active receiver, or public routes.",
+      "dependsOn": [
+        {
+          "task": "M4-DB-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-BE-002",
+      "planTask": "M4-BE-002",
+      "status": "blocked",
+      "currentObjective": "Implement approved Price mapping, provider/calendar adapters, observation validation and idempotency, selection/freshness, quota-controlled jobs, secret/retention operations, and synthetic adapter tests; live activation requires gate evidence and operator approval.",
+      "dependsOn": [
+        {
+          "task": "M4-BE-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-BE-003",
+      "planTask": "M4-BE-003",
+      "status": "blocked",
+      "currentObjective": "Implement the approved durable Holdings receiver, atomic Platform dedup/rebuild responsibility, rebuild job processing and reconciliation, backlog/restart/failure runbook, and explicit activation evidence; preserve ADR-022 and approved receiver/deployment prerequisites.",
+      "dependsOn": [
+        {
+          "task": "M4-BE-002",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-BE-004",
+      "planTask": "M4-BE-004",
+      "status": "blocked",
+      "currentObjective": "Deliver owner-scoped frozen Holding and selected-price read routes with generation, pagination, state, error, correlation, and no-store behavior and authenticated integration tests; no compute-on-request FIFO or public ingestion/rebuild routes.",
+      "dependsOn": [
+        {
+          "task": "M4-BE-003",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-FE-001",
+      "planTask": "M4-FE-001",
+      "status": "blocked",
+      "currentObjective": "Implement read-only Holding and selected-price UI, typed adapters and query keys, projection status/provenance, attribution, no-store/logout behavior, and focused frontend tests; require human UX review and no client financial calculations.",
+      "dependsOn": [
+        {
+          "task": "M4-BE-004",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-E2E-001",
+      "planTask": "M4-E2E-001",
+      "status": "blocked",
+      "currentObjective": "Verify approved M4 flows through the real HTTPS stack with safe synthetic test fixtures, no external provider CI dependency, and zero retries; retain Authentication, M2, and M3 regression evidence.",
+      "dependsOn": [
+        {
+          "task": "M4-FE-001",
+          "requiredStatus": "merged"
+        }
+      ],
+      "onReadyForMerge": "human_gate"
+    },
+    {
+      "id": "M4-VERIFY-001",
+      "planTask": "M4-VERIFY-001",
+      "status": "blocked",
+      "currentObjective": "Produce the M4 acceptance matrix and completion report with actual source, receiver, precision, rebuild, security, scope, and current-head CI evidence; recommend closure only after every preceding task is merged and maintainer review.",
+      "dependsOn": [
+        {
+          "task": "M4-E2E-001",
           "requiredStatus": "merged"
         }
       ],
