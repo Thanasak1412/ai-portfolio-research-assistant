@@ -2,7 +2,7 @@
 
 | Tool | Supported baseline | Pinning point |
 |---|---|---|
-| Go | 1.26.6 | `go.mod` and CI 1.26 patch line |
+| Go | 1.26.9 | `go.mod`, CI, and pinned backend build images |
 | Node.js | 24 LTS | `.node-version`, Docker major, CI major |
 | pnpm | 10.18.3 | root `packageManager` |
 | PostgreSQL | 17 | Docker Compose/CI images |
