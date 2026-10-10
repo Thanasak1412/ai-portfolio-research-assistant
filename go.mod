@@ -2,7 +2,7 @@ module github.com/Thanasak1412/ai-portfolio-research-assistant
 
 go 1.26.0
 
-toolchain go1.26.6
+toolchain go1.26.9
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
@@ -12,7 +12,7 @@ require (
 	golang.org/x/crypto v0.54.0
 )
 
-require golang.org/x/text v0.40.0 // indirect
+require golang.org/x/text v0.41.0 // indirect
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
