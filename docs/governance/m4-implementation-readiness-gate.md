@@ -15,9 +15,12 @@ This is an implementation-readiness gate, not a second M3 provider licensing
 approval. It records repository evidence and unresolved evidence/decisions
 without changing runtime behavior. `VERIFIED` means a cited authoritative
 source or executable repository behavior supports the specific statement;
-`BLOCKED` means required evidence, approval, or operational implementation is
-absent; `NOT_APPLICABLE` is used only where the approved scope excludes a
-feature. Only `VERIFIED` satisfies a mandatory row.
+`BLOCKED` means a required approval/decision/evidence item is absent for the
+phase named in its row. The overall M4-GATE-001 status reflects Phase A
+pre-implementation readiness; an open Phase B item blocks activation only and
+does not by itself block starting implementation. `NOT_APPLICABLE` is used
+only where the approved scope excludes a feature. Only `VERIFIED` satisfies a
+mandatory row for its stated phase.
 
 Engineering and Codex are not Product, Legal, provider-account, operator, or
 financial-policy approvers. This document must not contain credentials,
@@ -39,6 +42,66 @@ matrix and completion report, plus current M3 replay/correction/worker code
 and tests. The active queue selects only M4-GATE-001; downstream M4 tasks
 remain blocked. Current M3 runtime contains no FIFO projection, Price provider,
 calendar, durable Holdings rebuild job, or approved receiver.
+
+## Gate phases and non-circular sequencing
+
+M4-GATE-001 has two distinct evidence phases. Evidence from the later phase is
+not a prerequisite to begin the contract and implementation work that creates
+the relevant runtime behavior.
+
+### Phase A — pre-implementation readiness (this gate)
+
+Before M4-CONTRACT-001 may be authorized through a separate reviewed queue
+transition, this gate must close decisions and evidence that can exist without
+M4 runtime implementation:
+
+- approved architecture and ownership boundaries, including an explicit human
+  decision on the proposed receiver contract; this document does not accept
+  ADR-024 or approve/activate a receiver;
+- provider/account-specific operating and calendar evidence, with an approved
+  bounded universe and credential/environment operating model;
+- approved permission boundaries for invited-user access, data display, cache
+  policy, retention, deletion, and termination response;
+- an approved operational design, named owners, procedures, and failure
+  behavior for provider access, credentials, retention, and safe receiver
+  activation/deactivation; and
+- exact financial-policy decisions and accepted expected vectors for FIFO
+  correction compatibility and DECIMAL-v1 cross-lot reconciliation.
+
+Phase A requires decisions, provider/account evidence, and an implementable
+operational design. It does not require deployed controls, implementation
+tests, production deployment, or proof that a receiver has already accepted
+work. The missing Phase A items listed below keep this gate `BLOCKED` today.
+Closing Phase A alone does not activate a receiver or live provider access.
+
+### Phase B — post-implementation activation evidence
+
+After the separately authorized implementation tasks exist, but before a live
+provider/receiver or licensed private-beta delivery is activated, the task
+owners must provide current, task-specific operational verification. At
+minimum, this later activation review must include:
+
+- real PostgreSQL evidence for receiver durable responsibility and dedup in
+  one transaction, commit-before-ack, duplicate delivery, crash-before-ack,
+  worker restart, lease expiry/fencing, recovery, backlog handling, and safe
+  deactivation;
+- deployed private-beta admission/revocation enforcement, including denial
+  for authenticated users who are not invited;
+- HTTP response, SSR, browser, and cache verification for `no-store`, no shared
+  CDN/persistent browser cache, memory-only query state, and clearing licensed
+  data on logout;
+- exercised subscription-termination deletion controls, including inventory,
+  deadline monitoring, retries, backup/restore sanitization, and completion
+  evidence within the approved 30-day limit; and
+- end-to-end operational verification of provider limits, credentials,
+  calendar behavior, monitoring, and fail-closed behavior using approved
+  non-production evidence before any production/private-beta activation.
+
+These Phase B items remain mandatory activation evidence and retain their
+existing owners. They are intentionally not claimed as complete and are not
+preconditions for M4-CONTRACT-001. A missing Phase B item blocks activation,
+not the earlier design and implementation tasks. No implementation or
+activation is authorized by this clarification.
 
 ## Preserved M3 provider decision and use restrictions
 
@@ -69,22 +132,24 @@ boundary, or deployed deletion/cache controls.
 
 ## Gate summary
 
-| Requirement | Status | Evidence and exact closure needed |
+| Pre-implementation requirement | Status | Phase A closure; later Phase B activation evidence |
 | --- | --- | --- |
-| Receiver / durable handoff | `BLOCKED` | Proposed contract is in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md), but it is not accepted or implemented. Maintainer must accept the ADR; later implementation/deployment evidence must prove atomic dedup + durable responsibility, commit-before-ack, duplicate/restart recovery, safe deactivation, and backlog ownership. |
-| Provider operating envelope | `BLOCKED` | M3 gate records quotas, request weights, concurrency, asset-count, history depth, and commercial limits as unresolved. Provider/account owner must supply actual Venture entitlement evidence, including endpoint weighting, 429/retry guidance, EOD publication timing, backfill range, and batching capability if relied upon. No numerical limits are inferred. |
-| Credentials and environment separation | `BLOCKED` | Server-side-only and no-client-exposure are verified policy; the secret delivery mechanism, development/test/production separation, rotation/revocation, startup behavior for missing/invalid credentials, redaction, and outbound-host restrictions lack approved operational evidence. Operator/security owner must record the actual mechanism; no production credential belongs in ordinary CI. |
-| Canonical listing/provider mapping | `BLOCKED` | M3 Asset eligibility recognizes NYSE, NASDAQ, NYSEARCA, and AMEX, but repository code has no Twelve Data symbol/MIC mapping. Provider/Engineering must provide verified symbol, MIC, timezone, mapping version/effective dates, change procedure, and unsupported/delisted behavior. Ticker-only inference is not acceptable. |
-| US exchange calendar source | `BLOCKED` | `PRICE_SELECTION-v1` requires a provider-supported US exchange calendar, but no concrete Twelve Data calendar endpoint/dataset or entitlement is identified. Operator/maintainer must approve a source with regular sessions, holidays, early closes, DST, exchange-local dates, actual close instants, prior session, version evidence, and fail-closed behavior. No weekday approximation or unapproved third-party calendar is authorized. |
-| Retention / termination / deletion operations | `BLOCKED` | The 30-day raw-data deletion obligation is verified by M3 provider evidence; no executable termination signal, inventory, operator ownership, stop-ingestion/display procedure, backup/replica/cache inventory, restore sanitization, deadline alert, retry, and completion-evidence procedure is approved. Operator/security owner must approve and demonstrate it before live ingestion. Migration Down is not a purge mechanism. |
-| Private-beta display and cache | `BLOCKED` | Licensed audience and conservative no-persistent-client-cache direction are known, but public self-registration does not prove invited-beta admission and no enforcement/revocation mechanism or deployed no-store/cache behavior is evidenced. Product/operator must specify admission and revocation; implementation must enforce it server-side. No shared CDN or persistent browser storage is permitted by the plan. |
-| FIFO correction compatibility | `BLOCKED` | Current M3 replay/correction behavior is verified below, but `COST_BASIS-v1` does not uniquely resolve all M3-valid correction histories. Financial-policy maintainer must approve exact lot-neutralization and expected outputs for the vectors below without changing M3 validity implicitly. |
-| DECIMAL-v1 cross-lot reconciliation | `BLOCKED` | DECIMAL-v1 fixes internal precision, half-even rounding, and aggregate output rounding, but the plan’s two-lot counterexample makes persisted per-lot equality ambiguous. Financial-policy maintainer must decide persisted granularity and residual attribution, with exact vectors below. Any departure from DECIMAL-v1 requires a separate proposed and explicitly accepted policy ADR/version. |
+| Receiver / durable handoff | `BLOCKED` | **Phase A:** ADR-024 is Proposed; the architecture maintainer has not accepted the receiver contract and its ownership/activation boundaries. Do not treat later delivery tests or deployment as a Phase A prerequisite. **Phase B:** before activation, prove atomic dedup + durable responsibility, commit-before-ack, duplicate/restart recovery, safe deactivation, and backlog ownership. |
+| Provider operating envelope | `BLOCKED` | **Phase A:** provider/account owner must supply actual Venture entitlement evidence for endpoint weighting, 429/retry guidance, EOD publication timing, backfill range, batching capability if relied upon, and bounded universe capacity. No numerical limits are inferred. **Phase B:** verify configured limits and operational responses against that evidence before live ingestion. |
+| Credentials and environment separation | `BLOCKED` | **Phase A:** server-side-only/no-client-exposure is verified policy, but the approved secret-delivery mechanism, environment separation, rotation/revocation, missing/invalid behavior, redaction, outbound-host restrictions, owners, and operating procedures remain unresolved. **Phase B:** verify deployed injection, fail-closed behavior, redaction, and environment isolation without production secrets in ordinary CI. |
+| Canonical listing/provider mapping | `BLOCKED` | **Phase A:** M3 Asset eligibility recognizes NYSE, NASDAQ, NYSEARCA, and AMEX, but no verified Twelve Data symbol/MIC mapping, timezone, version/effective dates, change procedure, or unsupported/delisted behavior is approved. Ticker-only inference is not acceptable. **Phase B:** verify mapping behavior against approved evidence before ingestion. |
+| US exchange calendar source | `BLOCKED` | **Phase A:** `PRICE_SELECTION-v1` requires a provider-supported US exchange calendar, but no concrete Twelve Data calendar endpoint/dataset or entitlement is identified or approved. The source must cover regular sessions, holidays, early closes, DST, exchange-local dates, close instants, prior session, version evidence, and fail-closed behavior. **Phase B:** verify calendar integration against those approved cases. No weekday approximation or unapproved third-party calendar is authorized. |
+| Retention / termination / deletion operations | `BLOCKED` | **Phase A:** the 30-day raw-data deletion obligation is verified, but termination signal, inventory/owners, stop-ingestion/display procedure, backup/replica/cache scope, restore-sanitization plan, deadline alert, retry, and completion-evidence procedure are not approved. **Phase B:** exercise deployed deletion and restore controls and prove deadline completion. Migration Down is not a purge mechanism. |
+| Private-beta display and cache | `BLOCKED` | **Phase A:** licensed audience and conservative no-persistent-client-cache direction are known, but invited-beta admission/revocation policy and server-authoritative permission boundary are not approved. The no-store/cache policy must be specified before implementation. **Phase B:** prove deployed admission/denial/revocation and HTTP/SSR/browser no-store, no shared/persistent cache, memory-only query state, and logout clearing. |
+| FIFO correction compatibility | `BLOCKED` | **Phase A:** current M3 replay/correction behavior is verified below, but `COST_BASIS-v1` does not uniquely resolve all M3-valid correction histories. Financial-policy maintainer must approve exact lot-neutralization semantics and expected outputs for the vectors below without changing M3 validity implicitly. **Phase B:** implementation must pass the accepted executable vectors. |
+| DECIMAL-v1 cross-lot reconciliation | `BLOCKED` | **Phase A:** DECIMAL-v1 fixes internal precision, half-even rounding, and aggregate output rounding, but the plan’s two-lot counterexample makes persisted per-lot equality ambiguous. Financial-policy maintainer must decide persisted granularity and residual attribution, with exact vectors below. Any departure from DECIMAL-v1 requires a separate proposed and explicitly accepted policy ADR/version. **Phase B:** implementation must pass the accepted executable vectors. |
 
-**Gate Decision: `BLOCKED`** — mandatory evidence/decisions remain absent. No
-downstream M4 implementation is authorized. In particular, M4-CONTRACT-001
-stays blocked until this gate is approved and merged and a separate queue
-transition activates it.
+**Gate Decision: `BLOCKED`** — mandatory Phase A decisions/evidence remain
+absent. No downstream M4 implementation is authorized. In particular,
+M4-CONTRACT-001 stays blocked until Phase A is approved, this gate is merged,
+and a separate queue transition activates it. Phase B evidence remains a
+separate mandatory activation prerequisite after implementation; it is not
+required to begin M4-CONTRACT-001.
 
 ## 1. Receiver and durable responsibility
 
@@ -109,19 +174,24 @@ responsibility, not completed projection. Duplicate success requires proving
 the durable responsibility still exists. No broker or fake/no-op receiver is
 proposed.
 
-ADR-024 remains **Proposed** pending human acceptance. No receiver, job
-implementation, runtime activation, or operational evidence exists. ADR-022
-remains unchanged. Missing receiver continues to mean zero claims, attempts,
-publisher invocations, retries, dead-letter transitions, and acknowledgements.
+ADR-024 remains **Proposed**; no human acceptance is supplied here. No
+receiver, job implementation, runtime activation, or operational evidence
+exists. ADR-022 remains unchanged. Missing receiver continues to mean zero
+claims, attempts, publisher invocations, retries, dead-letter transitions,
+and acknowledgements. Human acceptance of the architecture contract is a
+Phase A decision; receiver durability/recovery tests and deployment proof are
+Phase B activation evidence and do not need to pre-exist the implementation.
 
 ### Owners and missing approval
 
 Platform owns generic jobs, leases, fencing, technical retries, and dedup;
 Holdings owns rebuild intent and calculation semantics; Transaction owns the
 immutable ledger and snapshot/checkpoint port. The architecture maintainer must
-accept ADR-024. The future receiver owner must prove backlog, atomic handoff,
-duplicate delivery, crash-before-ack, worker restart, fencing, failure recovery,
-monitoring, and deactivation before activation.
+accept ADR-024 as a Phase A architecture decision; no acceptance is recorded.
+Before Phase B activation, the future receiver owner must prove backlog,
+atomic handoff, duplicate delivery, crash-before-ack, worker restart, fencing,
+failure recovery, monitoring, and deactivation. Those proofs depend on the
+implementation and must not be demanded before its authorized work begins.
 
 ## 2. Provider operating envelope
 
@@ -212,8 +282,11 @@ auditable procedure specifying:
 6. Deadline monitoring/escalation, failure handling, completion evidence, and
    permitted minimal non-reconstructive deletion audit.
 
-Destructive production deletion remains a human-controlled action. No such
-action or infrastructure change is part of this task.
+Destructive production deletion remains a human-controlled action. The
+approved plan and ownership are Phase A prerequisites; deployed deletion and
+restore-sanitization controls must be exercised and evidenced in Phase B
+before live licensed ingestion. No such action or infrastructure change is
+part of this task.
 
 ## 7. Private-beta admission and cache
 
@@ -228,10 +301,11 @@ The M4 plan’s conservative client behavior is `Cache-Control: no-store`, no
 shared CDN cache, no persistent browser cache, React Query memory only, and
 clearing licensed data on logout. No localStorage, sessionStorage, IndexedDB,
 service-worker persistence, raw API, CSV export, or AI forwarding is allowed.
-This is the implementation ceiling, not evidence that such headers/admission
-controls are deployed or that the provider separately approved persistent
-client caching. No persistent client caching is approved here. Later contract,
-HTTP, and browser tests must prove the no-store and logout behavior.
+Phase A must approve the server-authoritative invited-user boundary and this
+cache policy; it does not claim that deployed headers/access controls already
+exist. Phase B HTTP, SSR, browser, and operational tests must prove the
+implemented no-store and logout behavior before licensed display is activated.
+No persistent client caching is approved here.
 
 ## 8. FIFO correction compatibility vectors
 
@@ -342,15 +416,15 @@ explicit acceptance. M4-DB-001 may not choose this schema/meaning on its own.
 | Evidence/decision | Owner | Status | Required reference |
 | --- | --- | --- | --- |
 | M3 provider/product/audience permission scope | Product / provider contract owner | `VERIFIED` | Merged [M3 gate](m3-price-provider-permission-gate.md); owner-held Twelve Data confirmation dated 2026-08-31 |
-| Venture account operating envelope | Provider/account owner | `BLOCKED` | Account-specific written quota/weight/concurrency/history/EOD/backfill evidence |
-| Secret and environment operation | Operator / security | `BLOCKED` | Approved secret reference/mechanism, separation, rotation, revoke, failure, redaction controls |
-| Provider listing mapping and supported MICs | Provider / Engineering | `BLOCKED` | Versioned mapping evidence and change/delist procedure |
-| Provider-supported calendar and entitlement | Provider/account owner / operator | `BLOCKED` | Concrete source, entitlement, coverage/version evidence and failure behavior |
-| Subscription termination and deletion runbook | Operator / security | `BLOCKED` | Owner, complete inventory, deadline-monitoring and restore-sanitization evidence |
-| Invited-user admission/revocation and no-store deployment | Product / operator / Engineering | `BLOCKED` | Server-side admission decision and tested access/cache controls |
-| Receiver ADR acceptance and operations | Architecture maintainer / Platform / Holdings | `BLOCKED` | Human ADR-024 acceptance, later real implementation and activation evidence |
-| FIFO correction expected vectors | Financial-policy maintainer | `BLOCKED` | Complete exact fixtures and explicitly accepted compatibility policy |
-| DECIMAL-v1 cross-lot expected vectors | Financial-policy maintainer | `BLOCKED` | Exact fixture outputs and explicitly accepted reconciliation representation |
+| Venture account operating envelope | Provider/account owner | `BLOCKED` | Phase A: account-specific written quota/weight/concurrency/history/EOD/backfill evidence. Phase B: operational limit/retry verification. |
+| Secret and environment operation | Operator / security | `BLOCKED` | Phase A: approved secret reference/mechanism, separation, rotation, revoke, failure, redaction, outbound policy. Phase B: deployed control verification. |
+| Provider listing mapping and supported MICs | Provider / Engineering | `BLOCKED` | Phase A: versioned mapping evidence and change/delist procedure. Phase B: mapping integration verification. |
+| Provider-supported calendar and entitlement | Provider/account owner / operator | `BLOCKED` | Phase A: concrete source, entitlement, coverage/version evidence and failure behavior. Phase B: calendar integration verification. |
+| Subscription termination and deletion runbook | Operator / security | `BLOCKED` | Phase A: approved owner, inventory, deadline-monitoring and restore-sanitization procedure. Phase B: exercised deletion and restore evidence. |
+| Invited-user admission/revocation and no-store | Product / operator / Engineering | `BLOCKED` | Phase A: approved server-side admission/revocation and cache policy. Phase B: deployed authorization and HTTP/SSR/browser access/cache tests. |
+| Receiver ADR acceptance and operations | Architecture maintainer / Platform / Holdings | `BLOCKED` | Phase A: human ADR-024 decision and ownership. Phase B: real implementation, durability/recovery tests, and activation evidence. |
+| FIFO correction expected vectors | Financial-policy maintainer | `BLOCKED` | Phase A: complete exact fixtures and explicitly accepted compatibility policy. Phase B: implementation tests passing those vectors. |
+| DECIMAL-v1 cross-lot expected vectors | Financial-policy maintainer | `BLOCKED` | Phase A: exact fixture outputs and explicitly accepted reconciliation representation. Phase B: implementation tests passing those vectors. |
 
 ## Human approval
 
@@ -386,13 +460,13 @@ separate reviewed queue transition activates it.
 | --- | --- |
 | M4 plan merged and active task verified | `VERIFIED` |
 | Existing M3 provider permission preserved without reopening | `VERIFIED` |
-| Receiver durable-handoff semantics proposed; no fake receiver | `BLOCKED` pending ADR-024 acceptance and later implementation evidence |
+| Receiver durable-handoff semantics proposed; no fake receiver | `BLOCKED` pending ADR-024 human decision (Phase A); real delivery durability/recovery evidence remains Phase B |
 | Provider operating envelope | `BLOCKED` |
 | Credentials and environment separation | `BLOCKED` |
 | Canonical listing/provider mapping | `BLOCKED` |
 | US exchange calendar | `BLOCKED` |
-| Retention/termination/deletion operation | `BLOCKED` |
-| Private-beta admission and cache enforcement | `BLOCKED` |
+| Retention/termination/deletion operation | `BLOCKED` (Phase A procedure/ownership; Phase B exercised controls) |
+| Private-beta admission and cache enforcement | `BLOCKED` (Phase A policy; Phase B deployed enforcement/tests) |
 | FIFO correction compatibility vectors | `BLOCKED` |
 | DECIMAL-v1 cross-lot reconciliation vectors | `BLOCKED` |
 | No credentials/confidential terms committed | `VERIFIED` |
