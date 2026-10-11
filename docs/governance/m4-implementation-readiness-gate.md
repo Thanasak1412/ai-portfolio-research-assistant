@@ -45,6 +45,28 @@ calendar, durable Holdings rebuild job, or approved receiver.
 
 ## Gate phases and non-circular sequencing
 
+### Phase A decision-closure review packet
+
+Repository evidence was rechecked at protected main
+`4c212f3e139cd08745ec531779317852600bbf64` (PR #82 merge) on 2026-10-11.
+The following proposals prepare decisions; they do not satisfy the missing
+human approvals or change any evidence owner/status below:
+
+- [Architecture approval recommendation](m4-phase-a-architecture-review.md):
+  caller-owned atomic handoff, duplicate integrity, ACK/fencing, recovery and
+  separate Phase B activation. ADR-024 remains **Proposed**.
+- [Proposed financial ADR-025](../adr/ADR-025-m4-financial-compatibility-and-reconciliation.md)
+  and [exact review vectors](m4-financial-policy-proposal-vectors.md): competing
+  correction approaches, unresolved consumed-BUY cost oracles and explicitly
+  versioned cross-lot reconciliation proposal. No new policy is accepted.
+- [Provider/operations evidence register](m4-provider-operations-evidence-register.md):
+  actionable requests to the existing owners, public-research/account evidence
+  distinction, credential/deletion/admission/cache operating proposals.
+
+Overall status remains **BLOCKED**. Missing financial oracles, actual account
+evidence and human decisions remain mandatory Phase A requirements;
+M4-CONTRACT-001 is not authorized.
+
 M4-GATE-001 has two distinct evidence phases. Evidence from the later phase is
 not a prerequisite to begin the contract and implementation work that creates
 the relevant runtime behavior.

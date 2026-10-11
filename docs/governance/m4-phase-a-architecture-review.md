@@ -1,0 +1,54 @@
+# M4 Phase A Architecture Approval Recommendation
+
+**Task:** M4-GATE-001
+
+**Status:** Proposed recommendation; human decision pending
+
+**Evidence base:** `4c212f3e139cd08745ec531779317852600bbf64` (merged PR #82)
+
+**Decision owner:** Maintainer / architecture owner
+
+## Recommendation and scope
+
+Recommend acceptance of the **design** in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md), subject to the review conditions below. This is not acceptance, receiver approval for deployment, or runtime activation. ADR-024 remains **Proposed**; the [readiness gate](m4-implementation-readiness-gate.md) remains **BLOCKED**. No queue transition or M4-CONTRACT-001 authorization follows from this document.
+
+Phase A should settle the ownership and atomic handoff contract. Phase B must prove the implementation and deployment before activating publication. Requiring Phase B tests before authorizing the work that creates them would be circular; removing those tests from activation would weaken the gate. Neither is recommended.
+
+## Verified repository seams, not a completed receiver
+
+| Evidence at the base                                                                                                                                                        | What it proves                                                                                                    | What it does not prove                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [Platform persistence](../../backend/internal/platform/database/platform_eventing.go), `NewPostgresConsumerDeduplicator` / `RecordIfNew`                                    | Caller-supplied DBTX; no independent begin/commit wrapper                                                         | A durable Holdings request exists                                       |
+| [Dedup SQL](../../backend/queries/platform/consumer_dedup.sql)                                                                                                              | Atomic insert with conflict detection on consumer/event; `false` means a marker exists                            | The marker's business work exists or completed                          |
+| [Platform integration tests](../../backend/internal/platform/database/platform_eventing_integration_test.go)                                                                | Test definitions exercise rollback and concurrent duplicate insertion                                             | Newly executed receiver integration evidence in this documentation task |
+| [Transaction transactor](../../backend/internal/transaction/infrastructure/database/transactor.go) and [service](../../backend/internal/transaction/application/service.go) | Ledger, idempotency, audit and event adapters share caller-owned transaction composition                          | Publication availability is necessary for a command                     |
+| [Outbox SQL](../../backend/queries/platform/outbox.sql)                                                                                                                     | SKIP LOCKED claims, unpublished-predecessor ordering, state plus claim-token transition predicates                | Exactly-once delivery or a Holdings publication fence                   |
+| [Delivery engine](../../backend/internal/platform/worker/delivery.go)                                                                                                       | Calls Publisher before MarkPublished; bounds cooperative publishing to the lease; token guards durable transition | A generic Publisher returning nil necessarily committed real work       |
+| [Worker composition](../../backend/cmd/worker/main.go) and [supervisor](../../backend/internal/platform/worker/supervisor.go)                                               | Empty receiver dependencies; missing publisher selects heartbeat before claims                                    | Active Transaction delivery or deployed Holdings recovery               |
+
+These are source-inspection findings. No new runtime tests or receiver are claimed here.
+
+## Approval conditions for the design
+
+1. **Atomic durable responsibility.** Holdings validates the accepted v1 event references using Transaction-owned public ports. In one caller-owned PostgreSQL transaction, insert Platform's `(holdings_rebuild_request_v1, event_id)` marker and Holdings' durable responsibility for that event/Portfolio/checkpoint/calculation version. Failure rolls back both. No pool-backed independent dedup call in this seam. Coalescing jobs must retain each event's responsibility evidence; a checkpoint alone is not proof of acceptance of an event.
+2. **Duplicate integrity.** A duplicate marker is a successful handoff only after the matching committed responsibility is read and its identities verified. A missing/inconsistent responsibility is an integrity failure: return failure, retain evidence, alert and require controlled repair; never fabricate work, delete dedup, ACK, or skip a predecessor to hide it. Concurrent duplicate deliveries use the database uniqueness result and see committed work, not another worker's uncommitted state. Holdings must define this lookup through its own interface in downstream design; Platform's boolean API alone is insufficient.
+3. **Commit before ACK.** Receiver success means the durable transaction committed, not that FIFO finished. An uncertain commit must be resolved through the durable pair on redelivery, not reported as success from memory. Crash before commit leaves neither record; crash after commit before ACK permits a duplicate proof. `PUBLISHED` is handoff, not projection completion.
+4. **Two fences, separate responsibilities.** Outbox transitions keep the current state/token predicate; a reclaimed old token cannot ACK. Existing SQL predicates do not additionally test wall-clock expiry: do not claim otherwise. The delivery engine cooperatively bounds Publish by lease; redelivery remains possible. A late commit must still be dedup-safe. Holdings' later work lease/generation token independently fences generation publication and prevents checkpoint/version regression. Do not treat an outbox token as a Holdings generation fence or redesign ADR-022 here.
+5. **Ownership.** Platform owns generic durable jobs, dedup, claims and technical scheduling. Holdings owns event responsibility, checkpoint/calculation version, rebuild and financial provenance. Transaction owns immutable snapshot/checkpoint ports; no cross-module table reads. Receiver is in-process, not an external broker. Outbox retry values do not silently become job/provider retry policy.
+6. **Backlog/recovery/deactivation.** Preserve pending backlog and original event IDs/positions. Reconcile source checkpoint with active generation via Transaction ports; reconciliation cannot ACK missing events or replay DEAD_LETTER. Deactivation stops new claims, allows only genuinely committed in-flight handoffs to ACK under the owned token, and leaves durable requests/generations intact. Restart uses durable state, never process memory. Incident owner, job budgets/retries and recovery procedures must be supplied before Phase A approval; deployed recovery evidence belongs to Phase B.
+
+## ADR compatibility and Phase B acceptance evidence
+
+[ADR-023](../adr/ADR-023-transaction-publication-activation-prerequisite.md) remains operative until a separately approved receiver is configured: zero claims, attempts, publisher invocations, retries, dead letters and ACKs for receiver absence. Ledger atomicity remains independent. [ADR-022](../adr/ADR-022-transaction-outbox-delivery-operational-policy.md) stays unchanged: 60-second lease; 5-second base/full jitter capped at 5 minutes; 10 invocation maximum; batch 50/poll 2 seconds; attempt >10 administrative dead-letter without invocation; predecessor blocking; no automatic dead-letter replay.
+
+After implementation authorization, Platform/Holdings and operator must supply real PostgreSQL and deployment evidence for first/duplicate handoff, missing-work integrity failure, rollback, uncertain commit, crash before/after commit and ACK, concurrent receivers, lease expiry/stale ACK, worker restart, fenced generation swap, accumulated backlog, failed durable work, monitoring and deactivation. Include the inactive-worker zero-claim regression. Synthetic/no-op acceptance cannot satisfy this evidence.
+
+## Human decision record
+
+| Requested decision                                                       | Owner                                                    | Current state         | Required record                                                              |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| Accept ADR-024 design and conditions above                               | Maintainer / architecture owner                          | PENDING; ADR Proposed | Explicit decision, date and reference; separately reviewed acceptance commit |
+| Name backlog/recovery/deactivation owner and approve operational budgets | Architecture maintainer / Platform / Holdings / operator | UNRESOLVED            | Owner-approved operating design; exact values with rationale                 |
+| Approve runtime receiver activation                                      | Maintainer / operator                                    | NOT AUTHORIZED        | Later implementation review and Phase B evidence; not this PR                |
+
+Codex recommends the architecture direction, not its own approval. Financial and provider prerequisites remain separate blockers.
