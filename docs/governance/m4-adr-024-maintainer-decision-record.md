@@ -1,8 +1,8 @@
-# ADR-024 Architecture Decision Record for Maintainer Review
+# ADR-024 Maintainer Architecture Decision Record
 
 **Task:** M4-GATE-001
 
-**Status:** Proposed decision record — approval evidence missing
+**Status:** A1–A7 accepted by maintainer; O1–O8 BLOCKED; implementation and activation not authorized
 
 **Evidence base:** `2c653ce74ce737ab32ac40e11b13bd916962719f` (protected main; PR #83 merged)
 
@@ -12,7 +12,7 @@
 
 ## Requested decision and authority
 
-Recommend accepting the architectural contract in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md), with the explicit boundaries below. This record is a review ballot, not an acceptance record. ADR-024 remains **Proposed**. Neither merging this proposal nor accepting the architecture alone closes [M4-GATE-001](m4-implementation-readiness-gate.md), authorizes M4-CONTRACT-001, configures a receiver, or permits runtime implementation or deployment.
+The maintainer explicitly accepted the architectural contract in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md), limited to clauses **A1–A7** below, on 2026-10-11. [Approval evidence](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/84#issuecomment-6107239122) records the exclusions. This document records architecture acceptance only. Neither merging this record nor accepting the architecture closes [M4-GATE-001](m4-implementation-readiness-gate.md), authorizes M4-CONTRACT-001, configures a receiver, or permits runtime implementation or deployment.
 
 The [Phase A recommendation](m4-phase-a-architecture-review.md) supplies the earlier source review. This record turns that recommendation into individually reviewable decisions and identifies the remaining operating-design blockers. Phase A requires approved mechanisms, owners and budgets, not deployed tests. Phase B separately requires implemented and deployed evidence before activation. No Phase B test is claimed to exist here.
 
@@ -29,7 +29,9 @@ The [Phase A recommendation](m4-phase-a-architecture-review.md) supplies the ear
 
 These findings are source evidence, not receiver integration or deployment evidence. The Transaction snapshot/checkpoint ports and Holdings work/generation persistence required below are future seams, not existing runtime capabilities.
 
-## Proposed acceptance clauses
+## Accepted architecture clauses A1–A7
+
+The clause text below is preserved from the reviewed proposal. "Accept" describes the approved architecture contract, not permission to implement or activate it. All seven clauses are accepted together within the maintainer's limited scope.
 
 ### A1 — Internal receiver identity and accepted envelope
 
@@ -84,7 +86,7 @@ Phase B activation requires separately reviewed implementation, real PostgreSQL 
 
 ## Unresolved architecture and operating decisions
 
-Every row is **BLOCKED**: no exact value or approver evidence is present. Approving A1–A7 can settle the architecture direction, but cannot silently approve these operating decisions or close Phase A. No guessed defaults apply if unanswered.
+Every row remains **BLOCKED**: no exact value or operating-approver evidence is present. Acceptance of A1–A7 settles the architecture direction only; it does not approve these operating decisions or close Phase A. No guessed defaults apply if unanswered.
 
 | ID  | Decision required                                                     | Evidence needed for Phase A                                                                                                                                                    | Owner                                                    |
 | --- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
@@ -99,23 +101,23 @@ Every row is **BLOCKED**: no exact value or approver evidence is present. Approv
 
 O4 must distinguish accepted-work failure from outbox delivery failure. O8 must not contradict the plan's prohibition on automatic dedup/request deletion. Numerical budgets need capacity/risk rationale; named owners need actual human evidence. Provider quotas are a separate account-specific register, never inferred here.
 
-## Maintainer approval evidence — unpopulated
+## Maintainer approval evidence — architecture only
 
-| Field                                     | Current record                                              |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| Architecture decision on A1–A7            | PENDING; ADR-024 Proposed                                   |
-| Approver name / role                      | MISSING — maintainer / architecture owner must supply       |
-| Decision date                             | MISSING                                                     |
-| Written approval reference                | MISSING                                                     |
-| Conditions/exclusions explicitly approved | MISSING; reference individual clause/operating decision IDs |
-| Operating decisions O1–O8                 | BLOCKED; owner-approved records missing                     |
-| Runtime implementation authorization      | NOT AUTHORIZED by this record                               |
-| Receiver activation decision/evidence     | NOT AUTHORIZED; separate Phase B review                     |
+| Field                                     | Current record                                                                                                                                                                           |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecture decision on A1–A7            | ACCEPTED — architecture design only                                                                                                                                                      |
+| Approver name / role                      | GitHub `Thanasak1412`, repository maintainer / architecture owner; comment author association OWNER                                                                                      |
+| Decision date                             | 2026-10-11, 08:42:42 UTC                                                                                                                                                                 |
+| Written approval reference                | [Maintainer decision on PR #84](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/84#issuecomment-6107239122)                                                         |
+| Conditions/exclusions explicitly approved | O1–O8 BLOCKED; ADR-025/financial policy, provider/account/credentials and other Phase A prerequisites excluded; Phase B/deployment/activation and all downstream implementation excluded |
+| Operating decisions O1–O8                 | BLOCKED; owner-approved records missing                                                                                                                                                  |
+| Runtime implementation authorization      | NOT AUTHORIZED by this record                                                                                                                                                            |
+| Receiver activation decision/evidence     | NOT AUTHORIZED; separate Phase B review                                                                                                                                                  |
 
-An explicit human decision with date/reference is required before a separately reviewed change can mark ADR-024 Accepted. Approval must state its scope; silence, a merged proposal, AI self-review and green CI do not constitute acceptance. Accepting only A1–A7 leaves O1–O8 and the overall gate BLOCKED. Rejection or requested changes should identify affected clauses rather than imply runtime permission.
+The approval text was supplied by the maintainer in the current conversation and posted to PR #84 by Codex at their explicit direction. GitHub author/date/OWNER attribution and the exact scope were verified. This is not approval inferred from proposal merge, AI self-review or green CI. The acceptance documentation remains subject to a separate ADR-013 review and protected-main merge. A1–A7 acceptance leaves O1–O8 and the overall gate BLOCKED.
 
 ## Preserved boundaries and review outcome
 
 [ADR-025](../adr/ADR-025-m4-financial-compatibility-and-reconciliation.md) remains **Proposed**. [FIFO correction and decimal vectors](m4-financial-policy-proposal-vectors.md), including unresolved consumed-BUY oracles and DR7, remain unchanged. The [provider/operations register](m4-provider-operations-evidence-register.md) is unchanged; no account entitlement, secret mechanism or permission is inferred. SECURITY_EXCEPTION-001 remains the unchanged accepted temporary risk through 2026-10-31, not remediated or extended.
 
-**Overall M4-GATE-001: BLOCKED. M4-CONTRACT-001: BLOCKED.** This document prepares an architecture acceptance decision for maintainer review only. No runtime, API, database, worker composition, policy acceptance or queue activation is delivered.
+**Overall M4-GATE-001: BLOCKED. M4-CONTRACT-001: BLOCKED.** This document records the human-approved architecture acceptance only, pending review/merge of this documentation update. No financial-policy acceptance, runtime, API, database, worker composition, implementation authorization or queue activation is delivered.

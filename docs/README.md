@@ -56,7 +56,7 @@
 - [ADR-021 — Trusted HTTPS Scheme Attestation](adr/ADR-021-trusted-https-scheme-attestation.md)
 - [ADR-022 — Transaction Outbox Delivery Operational Policy](adr/ADR-022-transaction-outbox-delivery-operational-policy.md) (accepted; M3-BE-002 delivery gate)
 - [ADR-023 — Transaction Outbox Publication Activation Prerequisite](adr/ADR-023-transaction-publication-activation-prerequisite.md) (accepted; M3-BE-002 receiver prerequisite)
-- [ADR-024 — M4 Holdings Durable Handoff](adr/ADR-024-m4-holdings-durable-handoff.md) (proposed; M4-GATE-001; not accepted or activated)
+- [ADR-024 — M4 Holdings Durable Handoff](adr/ADR-024-m4-holdings-durable-handoff.md) (accepted architecture A1–A7 only; O1–O8 blocked; implementation and activation not authorized)
 - [ADR-025 — M4 Financial Compatibility and Reconciliation](adr/ADR-025-m4-financial-compatibility-and-reconciliation.md) (proposed; no financial-policy acceptance)
 
 ## Operational contracts
