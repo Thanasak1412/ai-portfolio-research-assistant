@@ -12,6 +12,9 @@
 - [Price Data and Holding Projection — Execution Plan](planning/price-data-holding-projection-execution-plan.md) (proposed; M4-PLAN-001; planning only, implementation gated)
 - [M3 Primary US Price Provider Permission Gate](governance/m3-price-provider-permission-gate.md) (approved for Twelve Data Venture private-beta scope; M3-GATE-001)
 - [M4 Implementation Readiness Gate](governance/m4-implementation-readiness-gate.md) (blocked; M4-GATE-001; awaiting provider operations, receiver, retention, admission, and financial-policy evidence)
+- [M4 Phase A Architecture Review](governance/m4-phase-a-architecture-review.md) (proposed recommendation; no receiver activation)
+- [M4 Financial Policy Proposal Vectors](governance/m4-financial-policy-proposal-vectors.md) (proposed; consumed-BUY cost decisions unresolved)
+- [M4 Provider and Operations Evidence Register](governance/m4-provider-operations-evidence-register.md) (blocked; owner evidence and decisions pending)
 - [SECURITY_EXCEPTION-001 — Temporary braces audit exception](governance/security-exception-001-braces.md) (accepted temporary risk; expires 2026-10-31)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
 - [AUTH-BE-003 HTTPS Attestation Decision](planning/auth-be-003-https-attestation-blocker.md) (resolved; runtime activation implemented in AUTH-BE-003A, pending review)
@@ -54,6 +57,7 @@
 - [ADR-022 — Transaction Outbox Delivery Operational Policy](adr/ADR-022-transaction-outbox-delivery-operational-policy.md) (accepted; M3-BE-002 delivery gate)
 - [ADR-023 — Transaction Outbox Publication Activation Prerequisite](adr/ADR-023-transaction-publication-activation-prerequisite.md) (accepted; M3-BE-002 receiver prerequisite)
 - [ADR-024 — M4 Holdings Durable Handoff](adr/ADR-024-m4-holdings-durable-handoff.md) (proposed; M4-GATE-001; not accepted or activated)
+- [ADR-025 — M4 Financial Compatibility and Reconciliation](adr/ADR-025-m4-financial-compatibility-and-reconciliation.md) (proposed; no financial-policy acceptance)
 
 ## Operational contracts
 
