@@ -45,6 +45,8 @@ After implementation authorization, Platform/Holdings and operator must supply r
 
 ## Human decision record
 
+The focused [ADR-024 maintainer decision record](m4-adr-024-maintainer-decision-record.md) presents acceptance clauses A1–A7, the separately BLOCKED operating decisions O1–O8, and unpopulated human approval evidence. It records no acceptance or runtime authorization.
+
 | Requested decision                                                       | Owner                                                    | Current state         | Required record                                                              |
 | ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
 | Accept ADR-024 design and conditions above                               | Maintainer / architecture owner                          | PENDING; ADR Proposed | Explicit decision, date and reference; separately reviewed acceptance commit |
