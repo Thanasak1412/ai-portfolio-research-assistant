@@ -1,7 +1,8 @@
 # ADR-024 — M4 Holdings Durable Handoff
 
-**Status:** Proposed
+**Status:** Accepted — architecture design clauses A1–A7 only
 **Date:** 2026-10-10
+**Architecture approval date:** 2026-10-11
 **Task:** M4-GATE-001
 **Decision owner:** Maintainer / architecture owner
 
@@ -14,14 +15,16 @@ publisher calls, retries, dead-letter transitions, or acknowledgements, and
 events remain `PENDING`. M4 needs a concrete internal receiver before that
 delivery engine can be activated for Holdings rebuild work.
 
-The M4 plan proposes durable responsibility handoff to Holdings rather than
-performing an unbounded projection inside an outbox lease. This ADR is a
-proposal only. It does not approve or activate a receiver, alter ADR-022, or
-authorize an external broker.
+The M4 plan defines durable responsibility handoff to Holdings rather than
+performing an unbounded projection inside an outbox lease. The maintainer has
+accepted this architecture design only, as scoped by clauses A1–A7 in the
+[decision record](../governance/m4-adr-024-maintainer-decision-record.md).
+This acceptance does not authorize implementation, approve or activate a
+runtime receiver, alter ADR-022, or authorize an external broker.
 
-## Proposed decision
+## Decision — architecture only
 
-If accepted, M4 will implement the receiver identity
+For separately authorized future implementation, the receiver identity is
 `holdings_rebuild_request_v1` inside the existing worker. It will accept only
 `transaction.recorded.v1` and `transaction.corrected.v1`, each at event version
 1 with the approved bounded reference-payload schema. It will validate event
@@ -86,7 +89,7 @@ deactivation. Deactivation stops new claims and must not reset durable state.
 This ADR does not choose Product-facing behavior for a permanently failed
 projection or authorize destructive cleanup.
 
-## Consequences if accepted
+## Consequences
 
 - A committed Transaction event cannot be acknowledged before Holdings owns
   durable responsibility for it.
@@ -95,14 +98,24 @@ projection or authorize destructive cleanup.
 - Existing M3 events can accumulate as pending until the separately reviewed
   receiver implementation and deployment prerequisites are met.
 - No financial behavior, public API, database schema, worker composition, or
-  deployment behavior changes merely by proposing this ADR.
+  deployment behavior changes merely by accepting this architecture design.
 
 ## Approval
 
-This ADR remains **Proposed**. It becomes effective only after an explicit
-maintainer decision and merge under ADR-013. Codex does not accept this ADR.
-Until then, the worker remains inactive under ADR-023 and M4-GATE-001 remains
-blocked on receiver approval and implementation readiness evidence.
+The repository maintainer and architecture owner, GitHub `Thanasak1412`,
+explicitly approved design clauses **A1–A7** on **2026-10-11** at
+**08:42:42 UTC**. Evidence: [maintainer decision on PR #84](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/84#issuecomment-6107239122).
+The comment was recorded by Codex at the maintainer's explicit direction from
+their supplied decision, and is attributable to the OWNER account; it is not
+an AI-generated recommendation or an inference from merging the proposal.
+
+This architecture acceptance record must be reviewed and merged under
+ADR-013. **O1–O8 remain BLOCKED**. The decision does not approve ADR-025,
+unresolved financial policy, provider/account entitlements, credentials or
+other Phase A prerequisites, Phase B deployment/activation, M4-CONTRACT-001,
+or downstream implementation. M4-GATE-001 remains **BLOCKED**. The worker
+remains inactive under ADR-023 until separately approved runtime activation;
+architecture acceptance alone changes no claims, attempts or acknowledgements.
 
 ## Sources
 

@@ -2,7 +2,7 @@
 
 **Task:** M4-GATE-001
 
-**Status:** Proposed recommendation; human decision pending
+**Status:** Historical recommendation; A1–A7 architecture acceptance now recorded; operations and activation blocked
 
 **Evidence base:** `4c212f3e139cd08745ec531779317852600bbf64` (merged PR #82)
 
@@ -10,7 +10,7 @@
 
 ## Recommendation and scope
 
-Recommend acceptance of the **design** in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md), subject to the review conditions below. This is not acceptance, receiver approval for deployment, or runtime activation. ADR-024 remains **Proposed**; the [readiness gate](m4-implementation-readiness-gate.md) remains **BLOCKED**. No queue transition or M4-CONTRACT-001 authorization follows from this document.
+This recommendation originally proposed acceptance of the **design** in [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md). The maintainer has now explicitly accepted architecture clauses A1–A7 in the [focused decision record](m4-adr-024-maintainer-decision-record.md); [approval dated 2026-10-11](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/84#issuecomment-6107239122). This is not implementation authorization, receiver approval for deployment, or runtime activation. O1–O8 and the [readiness gate](m4-implementation-readiness-gate.md) remain **BLOCKED**. No queue transition or M4-CONTRACT-001 authorization follows. The source evidence below remains the historical review at its stated base.
 
 Phase A should settle the ownership and atomic handoff contract. Phase B must prove the implementation and deployment before activating publication. Requiring Phase B tests before authorizing the work that creates them would be circular; removing those tests from activation would weaken the gate. Neither is recommended.
 
@@ -45,12 +45,12 @@ After implementation authorization, Platform/Holdings and operator must supply r
 
 ## Human decision record
 
-The focused [ADR-024 maintainer decision record](m4-adr-024-maintainer-decision-record.md) presents acceptance clauses A1–A7, the separately BLOCKED operating decisions O1–O8, and unpopulated human approval evidence. It records no acceptance or runtime authorization.
+The focused [ADR-024 maintainer decision record](m4-adr-024-maintainer-decision-record.md) records accepted architecture clauses A1–A7, separately BLOCKED operating decisions O1–O8, and attributable human approval evidence. It grants no implementation or runtime activation authorization.
 
-| Requested decision                                                       | Owner                                                    | Current state         | Required record                                                              |
-| ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| Accept ADR-024 design and conditions above                               | Maintainer / architecture owner                          | PENDING; ADR Proposed | Explicit decision, date and reference; separately reviewed acceptance commit |
-| Name backlog/recovery/deactivation owner and approve operational budgets | Architecture maintainer / Platform / Holdings / operator | UNRESOLVED            | Owner-approved operating design; exact values with rationale                 |
-| Approve runtime receiver activation                                      | Maintainer / operator                                    | NOT AUTHORIZED        | Later implementation review and Phase B evidence; not this PR                |
+| Requested decision                                                       | Owner                                                    | Current state          | Required record                                                                                                                                                                             |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accept ADR-024 architecture clauses A1–A7                                | Maintainer / architecture owner                          | ACCEPTED — design only | [2026-10-11 maintainer decision](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/84#issuecomment-6107239122); acceptance documentation subject to ADR-013 review/merge |
+| Name backlog/recovery/deactivation owner and approve operational budgets | Architecture maintainer / Platform / Holdings / operator | UNRESOLVED             | Owner-approved operating design; exact values with rationale                                                                                                                                |
+| Approve runtime receiver activation                                      | Maintainer / operator                                    | NOT AUTHORIZED         | Later implementation review and Phase B evidence; not this PR                                                                                                                               |
 
-Codex recommends the architecture direction, not its own approval. Financial and provider prerequisites remain separate blockers.
+Codex records the maintainer's limited approval, not its own decision. Operating, financial and provider prerequisites remain separate blockers.
