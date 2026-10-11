@@ -67,6 +67,10 @@ The following packet preserves that review evidence. The subsequent
   repository-verified pool, lease/batch and shutdown limits; test-only candidate
   budgets, ownership matrix, sizing/recovery and Phase B evidence requirements.
   All O1–O8 approvals remain BLOCKED; proposal CI is not operating approval.
+- [O1 solo-maintainer pending decision record](m4-o1-solo-maintainer-formal-decision-record.md):
+  confirmed partial staffing/coverage direction only; alerting, emergency
+  authority, no-backup risk acceptance and final sign-off remain pending.
+  O1 is BLOCKED, not accepted; no implementation or activation is authorized.
 
 Overall status remains **BLOCKED**. Missing financial oracles, actual account
 evidence and human decisions remain mandatory Phase A requirements;
