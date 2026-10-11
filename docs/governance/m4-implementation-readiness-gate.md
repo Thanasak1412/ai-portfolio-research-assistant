@@ -63,6 +63,10 @@ The following packet preserves that review evidence. The subsequent
 - [Provider/operations evidence register](m4-provider-operations-evidence-register.md):
   actionable requests to the existing owners, public-research/account evidence
   distinction, credential/deletion/admission/cache operating proposals.
+- [O1–O8 operating decision proposal](m4-holdings-operating-decision-proposal.md):
+  repository-verified pool, lease/batch and shutdown limits; test-only candidate
+  budgets, ownership matrix, sizing/recovery and Phase B evidence requirements.
+  All O1–O8 approvals remain BLOCKED; proposal CI is not operating approval.
 
 Overall status remains **BLOCKED**. Missing financial oracles, actual account
 evidence and human decisions remain mandatory Phase A requirements;
