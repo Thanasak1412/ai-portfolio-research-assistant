@@ -16,6 +16,7 @@
 - [M4 Financial Policy Proposal Vectors](governance/m4-financial-policy-proposal-vectors.md) (proposed; consumed-BUY cost decisions unresolved)
 - [M4 Provider and Operations Evidence Register](governance/m4-provider-operations-evidence-register.md) (blocked; owner evidence and decisions pending)
 - [M4 Holdings Operating Decision Proposal — O1–O8](governance/m4-holdings-operating-decision-proposal.md) (proposed; all operating approvals blocked; no runtime activation)
+- [M4 O1 Solo-Maintainer Formal Decision Record](governance/m4-o1-solo-maintainer-formal-decision-record.md) (pending partial direction; O1 blocked, not accepted; no implementation or activation)
 - [SECURITY_EXCEPTION-001 — Temporary braces audit exception](governance/security-exception-001-braces.md) (accepted temporary risk; expires 2026-10-31)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
 - [AUTH-BE-003 HTTPS Attestation Decision](planning/auth-be-003-https-attestation-blocker.md) (resolved; runtime activation implemented in AUTH-BE-003A, pending review)
