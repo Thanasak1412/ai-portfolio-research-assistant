@@ -121,6 +121,12 @@ Each H12 base cost=`0`. **PROPOSED OUTPUT:** S1..S9 recognized cost=`0`, realize
 
 Repeat DR3 twice with distinct immutable acquisitions/sales, second episode later than the first closure. **PROPOSED OUTPUT:** each closed episode target/recognized=`0.000000000001`; combined recognized=`0.000000000002`. H12 of both episodes' exact acquisition sum (`0.0000000000024`) happens to agree here; it is not the algorithm. Contrast three episodes: recognized=`0.000000000003`, whereas H12(`0.0000000000036`)=`0.000000000004`. The proposed episode boundary, not whole-history net rounding, is authoritative **only if approved**. Maintainer must explicitly accept this consequence. Correction changes to episode boundaries require recomputation and accepted combined oracles.
 
+### DR7 — closure reconciliation can change the sign of recognized cost
+
+BUY X quantity=`0.000004`, price=`0.0000006`, fee=`0` gives exact cost=`0.0000000000024`. Four SELLs each quantity=`0.000001`, price=`1`, fee=`0`; each exact cost contribution=`0.0000000000006`, H12 base cost=`0.000000000001`, proceeds=`0.000001`. After S1–S3, accumulated persisted recognized cost=`0.000000000003`; closed-episode target H12(`0.0000000000024`)=`0.000000000002`.
+
+Under the **PROPOSED** closure-only algorithm, S4 base=`0.000000000001`, reconciliation=`-0.000000000002`, recognized cost=`-0.000000000001`, realized=`0.000001000001`. The arithmetic conserves the episode target, but negative recognized cost is a material financial compatibility consequence, not an approved behavior. **UNRESOLVED DECISION:** explicitly allow this signed reconciliation/recognition meaning, or reject closure-only allocation and choose a different versioned attribution rule with revised DR2/DR5/DR7 outputs. Do not clamp to zero (breaks conservation), silently restate previous sale records, or claim the proposal guarantees nonnegative per-sale recognized cost. The ordinary exact lot costs remain nonnegative. Financial-policy maintainer must resolve this before accepting ADR-025 or closing Phase A.
+
 ## Review checklist and unresolved decisions
 
 | Decision                                        | Recommendation / deliverable                                                                                     | Owner / state                                        |
