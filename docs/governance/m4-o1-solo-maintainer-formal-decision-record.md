@@ -10,6 +10,8 @@
 
 **Record date:** 2026-10-11; no final UTC operating-approval timestamp recorded
 
+**Coverage update:** 2026-10-12 — maintainer confirmed Monday–Friday 20:00–23:00 `Asia/Bangkok` in the current conversation; coverage clarification only, not final O1 approval
+
 **Source:** owner-supplied O1 decision record and explicit maintainer direction in the current conversation, authorizing a pending documentation PR only
 
 **Policy sources:** [O1 operating proposal](m4-holdings-operating-decision-proposal.md), [ADR-013](../adr/ADR-013-solo-maintainer-merge-governance.md), [ADR-022](../adr/ADR-022-transaction-outbox-delivery-operational-policy.md), [ADR-023](../adr/ADR-023-transaction-publication-activation-prerequisite.md), [ADR-024](../adr/ADR-024-m4-holdings-durable-handoff.md)
@@ -49,11 +51,11 @@ No solo-maintainer risk exception is accepted by this pending record.
 | Field                        | Confirmed direction                             | Remaining decision / evidence                                                                            |
 | ---------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Timezone                     | `Asia/Bangkok` (UTC+07:00)                      | No alternative timezone inferred                                                                         |
-| Monday–Friday                | Starting at 20:00                               | End time NOT YET CONFIRMED; no midnight/overnight window inferred                                        |
+| Monday–Friday                | 20:00–23:00 `Asia/Bangkok`                      | Weekday start/end confirmed; no overnight or immediate-response guarantee inferred                       |
 | Saturday–Sunday              | All-day best-effort availability                | NOT guaranteed 24-hour monitoring or continuously staffed coverage                                       |
 | Public holidays              | NOT YET CONFIRMED                               | Holiday, leave and absence handling pending                                                              |
 | In-window response           | Best-effort direction; no SLA                   | Exact response/acknowledgement expectations pending                                                      |
-| Outside coverage             | Respond during the next defined coverage window | Final window and unavailable-operator/escalation procedure pending                                       |
+| Outside coverage             | Respond during the next defined coverage window | Holiday/absence handling and unavailable-operator/escalation procedure pending                           |
 | Preferred alert channel      | Email                                           | Destination, delivery mechanism and successful alert test NOT YET VERIFIED                               |
 | Escalation / incident record | No approved route or register recorded          | Sender/transport, recipient, severity routing, bounce/failure handling and acknowledgement route pending |
 
@@ -85,15 +87,15 @@ No alert transport is implemented, tested or operational by this document.
 
 ## Pending approval and evidence register
 
-| Subdecision                     | Recorded partial direction                                         | Status / required completion                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| O1-S1 Staffing                  | Solo model and provisional assignments above                       | PARTIAL; complete role attestation, effective scope and verifiable approval reference pending                |
-| O1-S2 No-backup risk            | No backup, limited private beta, no 24/7 SLA                       | PARTIAL; explicit residual-risk acceptance, bounded period, review/expiry and beta-expansion trigger pending |
-| O1-S3 Coverage                  | Weekday 20:00 start; weekend all-day best effort; Bangkok timezone | PARTIAL; weekday end, holidays/absence and response expectations pending                                     |
-| O1-S4 Alert route               | Email preferred                                                    | BLOCKED; approved destination/transport/escalation design and later delivery evidence missing                |
-| O1-S5 Outside coverage          | Next defined window; safety boundary above                         | PARTIAL; final unavailable-operator and escalation procedure pending                                         |
-| O1-S6 Emergency pause / restart | No restart-to-activation; separate reactivation authorization      | BLOCKED; explicit pause delegation, procedure, preflight and audit design pending                            |
-| O1-S7 Final sign-off            | Pending record authorized only                                     | BLOCKED; complete O1 decision, authorized approver/role, UTC date and verifiable evidence reference missing  |
+| Subdecision                     | Recorded partial direction                                     | Status / required completion                                                                                 |
+| ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| O1-S1 Staffing                  | Solo model and provisional assignments above                   | PARTIAL; complete role attestation, effective scope and verifiable approval reference pending                |
+| O1-S2 No-backup risk            | No backup, limited private beta, no 24/7 SLA                   | PARTIAL; explicit residual-risk acceptance, bounded period, review/expiry and beta-expansion trigger pending |
+| O1-S3 Coverage                  | Mon–Fri 20:00–23:00; Sat–Sun all-day best effort; Asia/Bangkok | PARTIAL; public holidays/absence handling and response expectations pending                                  |
+| O1-S4 Alert route               | Email preferred                                                | BLOCKED; approved destination/transport/escalation design and later delivery evidence missing                |
+| O1-S5 Outside coverage          | Next defined window; safety boundary above                     | PARTIAL; final unavailable-operator and escalation procedure pending                                         |
+| O1-S6 Emergency pause / restart | No restart-to-activation; separate reactivation authorization  | BLOCKED; explicit pause delegation, procedure, preflight and audit design pending                            |
+| O1-S7 Final sign-off            | Pending record authorized only                                 | BLOCKED; complete O1 decision, authorized approver/role, UTC date and verifiable evidence reference missing  |
 
 **Full O1 approval:** PENDING. **Final UTC approval time:** PENDING.
 **GitHub / controlled operating-approval reference:** PENDING.
@@ -117,8 +119,8 @@ proof blocks activation; the missing Phase A decisions above keep O1 blocked now
 - SECURITY_EXCEPTION-001: unchanged accepted temporary risk through
   **2026-10-31**, not remediated or extended.
 
-Next human action: confirm weekday end time, holiday/absence and response
-expectations; approve alert/escalation design, emergency authority/procedure
+Next human action: confirm holiday/absence handling and response expectations;
+approve alert/escalation design, emergency authority/procedure
 and dated no-backup risk boundaries; then supply explicit, scoped approval
 with a verifiable date/reference. Until then this is a **pending record, not an
 O1 acceptance PR**. All documentation changes remain subject to ADR-013;
