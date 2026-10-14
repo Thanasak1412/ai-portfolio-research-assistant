@@ -21,7 +21,7 @@
 This record preserves confirmed **partial direction**, not complete O1 approval.
 The maintainer authorized recording a solo-maintainer, no-backup, limited
 private-beta operating direction. They did not accept the outstanding risk,
-approve an emergency delegation, verify alerting, or authorize implementation
+approve an emergency delegation, approve operational alerting, or authorize implementation
 or activation. No GitHub operating-approval evidence is claimed.
 
 Architecture clauses A1–A7 are already accepted under the separate
@@ -48,21 +48,106 @@ No solo-maintainer risk exception is accepted by this pending record.
 
 ## Coverage and alerting
 
-| Field                        | Confirmed direction                             | Remaining decision / evidence                                                                            |
-| ---------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Timezone                     | `Asia/Bangkok` (UTC+07:00)                      | No alternative timezone inferred                                                                         |
-| Monday–Friday                | 20:00–23:00 `Asia/Bangkok`                      | Weekday start/end confirmed; no overnight or immediate-response guarantee inferred                       |
-| Saturday–Sunday              | All-day best-effort availability                | NOT guaranteed 24-hour monitoring or continuously staffed coverage                                       |
-| Public holidays              | NOT YET CONFIRMED                               | Holiday, leave and absence handling pending                                                              |
-| In-window response           | Best-effort direction; no SLA                   | Exact response/acknowledgement expectations pending                                                      |
-| Outside coverage             | Respond during the next defined coverage window | Holiday/absence handling and unavailable-operator/escalation procedure pending                           |
-| Preferred alert channel      | Email                                           | Destination, delivery mechanism and successful alert test NOT YET VERIFIED                               |
-| Escalation / incident record | No approved route or register recorded          | Sender/transport, recipient, severity routing, bounce/failure handling and acknowledgement route pending |
+| Field                        | Confirmed direction                                           | Remaining decision / evidence                                                               |
+| ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Timezone                     | `Asia/Bangkok` (UTC+07:00)                                    | No alternative timezone inferred                                                            |
+| Monday–Friday                | 20:00–23:00 `Asia/Bangkok`                                    | Weekday start/end confirmed; no overnight or immediate-response guarantee inferred          |
+| Saturday–Sunday              | All-day best-effort availability                              | NOT guaranteed 24-hour monitoring or continuously staffed coverage                          |
+| Public holidays              | NOT YET CONFIRMED                                             | Holiday, leave and absence handling pending                                                 |
+| In-window response           | Best-effort direction; no SLA                                 | Exact response/acknowledgement expectations pending                                         |
+| Outside coverage             | Respond during the next defined coverage window               | Holiday/absence handling and unavailable-operator/escalation procedure pending              |
+| Preferred alert channel      | Email; logical destination `private-beta-primary-alert-inbox` | Gmail setup owner-attested only; sender/transport approval and M4 delivery evidence pending |
+| Escalation / incident record | GitHub Issues proposed, not approved or integrated            | Severity routing, bounce/failure handling and acknowledgement workflow approval pending     |
 
 Email preference is not evidence of a working mail pipeline. Do not infer the
 operational destination from the connected GitHub account or publish private
 contact information. Record only approved, appropriately controlled references.
-No alert transport is implemented, tested or operational by this document.
+No M4 alert transport is implemented, tested or operational by this document.
+
+## O1-S4 — Proposed Email Alert and Escalation Design
+
+**Status:** PROPOSED / PENDING FORMAL APPROVAL — limited private beta only.
+
+**Accountable operator direction:** GitHub `Thanasak1412`, subject to final O1 sign-off.
+
+### Owner-attested Gmail evidence and its limits
+
+On 2026-10-14 the maintainer supplied written direction in the current
+conversation attesting that a dedicated Gmail inbox has been selected,
+automatic forwarding to the primary inbox is configured and tested, and
+Gmail label classification is configured and tested. This is
+**OWNER-ATTESTED GMAIL FORWARDING AND LABEL VERIFICATION ONLY**.
+The attestation record date is not an independently verified test timestamp
+or final operating-approval date.
+
+- Logical destination: `private-beta-primary-alert-inbox`.
+- Physical destination: maintainer-designated dedicated Gmail inbox, with
+  forwarding to the primary inbox; physical addresses/targets are excluded.
+- Classification direction: `AI Portfolio / Alerts`.
+- Backup destination/operator: none; residual-risk approval still pending.
+- Sender/transport and restricted configuration approach: **PENDING APPROVAL**.
+
+No independent delivery verification, end-to-end M4 Monitoring test, approved
+sender/transport implementation, tested fallback escalation, operational
+alerting/monitoring, or production readiness is established. Gmail forwarding
+alone is not a reliable fallback channel. Email addresses, credentials, tokens
+and sensitive message contents must not enter this public governance record;
+future physical routing must use separately approved restricted configuration.
+
+### Proposed severity and safe incident envelope
+
+| Severity | Proposed classification                                                                                                                                                                          | Approval boundary                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| CRITICAL | Integrity invariant violations; missing/inconsistent durable responsibility; terminal failures or dead-letter conditions requiring human intervention; unauthorized/unsafe activation conditions | Classification does not authorize repair, replay or activation   |
+| WARNING  | Backlog/reconciliation lag beyond separately approved thresholds; repeated nonterminal processing failures                                                                                       | O3/O6 numeric thresholds remain pending their separate approvals |
+| INFO     | Routine diagnostics and normal status, generally retained in logs                                                                                                                                | No new delivery/retention policy approved                        |
+
+The future approved monitoring mechanism would preserve an incident ID,
+event timestamp, affected subsystem and bounded safe diagnostic metadata.
+Do not include financial bodies, provider payloads, private messages or secrets.
+Classification cannot override ADR-022, ADR-023, ADR-024 or O3/O6 decisions.
+
+### Proposed acknowledgement and escalation workflow
+
+1. Detect/classify through a separately approved monitoring mechanism;
+   preserve incident identity/time, subsystem and safe context.
+2. Send to the logical destination only when the approved alert mechanism
+   is implemented. Neither transport nor integration exists by this record.
+3. Operator acknowledgement is best-effort during the next applicable
+   coverage window: Mon–Fri 20:00–23:00 `Asia/Bangkok`; weekends all-day
+   best effort, not continuous monitoring. No 24/7 response SLA is implied.
+4. Record acknowledgement, investigation, resolution or escalation in
+   **GitHub Issues as a proposed Incident Register**, not an approved workflow
+   or implemented integration. Register/access and acknowledgement approval
+   remain pending; preserve only safe references in any future public issue.
+5. If the operator is unavailable, retain the incident as unresolved.
+   No nonexistent backup, immediate response or automatic fallback is implied.
+
+Delivery/forwarding failures, bounces, unanswered alerts, severity escalation,
+public holidays, leave and absence handling remain unresolved design
+requirements. Eventual delivery failure must be observable, but this document
+does not claim a mechanism or approved response deadline exists.
+
+### Phase A approval versus Phase B verification
+
+Phase A still needs explicit maintainer design approval, approved sender/
+transport and secure configuration, Incident Register/acknowledgement workflow,
+escalation/delivery-failure/absence procedures and no-backup risk acceptance.
+O1-S6 emergency-pause delegation/procedure and final dated O1 sign-off with a
+verifiable reference remain pending. Recording this proposal is not approval.
+
+Phase B must separately prove delivery from the actual approved environment,
+receipt in dedicated and forwarded inboxes, correct severity/incident ID/time/
+safe metadata, failed-delivery and unattended-operator cases, acknowledgement/
+escalation/audit exercises, and ADR-preserving safety/shutdown behavior.
+These tests are activation prerequisites, not circular preconditions requiring
+unimplemented M4 functionality before Phase A design can be reviewed.
+
+Automated safety controls, if later implemented and approved, must not depend
+on reading email. Emergency pause remains subject to O1-S6. No automatic
+dead-letter replay, speculative ACK, integrity repair or evidence deletion is
+authorized. Reactivation requires explicit human authorization and approved
+preflight; process restart alone is never approval to reactivate.
 
 ## Emergency operations and safety boundaries
 
@@ -87,15 +172,15 @@ No alert transport is implemented, tested or operational by this document.
 
 ## Pending approval and evidence register
 
-| Subdecision                     | Recorded partial direction                                     | Status / required completion                                                                                 |
-| ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| O1-S1 Staffing                  | Solo model and provisional assignments above                   | PARTIAL; complete role attestation, effective scope and verifiable approval reference pending                |
-| O1-S2 No-backup risk            | No backup, limited private beta, no 24/7 SLA                   | PARTIAL; explicit residual-risk acceptance, bounded period, review/expiry and beta-expansion trigger pending |
-| O1-S3 Coverage                  | Mon–Fri 20:00–23:00; Sat–Sun all-day best effort; Asia/Bangkok | PARTIAL; public holidays/absence handling and response expectations pending                                  |
-| O1-S4 Alert route               | Email preferred                                                | BLOCKED; approved destination/transport/escalation design and later delivery evidence missing                |
-| O1-S5 Outside coverage          | Next defined window; safety boundary above                     | PARTIAL; final unavailable-operator and escalation procedure pending                                         |
-| O1-S6 Emergency pause / restart | No restart-to-activation; separate reactivation authorization  | BLOCKED; explicit pause delegation, procedure, preflight and audit design pending                            |
-| O1-S7 Final sign-off            | Pending record authorized only                                 | BLOCKED; complete O1 decision, authorized approver/role, UTC date and verifiable evidence reference missing  |
+| Subdecision                     | Recorded partial direction                                         | Status / required completion                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| O1-S1 Staffing                  | Solo model and provisional assignments above                       | PARTIAL; complete role attestation, effective scope and verifiable approval reference pending                                  |
+| O1-S2 No-backup risk            | No backup, limited private beta, no 24/7 SLA                       | PARTIAL; explicit residual-risk acceptance, bounded period, review/expiry and beta-expansion trigger pending                   |
+| O1-S3 Coverage                  | Mon–Fri 20:00–23:00; Sat–Sun all-day best effort; Asia/Bangkok     | PARTIAL; public holidays/absence handling and response expectations pending                                                    |
+| O1-S4 Alert route               | Proposed email design; Gmail forwarding/labels owner-attested only | PROPOSED / PENDING FORMAL APPROVAL; transport/configuration/register/escalation approval and Phase B M4 delivery proof missing |
+| O1-S5 Outside coverage          | Next defined window; safety boundary above                         | PARTIAL; final unavailable-operator and escalation procedure pending                                                           |
+| O1-S6 Emergency pause / restart | No restart-to-activation; separate reactivation authorization      | BLOCKED; explicit pause delegation, procedure, preflight and audit design pending                                              |
+| O1-S7 Final sign-off            | Pending record authorized only                                     | BLOCKED; complete O1 decision, authorized approver/role, UTC date and verifiable evidence reference missing                    |
 
 **Full O1 approval:** PENDING. **Final UTC approval time:** PENDING.
 **GitHub / controlled operating-approval reference:** PENDING.
