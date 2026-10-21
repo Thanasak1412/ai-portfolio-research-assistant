@@ -86,7 +86,7 @@ Control-plane tests and validation run inside the existing `contracts-and-genera
 
 A green job after retry is not automatically acceptable. Task acceptance can be stricter than the job badge.
 
-The historical M2 stability task required the following clean result (check each *current* task's own acceptance rather than blindly reusing this M2-specific vector):
+The historical M2 stability task required the following clean result (check each _current_ task's own acceptance rather than blindly reusing this M2-specific vector):
 
 ```text
 4 passed
