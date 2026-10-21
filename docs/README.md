@@ -64,6 +64,9 @@
 ## Operational contracts
 
 - [Continuous AI Development Agent](engineering/ai-continuous-development-agent.md)
+- [Reusable AI Task Prompt](engineering/templates/ai-task-prompt.md) (template only; no task approval)
+- [Real-stack Regression Skill](../.agents/skills/real-stack-regression/SKILL.md) (execution guidance; existing Auth/M2/M3 suites)
+- [PR Evidence Review Skill](../.agents/skills/pr-evidence-review/SKILL.md) (current-head/CI/review evidence; no merge authorization)
 - [Authentication Database Ownership](architecture/authentication-database.md)
 - [Portfolio and Asset Database Ownership](architecture/portfolio-asset-database.md)
 - [Transaction Ledger Database Foundation](architecture/transaction-database.md) (M3-DB-001; persistence only)

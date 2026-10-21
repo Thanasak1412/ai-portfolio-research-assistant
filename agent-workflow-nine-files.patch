@@ -1,0 +1,343 @@
+diff --git a/.agents/skills/pr-evidence-review/SKILL.md b/.agents/skills/pr-evidence-review/SKILL.md
+new file mode 100644
+index 0000000..ad9b429
+--- /dev/null
++++ b/.agents/skills/pr-evidence-review/SKILL.md
+@@ -0,0 +1,28 @@
++---
++name: pr-evidence-review
++description: Check protected-main freshness, Draft PR current-head tests, ADR-013 CI jobs, security evidence and review threads before human handoff.
++---
++
++# PR evidence review
++
++This **instruction-only** skill supports a task already approved under `AGENTS.md` and the queue. It cannot merge to protected `main`, approve policies or exception extensions, deploy, activate receivers, or expand the task graph.
++
++## Current-head evidence checklist
++
++1. Read `AGENTS.md`, `.ai/agent-policy.json`, `.ai/development-queue.json`, the queue's `sourceOfTruth.executionPlan`, and task-specific accepted ADRs/approval records. Run `pnpm agent:validate` / `pnpm agent:next`; confirm scope and the resolved action.
++2. Inspect the local working tree (staged, unstaged, untracked), commit range, current protected `main` SHA, feature branch SHA, PR state and base, and unresolved review conversations. Do not overwrite unrelated changes.
++3. Verify the reviewed PR commit is exactly the head for which results were obtained; if new commits landed or base is stale, rerun required checks and re-review diff.
++4. Confirm **all seven ADR-013 required jobs** are green on the current PR head: `frontend`, `backend`, `contracts-and-generation`, `database-integration`, `browser-e2e`, `compose-smoke`, `secrets`. Do not treat a workflow summary or older head as evidence. Inspect applicable additional GitGuardian/secrets results; distinguish gitleaks from GitGuardian rather than silently treating them as interchangeable.
++5. Verify task-specific acceptance separately: clean pass/fail/flaky/retry counts, regression coverage, generated-contract/sqlc drift, migration/database tests, and current security exception/approval references. Passing CI must not waive stricter zero-retry or human acceptance requirements.
++6. For each check, record link/run ID, conclusion, head SHA and coverage limitations. Keep historic failed runs and diagnostics, but redact credentials, cookies, provider payloads, customer details and financial transaction bodies.
++7. Inspect final diff scope (`git diff --check` plus staged/unstaged/untracked files), required formatting including changed root documentation, and any pending review threads. Confirm no weakened tests, new skip/fixme, unauthorized secrets, permissions or deployment changes.
++8. Prepare a Draft PR or an evidence-backed maintainer handoff **only if permitted**. The maintainer supplies the actual self-review and merge decision under ADR-013; never present agent evidence as an independent human approval.
++
++## Blocker handling
++
++- If branch/PR write access is denied: state the exact error and provide a reviewable local patch; do not write to protected `main` or forge a PR.
++- If task scope, CI, current-head freshness, GitGuardian or review conversation status cannot be verified: label **NOT VERIFIED** and do not claim Ready.
++- If M4-GATE-001 remains blocked or ADR-023 has no receiver: preserve zero claims, attempts, publisher invocations, retries, dead-letter transitions and ACKs; this workflow never activates the M4 worker.
++- For security exceptions, preserve recorded expiry and follow human governance for changes; **no automatic renewal**.
++
++**Handoff fields:** task/action; protected-main/base and PR head SHA; files changed; commands and exact results; seven current-head jobs; applicable security results; retry/flaky/skip evidence; review threads; unresolved issues; next allowed human action.
+diff --git a/.agents/skills/real-stack-regression/SKILL.md b/.agents/skills/real-stack-regression/SKILL.md
+new file mode 100644
+index 0000000..c29feff
+--- /dev/null
++++ b/.agents/skills/real-stack-regression/SKILL.md
+@@ -0,0 +1,33 @@
++---
++name: real-stack-regression
++description: Select and verify repository Auth/M2/M3 real-stack regression suites using isolated fixtures, approved HTTPS topology, and safe failure evidence.
++---
++
++# Real-stack regression
++
++Use this **instruction-only** skill for a task already permitted by `AGENTS.md`, `.ai/agent-policy.json`, the queue-selected execution plan, and its governing ADRs. It does not authorize implementation, policy changes, external infrastructure or M4 receiver activation.
++
++## Before any run
++
++1. Inspect `git status --short` (including untracked files), record protected-main/task head and preserve unrelated work.
++2. Run `pnpm agent:validate` and `pnpm agent:next`; confirm task, scope, and approved test requirements. If outside scope or a decision is blocked, stop rather than expanding scope.
++3. Check actual Node, pnpm, Go, Docker/Compose and Playwright versions against repository manifests/CI. Check port ownership before touching containers.
++4. Choose the smallest meaningful existing suite: focused unit tests for changed code, Authentication for session/security, M2 for Portfolio/Asset, M3 for Transaction ledger, plus the broader required regression on current head. Do not invent an M4 live suite while M4 gates are blocked.
++
++## Real-stack safety
++
++- Reference [`docs/engineering/authentication-local-https.md`](../../../docs/engineering/authentication-local-https.md), [`docs/engineering/m2-real-stack-e2e.md`](../../../docs/engineering/m2-real-stack-e2e.md), and [`docs/engineering/m3-real-stack-e2e.md`](../../../docs/engineering/m3-real-stack-e2e.md) for actual commands and fixture rules, instead of copying a stale script sequence into this skill.
++- Browser Auth/M2/M3 must use `https://app.localhost:3443`, the approved Caddy same-origin proxy, real Next.js and Go API, and disposable `postgres-test` / `portfolio_test`. `localhost:3000` and `localhost:8080` are diagnostic ports, **not** the browser Authentication entrypoint.
++- Before seeding, prove that scripts target only the isolated `postgres-test` service and fixture database. Do not modify persistent local, staging, or production data; never run destructive `down -v` against the normal development project. Keep fixture environment and TLS material ignored.
++- Use repository setup/seed/reset scripts as documented. Reset only disposable E2E rate-limit data when directed. Never mock `/api/v1` responses for tests claiming real integration.
++- Respect approved HTTPS proxy attestation, CSRF Origin/X-Requested-With, cookie, no-CORS, provider-data and ADR-023 no-receiver boundaries. Do not introduce a fake publisher, broker, claims or ACKs.
++
++## Failure classification and handoff
++
++1. Capture exact test command, suite, commit SHA, environment/fixture identity, counts (passed, failed, flaky, retries, skipped), and whether tests ran on real HTTPS and PostgreSQL.
++2. Diagnose each failure as **application defect**, **test defect**, **infrastructure/environment issue**, or **unresolved policy/design decision**; include bounded sanitized evidence. Missing Docker/Chromium/proxy is *not* a passing application test.
++3. Repair only when permitted by task scope, rerun focused tests, then required broader checks. Do not add `.skip`/`.fixme`, disable an assertion, hide existing failure evidence or retry until green.
++4. Preserve no-secret screenshots/traces/logs only where explicitly safe; avoid cookies, bearer headers, provider payloads, holdings, monetary amounts and transaction bodies in shared artifacts.
++5. Report blockers with the next permitted action. Stop before policy changes, M4 activation, destructive data operations or human approval gates.
++
++**Success evidence:** Required suites passed on current head with task-specific cleanliness (zero retry/flaky where required), correct isolated real-stack topology, documented failure history, and unchanged governance boundaries. A passing local test does not establish remote CI or deployment readiness.
+diff --git a/.ai/README.md b/.ai/README.md
+index e1c7ac0..b93177b 100644
+--- a/.ai/README.md
++++ b/.ai/README.md
+@@ -58,9 +58,13 @@ Use least privilege:
+
+ Never store an OpenAI or GitHub token in this repository.
+
+-## Current queue
++## Current queue and historical context
+
+-At foundation creation, PR #63 is active. PR #64 is implementation-complete but blocked until PR #63 merges. M3-BE-003 remains blocked until M3-BE-002 merges.
++The original foundation bootstrap involved PR #63, PR #64, and M3-BE-003. These are **historical examples**, not the current queue state or authorization to resume an old task.
++
++Read `.ai/development-queue.json` and its `sourceOfTruth.executionPlan` field, validate it, then run the resolver. Verify the current protected-main commit, any task PR, and its current-head CI in GitHub before taking action. The resolver cannot approve pending human decisions.
++
++See [`AGENTS.md`](../AGENTS.md), the [continuous-development guide](../docs/engineering/ai-continuous-development-agent.md), and the [task template](../docs/engineering/templates/ai-task-prompt.md).
+
+ Run:
+
+diff --git a/AGENTS.md b/AGENTS.md
+index b670807..4a46d7a 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -8,10 +8,11 @@ Read these before making changes, in this order:
+
+ 1. `docs/adr/ADR-013-solo-maintainer-merge-governance.md`
+ 2. The approved task-specific ADRs/policies referenced by the current task.
+-3. `docs/planning/transaction-ledger-foundation-execution-plan.md` for M3 task ordering and scope.
+-4. `.ai/agent-policy.json`
+-5. `.ai/development-queue.json`
+-6. Existing implementation and repository conventions.
++3. `.ai/agent-policy.json` and `.ai/development-queue.json` for permitted actions, active task, and its `sourceOfTruth.executionPlan`.
++4. The execution plan selected by that queue reference; do not assume an earlier milestone's plan still governs the active task.
++5. Existing implementation and repository conventions.
++
++Repository workflow references: [continuous-development guide](docs/engineering/ai-continuous-development-agent.md), [task prompt template](docs/engineering/templates/ai-task-prompt.md), [real-stack regression skill](.agents/skills/real-stack-regression/SKILL.md), and [PR evidence review skill](.agents/skills/pr-evidence-review/SKILL.md). These are reusable instructions, not independent permissions.
+
+ If these sources conflict, stop the affected work and report the conflict. Do not hide an architecture or policy choice in code.
+
+@@ -19,17 +20,17 @@ If these sources conflict, stop the affected work and report the conflict. Do no
+
+ For every run:
+
+-1. Read `.ai/agent-policy.json` and `.ai/development-queue.json`.
+-2. Run `pnpm agent:validate`.
+-3. Run `pnpm agent:next`.
+-4. Work only on the returned task and action.
+-5. Inspect the current protected `main`, task branch, PR, review conversations, and current-head CI before editing.
+-6. Keep changes inside task scope.
+-7. Run focused checks first, then all applicable repository checks.
+-8. Push only to the task branch.
+-9. Open or update a Draft PR when permitted.
+-10. Diagnose failing CI and repair only when the root cause is inside the approved task scope.
+-11. Stop at every human gate.
++1. Inspect `git status --short` and existing staged, unstaged, and untracked changes; preserve unrelated work and avoid destructive cleanup.
++2. Verify installed Node/pnpm/Go versions against the repository manifests and toolchain constraints rather than copied example versions.
++3. Read `.ai/agent-policy.json` and `.ai/development-queue.json`; check the queue-selected execution plan and approved task-specific ADRs.
++4. Run `pnpm agent:validate` and `pnpm agent:next`; read the result as a *candidate action*, not new authorization.
++5. Inspect the current protected `main`, task branch, PR, review conversations, current-head CI, and task-specific acceptance evidence before editing.
++6. Work only on the returned task/action and permitted paths; stop for missing approval, mismatched live state, or scope expansion.
++7. Run focused checks first, then applicable integration/browser checks; classify failures before repair.
++8. Inspect `git diff --check`, committed/staged/unstaged/untracked changes, generated artifacts, and secrets before committing.
++9. Push only to the task branch; open/update a Draft PR only when task scope and access permit it.
++10. Inspect the final PR head, seven CI jobs, additional security checks and review threads; never relabel a flaky/retried test as clean.
++11. Stop at every human gate, including maintainer review and merge.
+
+ Never skip a merge dependency because a downstream branch happens to compile.
+
+@@ -67,7 +68,7 @@ ADR-013 requires all seven protected checks:
+ - `compose-smoke`
+ - `secrets`
+
+-A green job is insufficient when a task-specific gate reports a retry/flaky result that its acceptance criteria forbid. Preserve historical failures and retry counts.
++A green job is insufficient when a task-specific gate reports a retry/flaky result that its acceptance criteria forbid. Preserve historical failures and retry counts. The `contracts-and-generation` job runs control-plane tests; it does not independently grant implementation authority. For root Markdown/skills not covered by `pnpm format:check` (currently scoped to `apps/web`), run explicit formatting and frontmatter checks on changed files.
+
+ ## Reporting
+
+diff --git a/apps/web/.codex/agents/playwright_test_healer.toml b/apps/web/.codex/agents/playwright_test_healer.toml
+index b13673a..168c464 100644
+--- a/apps/web/.codex/agents/playwright_test_healer.toml
++++ b/apps/web/.codex/agents/playwright_test_healer.toml
+@@ -7,7 +7,7 @@ resolving Playwright test failures. Your mission is to systematically identify,
+ broken Playwright tests using a methodical approach.
+
+ Your workflow:
+-1. **Initial Execution**: Run all tests using `test_run` tool to identify failing tests
++1. **Initial Execution**: Run the relevant failing test/suite in its approved isolated environment using `test_run`; broaden only when task scope and evidence warrant it
+ 2. **Debug failed tests**: For each failing test run `test_debug`.
+ 3. **Error Investigation**: When the test pauses on errors, use available Playwright MCP tools to:
+    - Examine the error details
+@@ -18,7 +18,7 @@ Your workflow:
+    - Timing and synchronization issues
+    - Data dependencies or test environment problems
+    - Application changes that broke test assumptions
+-5. **Code Remediation**: Edit the test code to address identified issues, focusing on:
++5. **Code Remediation**: Fix the proven root cause within approved task scope (application code, test code, or isolated fixture as appropriate); when editing tests, focus on:
+    - Updating selectors to match current application state
+    - Fixing assertions and expected values
+    - Improving test reliability and maintainability
+@@ -33,11 +33,11 @@ Key principles:
+ - Use Playwright best practices for reliable test automation
+ - If multiple errors exist, fix them one at a time and retest
+ - Provide clear explanations of what was broken and how you fixed it
+-- You will continue this process until the test runs successfully without any failures or errors.
+-- If the error persists and you have high level of confidence that the test is correct, mark this test as test.fixme()
+-  so that it is skipped during the execution. Add a comment before the failing step explaining what is happening instead
+-  of the expected behavior.
+-- Do not ask user questions, you are not interactive tool, do the most reasonable thing possible to pass the test.
++- Stop and report unresolved failures if the root cause is outside approved scope or needs a human decision; do not insist on a green badge at the expense of correctness.
++- NEVER add `test.fixme()`, `test.skip()`, conditional skipping, muted assertions, retries, or changed expectations merely to turn a failure green. Preserve failure history and retry counts. Disabling required coverage or weakening a gate requires explicit maintainer authorization under ADR-013.
++- Classify failures as application defect, test defect, infrastructure/environment failure, or unresolved decision; an infrastructure failure is not a passing application test.
++- Collect only sanitized diagnostics. Never record browser cookies, tokens, provider data or sensitive request/response bodies in snapshots, traces, logs or PR attachments.
++- Do not solicit interactive questions from inside the healer; when authorization or evidence is missing, stop and report the blocker.
+ - Never wait for networkidle or use other discouraged or deprecated apis
+ """
+
+diff --git a/apps/web/.codex/prompts/playwright-test-coverage.md b/apps/web/.codex/prompts/playwright-test-coverage.md
+index 08d6d60..562f799 100644
+--- a/apps/web/.codex/prompts/playwright-test-coverage.md
++++ b/apps/web/.codex/prompts/playwright-test-coverage.md
+@@ -17,7 +17,9 @@ Parameters:
+   <plan-file><!-- path to test plan file to generate --></plan-file>
+ </plan>
+
+-2. For each test case from the test plan file (1.1, 1.2, ...), one after another, not in parallel, call #playwright-test-generator subagent with prompt:
++2. **Human plan-review gate:** Stop after planning. Present the exact plan file, scope, fixtures, real-HTTPS environment, negative cases, and expected assertions for explicit maintainer review. Do not generate tests merely because a plan exists. Do not infer approval from a green CI run or from this prompt. If approval has not been given for this plan and task, stop here and report the pending decision.
++
++3. After approval, for each approved test case from the test plan file (1.1, 1.2, ...), one after another, not in parallel, call #playwright-test-generator subagent with prompt:
+
+ <generate>
+   <test-suite><!-- Verbatim name of the test spec group w/o ordinal like "Multiplication tests" --></test-suite>
+@@ -27,6 +29,10 @@ Parameters:
+   <body><!-- Test case content including steps and expectations --></body>
+ </generate>
+
+-3. Call #playwright-test-healer subagent with prompt:
++4. Run approved, scoped test cases against the real isolated HTTPS stack, then any required broader regression. Record results and retries without suppression. If failures occur, classify them and request a separately scoped healing stage where authorized; do not invoke the healer automatically.
++
++5. Only when separately authorized, call #playwright-test-healer for specific failing tests and exact evidence:
++
++<heal>Investigate approved failing test cases, preserve failure evidence, and fix only proven task-scoped causes. Do not skip tests, add retries to conceal failures, or weaken required coverage. Stop at human gates.</heal>
+
+-<heal>Run all tests and fix the failing ones one after another.</heal>
++Never replace the existing Auth/M2/M3 real-stack suites with mocks, change fixed fixture isolation, or treat a flaky/retried outcome as clean. See `docs/engineering/ai-continuous-development-agent.md` and `.agents/skills/real-stack-regression/SKILL.md`.
+diff --git a/docs/README.md b/docs/README.md
+index eb90f47..9724d66 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -64,6 +64,9 @@
+ ## Operational contracts
+
+ - [Continuous AI Development Agent](engineering/ai-continuous-development-agent.md)
++- [Reusable AI Task Prompt](engineering/templates/ai-task-prompt.md) (template only; no task approval)
++- [Real-stack Regression Skill](../.agents/skills/real-stack-regression/SKILL.md) (execution guidance; existing Auth/M2/M3 suites)
++- [PR Evidence Review Skill](../.agents/skills/pr-evidence-review/SKILL.md) (current-head/CI/review evidence; no merge authorization)
+ - [Authentication Database Ownership](architecture/authentication-database.md)
+ - [Portfolio and Asset Database Ownership](architecture/portfolio-asset-database.md)
+ - [Transaction Ledger Database Foundation](architecture/transaction-database.md) (M3-DB-001; persistence only)
+diff --git a/docs/engineering/ai-continuous-development-agent.md b/docs/engineering/ai-continuous-development-agent.md
+index b37dd51..291c9f0 100644
+--- a/docs/engineering/ai-continuous-development-agent.md
++++ b/docs/engineering/ai-continuous-development-agent.md
+@@ -62,6 +62,16 @@ They do not prove that a PR merged, approve a task-graph change, or extend a sec
+ exception. The existing security audit remains authoritative for exception expiry
+ and advisory drift. Human-reviewed policy changes must update their regression tests.
+
++## Reusable task and regression workflow
++
++Use the [task prompt template](templates/ai-task-prompt.md) for an approved task and the repository skills [real-stack-regression](../../.agents/skills/real-stack-regression/SKILL.md) and [pr-evidence-review](../../.agents/skills/pr-evidence-review/SKILL.md) for their respective evidence workflows. Skills do not supersede `AGENTS.md`, queue scope, policies or human gates.
++
++Before implementation, examine existing working-tree changes and toolchain versions; obtain the queue action and current GitHub evidence. Implement only inside scope. For failed checks, classify the cause as application defect, test defect, environment/infrastructure failure, or unresolved policy/decision. Preserve traces and previous CI failures rather than masking them with retries or skips. An environment failure is not proof that application behavior passed.
++
++For docs and root skill files, root `pnpm format:check` currently covers the web package only. Explicitly run Prettier (or another approved formatter) over all newly changed Markdown files, validate skill YAML frontmatter, review relative links, and inspect `git diff --check`. This is additional local evidence, **not** a new protected CI check or replacement for the seven ADR-013 jobs.
++
++At delivery, verify the current PR head SHA, protected-main freshness, seven required CI jobs, task-specific clean runs, additional applicable security evidence (including GitGuardian where required), outstanding review threads, and human review. Do not assume a past green head applies to a newer commit.
++
+ ## GitHub truth vs queue state
+
+ GitHub is authoritative for PR state, head SHA, current-head CI, review conversations, and protected-main SHA.
+@@ -76,7 +86,7 @@ Control-plane tests and validation run inside the existing `contracts-and-genera
+
+ A green job after retry is not automatically acceptable. Task acceptance can be stricter than the job badge.
+
+-For current M2 stabilization, the clean requirement is:
++The historical M2 stability task required the following clean result (check each *current* task's own acceptance rather than blindly reusing this M2-specific vector):
+
+ ```text
+ 4 passed
+@@ -120,13 +130,11 @@ loop:
+
+ The runner must not use an unmerged dependency as an implementation base.
+
+-## Current bootstrap state
++## Historical bootstrap record (not live status)
++
++During the initial control-plane bootstrap, the M2 stability PR #63 preceded M3 PR #64 and M3-BE-003. These entries describe **past state**, not the active task. For current execution, inspect `.ai/development-queue.json` and its `sourceOfTruth.executionPlan`, run `pnpm agent:validate` / `pnpm agent:next`, and reconcile with live GitHub evidence. Do not change queue tasks or promote readiness to fit an instruction-only workflow.
+
+-- `M2-STABILITY-PR63` — active.
+-- `M3-BE-002` / PR #64 — implementation complete, blocked on PR #63 merge.
+-- `M3-BE-003` — blocked until M3-BE-002 merge.
+-- remaining M3 tasks follow the execution-plan merge sequence.
+-- `SECURITY_EXCEPTION-001` is an accepted temporary risk through 2026-10-31 and cannot be extended automatically.
++`SECURITY_EXCEPTION-001` is a temporary accepted risk expiring **2026-10-31**; neither these instructions nor passing tests extend or remediate it.
+
+ ## Recommended external automation cadence
+
+diff --git a/docs/engineering/templates/ai-task-prompt.md b/docs/engineering/templates/ai-task-prompt.md
+new file mode 100644
+index 0000000..b997c64
+--- /dev/null
++++ b/docs/engineering/templates/ai-task-prompt.md
+@@ -0,0 +1,57 @@
++# AI Task Prompt Template
++
++Use this template only for a task already permitted by the repository queue and governing human approvals. A filled-in template is **not** itself authorization to change the task queue, ADRs, secrets, infrastructure, production state, or M4 receiver activation.
++
++## Task: <ID and title>
++
++### Context
++
++- Repository:
++- Protected-main SHA (current verified):
++- Existing branch / PR, if any:
++- Queue task, status and `pnpm agent:next` resolver result:
++- Queue-selected execution plan, ADRs and attributable approval references:
++- Existing staged/unstaged/untracked changes to preserve:
++
++### Objective
++
++Describe the independently observable outcome and the reason it belongs to the authorized task.
++
++### Scope
++
++- Allowed files/components:
++- Excluded files/components:
++- Existing implementation to preserve:
++- Authorized actions and delivery boundary:
++- Stop/ask for maintainer if scope expansion is required:
++
++### Functional requirements
++
++Document required behavior, validation and failure behavior.
++
++### Business rules
++
++Reference accepted policies and exact acceptance vectors, not guessed results. Identify unresolved decisions explicitly and stop the affected work rather than inventing values.
++
++### Constraints
++
++State architecture, auth/security, sensitive-data, test isolation and backward-compatibility limits. Treat proposals as evidence, not automatic approval. Preserve unrelated local changes, all existing coverage and required CI.
++
++### Acceptance criteria
++
++Define testable outcomes, negative cases, edge cases and **zero-flaky/zero-retry requirements where applicable**.
++
++### Verification requirements
++
++- Focused static/unit tests and formatting:
++- Real PostgreSQL integration and browser HTTPS suites as applicable:
++- Contract/sqlc generation and diff:
++- Secrets/security checks (including GitGuardian when required):
++- Seven ADR-013 required current-head CI jobs:
++- Task-specific clean-run requirements and evidence artifacts:
++
++### Delivery and stop conditions
++
++Report protected-main/base SHA, task branch and PR head SHA, changed paths, exact commands and outcomes, unresolved findings/risks and next permitted action. Open/update a **Draft PR** only where authorized; never merge or claim approval by an agent.
++
++Stop at human review, policy/ADR/secret/permission/deployment gates; do not activate the M4 receiver or change M4 queue status without the separately accepted gate evidence.
