@@ -1,4 +1,4 @@
-const exactException = {
+const retiredException = {
   id: "SECURITY_EXCEPTION-001",
   advisory: "GHSA-vfj7-8cjw-p6xm",
   package: "braces",
@@ -11,6 +11,8 @@ const exactException = {
     "apps__web>eslint-config-next>@next/eslint-plugin-next>fast-glob>micromatch>braces",
   ],
   expiresOn: "2026-10-31",
+  retirementReason: "upstream_advisory_withdrawn",
+  withdrawnAt: "2026-10-23T12:53:02Z",
 };
 
 function record(value, label) {
@@ -22,17 +24,22 @@ function record(value, label) {
 
 function validatePolicy(policy) {
   record(policy, "security audit policy");
-  if (policy.schemaVersion !== 1 || policy.auditLevel !== "high") {
+  if (policy.schemaVersion !== 2 || policy.auditLevel !== "high") {
     throw new Error("unsupported security audit policy");
   }
-  if (!Array.isArray(policy.exceptions) || policy.exceptions.length !== 1) {
-    throw new Error("security audit policy must contain exactly one exception");
+  if (!Array.isArray(policy.exceptions) || policy.exceptions.length !== 0) {
+    throw new Error("security audit policy must contain no active exceptions");
   }
-  const candidate = record(policy.exceptions[0], "security exception");
-  if (JSON.stringify(candidate) !== JSON.stringify(exactException)) {
-    throw new Error("security exception differs from the approved exact scope");
+  if (
+    !Array.isArray(policy.retiredExceptions) ||
+    policy.retiredExceptions.length !== 1 ||
+    JSON.stringify(policy.retiredExceptions[0]) !==
+      JSON.stringify(retiredException)
+  ) {
+    throw new Error(
+      "retired exception must preserve its exact historical record",
+    );
   }
-  return candidate;
 }
 
 function advisoriesFrom(report) {
@@ -93,82 +100,17 @@ function advisoriesFrom(report) {
   return parsed;
 }
 
-export function evaluateAudit({ report, policy, manifests, today }) {
-  const exception = validatePolicy(policy);
-  if (
-    !(manifests instanceof Map) ||
-    !(today instanceof Date) ||
-    Number.isNaN(today.getTime())
-  ) {
-    throw new Error("security audit inputs are invalid");
-  }
+export function evaluateAudit({ report, policy }) {
+  validatePolicy(policy);
   const parsed = advisoriesFrom(report);
-  const failures = [];
-  const accepted = [];
   const highOrCritical = parsed.filter(({ advisory }) =>
     ["high", "critical"].includes(advisory.severity),
   );
-  if (highOrCritical.length !== 1) {
-    failures.push(
-      `expected exactly one scoped High advisory, found ${highOrCritical.length}`,
-    );
-  }
-  for (const { advisory, findings } of highOrCritical) {
-    if (advisory.severity === "critical") {
-      failures.push("Critical advisories cannot be exempted");
-      continue;
-    }
-    if (
-      advisory.github_advisory_id !== exception.advisory ||
-      advisory.module_name !== exception.package ||
-      advisory.severity !== exception.severity ||
-      advisory.vulnerable_versions !== exception.vulnerableVersions ||
-      advisory.patched_versions !== "<0.0.0" ||
-      findings.length !== 1 ||
-      findings[0]?.version !== exception.resolvedVersion ||
-      findings[0]?.paths.length !== 1 ||
-      findings[0]?.paths[0] !== exception.allowedPaths[0]
-    ) {
-      failures.push(
-        "High advisory differs from the exact approved exception or has a patch",
-      );
-      continue;
-    }
-    accepted.push({
-      id: exception.id,
-      advisory: exception.advisory,
-      package: exception.package,
-      version: exception.resolvedVersion,
-      expiresOn: exception.expiresOn,
-    });
-  }
-  if (accepted.length !== 1) {
-    failures.push(
-      "security exception is stale or no longer precisely reported",
-    );
-  }
-  const expiresAt = new Date(`${exception.expiresOn}T23:59:59.999Z`);
-  if (
-    Number.isNaN(expiresAt.getTime()) ||
-    today.getTime() > expiresAt.getTime()
-  ) {
-    failures.push(`${exception.id} expired on ${exception.expiresOn}`);
-  }
-  const manifest = manifests.get(exception.manifestPath);
-  if (!manifest || typeof manifest !== "object") {
-    failures.push("exception dependency manifest was not loaded");
-  } else if (
-    !Object.hasOwn(
-      manifest.devDependencies ?? {},
-      exception.topLevelDependency,
-    ) ||
-    ["dependencies", "optionalDependencies", "peerDependencies"].some((field) =>
-      Object.hasOwn(manifest[field] ?? {}, exception.topLevelDependency),
-    )
-  ) {
-    failures.push(
-      `${exception.topLevelDependency} is no longer development-only`,
-    );
-  }
-  return { failures, accepted };
+  return {
+    failures: highOrCritical.map(
+      ({ advisory }) =>
+        `${advisory.severity} advisory ${advisory.github_advisory_id} is not exempted`,
+    ),
+    expectedExitCode: highOrCritical.length > 0 ? 1 : 0,
+  };
 }

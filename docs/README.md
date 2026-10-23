@@ -19,7 +19,7 @@
 - [M4 Provider and Operations Evidence Register](governance/m4-provider-operations-evidence-register.md) (blocked; owner evidence and decisions pending)
 - [M4 Holdings Operating Decision Proposal — O1–O8](governance/m4-holdings-operating-decision-proposal.md) (historical candidates; later scoped O1 approval preserved; full O1 and O2–O8 blocked)
 - [M4 O1 Solo-Maintainer Formal Decision Record](governance/m4-o1-solo-maintainer-formal-decision-record.md) (scoped S1/S2/S3/S5 and Phase A S6 accepted; S4/final O1 blocked; no implementation or activation)
-- [SECURITY_EXCEPTION-001 — Temporary braces audit exception](governance/security-exception-001-braces.md) (accepted temporary risk; expires 2026-10-31)
+- [SECURITY_EXCEPTION-001 — Historical braces audit exception](governance/security-exception-001-braces.md) (retired after upstream advisory withdrawal; original expiry 2026-10-31 unchanged)
 - [AUTH-BE-002 Security Decision Gaps](planning/auth-be-002-implementation-blockers.md)
 - [AUTH-BE-003 HTTPS Attestation Decision](planning/auth-be-003-https-attestation-blocker.md) (resolved; runtime activation implemented in AUTH-BE-003A, pending review)
 - [Argon2id Benchmark Report — 2026-08-04](planning/argon2id-benchmark-report-2026-08-04.md)
