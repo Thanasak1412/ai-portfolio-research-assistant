@@ -17,7 +17,9 @@ Parameters:
   <plan-file><!-- path to test plan file to generate --></plan-file>
 </plan>
 
-2. For each test case from the test plan file (1.1, 1.2, ...), one after another, not in parallel, call #playwright-test-generator subagent with prompt:
+2. **Human plan-review gate:** Stop after planning. Present the exact plan file, scope, fixtures, real-HTTPS environment, negative cases, and expected assertions for explicit maintainer review. Do not generate tests merely because a plan exists. Do not infer approval from a green CI run or from this prompt. If approval has not been given for this plan and task, stop here and report the pending decision.
+
+3. After approval, for each approved test case from the test plan file (1.1, 1.2, ...), one after another, not in parallel, call #playwright-test-generator subagent with prompt:
 
 <generate>
   <test-suite><!-- Verbatim name of the test spec group w/o ordinal like "Multiplication tests" --></test-suite>
@@ -27,6 +29,10 @@ Parameters:
   <body><!-- Test case content including steps and expectations --></body>
 </generate>
 
-3. Call #playwright-test-healer subagent with prompt:
+4. Run approved, scoped test cases against the real isolated HTTPS stack, then any required broader regression. Record results and retries without suppression. If failures occur, classify them and request a separately scoped healing stage where authorized; do not invoke the healer automatically.
 
-<heal>Run all tests and fix the failing ones one after another.</heal>
+5. Only when separately authorized, call #playwright-test-healer for specific failing tests and exact evidence:
+
+<heal>Investigate approved failing test cases, preserve failure evidence, and fix only proven task-scoped causes. Do not skip tests, add retries to conceal failures, or weaken required coverage. Stop at human gates.</heal>
+
+Never replace the existing Auth/M2/M3 real-stack suites with mocks, change fixed fixture isolation, or treat a flaky/retried outcome as clean. See `docs/engineering/ai-continuous-development-agent.md` and `.agents/skills/real-stack-regression/SKILL.md`.

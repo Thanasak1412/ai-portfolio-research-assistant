@@ -58,9 +58,13 @@ Use least privilege:
 
 Never store an OpenAI or GitHub token in this repository.
 
-## Current queue
+## Current queue and historical context
 
-At foundation creation, PR #63 is active. PR #64 is implementation-complete but blocked until PR #63 merges. M3-BE-003 remains blocked until M3-BE-002 merges.
+The original foundation bootstrap involved PR #63, PR #64, and M3-BE-003. These are **historical examples**, not the current queue state or authorization to resume an old task.
+
+Read `.ai/development-queue.json` and its `sourceOfTruth.executionPlan` field, validate it, then run the resolver. Verify the current protected-main commit, any task PR, and its current-head CI in GitHub before taking action. The resolver cannot approve pending human decisions.
+
+See [`AGENTS.md`](../AGENTS.md), the [continuous-development guide](../docs/engineering/ai-continuous-development-agent.md), and the [task template](../docs/engineering/templates/ai-task-prompt.md).
 
 Run:
 

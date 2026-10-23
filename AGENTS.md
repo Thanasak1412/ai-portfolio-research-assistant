@@ -8,10 +8,11 @@ Read these before making changes, in this order:
 
 1. `docs/adr/ADR-013-solo-maintainer-merge-governance.md`
 2. The approved task-specific ADRs/policies referenced by the current task.
-3. `docs/planning/transaction-ledger-foundation-execution-plan.md` for M3 task ordering and scope.
-4. `.ai/agent-policy.json`
-5. `.ai/development-queue.json`
-6. Existing implementation and repository conventions.
+3. `.ai/agent-policy.json` and `.ai/development-queue.json` for permitted actions, active task, and its `sourceOfTruth.executionPlan`.
+4. The execution plan selected by that queue reference; do not assume an earlier milestone's plan still governs the active task.
+5. Existing implementation and repository conventions.
+
+Repository workflow references: [continuous-development guide](docs/engineering/ai-continuous-development-agent.md), [task prompt template](docs/engineering/templates/ai-task-prompt.md), [real-stack regression skill](.agents/skills/real-stack-regression/SKILL.md), and [PR evidence review skill](.agents/skills/pr-evidence-review/SKILL.md). These are reusable instructions, not independent permissions.
 
 If these sources conflict, stop the affected work and report the conflict. Do not hide an architecture or policy choice in code.
 
@@ -19,17 +20,17 @@ If these sources conflict, stop the affected work and report the conflict. Do no
 
 For every run:
 
-1. Read `.ai/agent-policy.json` and `.ai/development-queue.json`.
-2. Run `pnpm agent:validate`.
-3. Run `pnpm agent:next`.
-4. Work only on the returned task and action.
-5. Inspect the current protected `main`, task branch, PR, review conversations, and current-head CI before editing.
-6. Keep changes inside task scope.
-7. Run focused checks first, then all applicable repository checks.
-8. Push only to the task branch.
-9. Open or update a Draft PR when permitted.
-10. Diagnose failing CI and repair only when the root cause is inside the approved task scope.
-11. Stop at every human gate.
+1. Inspect `git status --short` and existing staged, unstaged, and untracked changes; preserve unrelated work and avoid destructive cleanup.
+2. Verify installed Node/pnpm/Go versions against the repository manifests and toolchain constraints rather than copied example versions.
+3. Read `.ai/agent-policy.json` and `.ai/development-queue.json`; check the queue-selected execution plan and approved task-specific ADRs.
+4. Run `pnpm agent:validate` and `pnpm agent:next`; read the result as a _candidate action_, not new authorization.
+5. Inspect the current protected `main`, task branch, PR, review conversations, current-head CI, and task-specific acceptance evidence before editing.
+6. Work only on the returned task/action and permitted paths; stop for missing approval, mismatched live state, or scope expansion.
+7. Run focused checks first, then applicable integration/browser checks; classify failures before repair.
+8. Inspect `git diff --check`, committed/staged/unstaged/untracked changes, generated artifacts, and secrets before committing.
+9. Push only to the task branch; open/update a Draft PR only when task scope and access permit it.
+10. Inspect the final PR head, seven CI jobs, additional security checks and review threads; never relabel a flaky/retried test as clean.
+11. Stop at every human gate, including maintainer review and merge.
 
 Never skip a merge dependency because a downstream branch happens to compile.
 
@@ -67,7 +68,7 @@ ADR-013 requires all seven protected checks:
 - `compose-smoke`
 - `secrets`
 
-A green job is insufficient when a task-specific gate reports a retry/flaky result that its acceptance criteria forbid. Preserve historical failures and retry counts.
+A green job is insufficient when a task-specific gate reports a retry/flaky result that its acceptance criteria forbid. Preserve historical failures and retry counts. The `contracts-and-generation` job runs control-plane tests; it does not independently grant implementation authority. For root Markdown/skills not covered by `pnpm format:check` (currently scoped to `apps/web`), run explicit formatting and frontmatter checks on changed files.
 
 ## Reporting
 
