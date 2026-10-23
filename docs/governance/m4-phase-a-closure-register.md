@@ -4,7 +4,7 @@
 
 **Status:** BLOCKED — evidence inventory and proposals only
 
-**Evidence base:** protected main `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`; reviewed 2026-10-23 after verified PR #94 merge
+**Evidence base:** protected main `8c126ff0858ff9cb7c17435d6bfea42a951f3196`; reviewed 2026-10-23 after verified PR #97 merge (incorporating PR #98)
 
 The queue-selected [execution plan](../planning/price-data-holding-projection-execution-plan.md), [readiness gate](m4-implementation-readiness-gate.md) and accepted decisions control. Resolver verification selects only `M4-GATE-001 / in_progress / implement_or_diagnose`. This dated register reconciles later scoped approvals with historical proposals; it does not replace policy text or supply missing decisions.
 
@@ -80,4 +80,12 @@ Receiver durability/recovery/fencing and backlog tests, actual resource measurem
 
 Next: `Thanasak1412` reviews the O1-S4 packet and routes the O2–O8, financial, account, Product and security requests to the required decision owners. Supply attributable decisions and controlled evidence, then reconcile this same gate. M4-GATE-001 stays **in_progress / BLOCKED**; M4-CONTRACT-001 stays **blocked**. Any later implementation authorization requires complete Phase A approval, reviewed gate merge and a separately authorized queue transition. Receiver and Transaction delivery remain inactive under ADR-023. No production deployment or automatic merge is authorized.
 
-`SECURITY_EXCEPTION-001` remains unchanged accepted temporary risk, expires 2026-10-31, and is not remediated or extended by this work.
+The merged [security-exception retirement record](security-exception-001-braces.md)
+supersedes the earlier active-exception wording: upstream
+`GHSA-vfj7-8cjw-p6xm` was withdrawn; the active audit policy has zero
+exceptions. `braces@3.0.3` remains in the graph; withdrawal is not package
+remediation. The original 2026-10-31 expiry is historical evidence, not an
+extension. O1-S2's accepted no-backup operating risk is a separate decision
+and retains its existing review trigger. Queue exception metadata remains
+unchanged and needs separate authorization to reconcile; no M4 readiness
+approval follows from security-policy retirement.

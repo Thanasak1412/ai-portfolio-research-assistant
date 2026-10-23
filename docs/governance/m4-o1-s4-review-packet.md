@@ -6,7 +6,7 @@
 
 **Status:** PROPOSED — approval evidence MISSING; O1-S4 and O1 remain BLOCKED
 
-**Evidence base:** protected main `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`; reviewed 2026-10-23
+**Evidence base:** protected main `8c126ff0858ff9cb7c17435d6bfea42a951f3196`; reviewed 2026-10-23 after PR #97 (incorporating PR #98) merged
 
 **Human decision owner:** `Thanasak1412`, as maintainer and the Platform, Holdings and Primary Operator roles assigned by the [scoped O1 decision](m4-o1-solo-maintainer-formal-decision-record.md). No additional financial-policy authority is assigned.
 
@@ -69,4 +69,12 @@ No deployment, email sender, webhook, automatic Issues integration or M4 receive
 
 Supply: packet version; exact S4 row IDs and accepted/revised text; approving human and role; actual UTC decision time; GitHub evidence reference; controlled provider/config/access references; exclusions; and remaining blockers. Approval fields are **MISSING**. Publishing this packet, green CI, or merging its documentation is not acceptance.
 
-Next action: maintainer/operator resolves S4-1 through S4-7 and records the scoped S4 decision, then S4-8 final O1 closure. Other O2–O8, financial/provider and Phase B requirements remain independent gates. `SECURITY_EXCEPTION-001` remains unchanged accepted temporary risk through 2026-10-31, not remediated or extended.
+Next action: maintainer/operator resolves S4-1 through S4-7 and records the scoped S4 decision, then S4-8 final O1 closure. Other O2–O8, financial/provider and Phase B requirements remain independent gates.
+
+Per the merged [security-exception retirement record](security-exception-001-braces.md),
+GitHub withdrew `GHSA-vfj7-8cjw-p6xm`; the active audit policy has zero
+exceptions. `braces@3.0.3` remains present: withdrawal is not package remediation.
+The original 2026-10-31 expiry is historical, not extended. This dependency
+exception retirement is distinct from O1-S2's accepted temporary no-backup
+operating risk and does not change its scope or review trigger. O1-S4 and final
+O1 approval remain pending.

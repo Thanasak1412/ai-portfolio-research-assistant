@@ -14,7 +14,7 @@
 
 **Record history:** Initial pending record dated 2026-10-11; coverage clarification dated 2026-10-12; O1-S4 proposal dated 2026-10-14; scoped Phase A decision recorded 2026-10-16. This scoped approval is not final O1 acceptance.
 
-**Evidence reconciliation:** 2026-10-23 at protected main `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`. The [O1-S4 review packet](m4-o1-s4-review-packet.md) links verified private register preparation and the selected Transactional Email API class; complete sender/transport, access/configuration and failure/escalation approval remain pending. No accepted O1 clause is changed by that packet.
+**Evidence reconciliation:** 2026-10-23 at protected main `8c126ff0858ff9cb7c17435d6bfea42a951f3196`. The [O1-S4 review packet](m4-o1-s4-review-packet.md) links verified private register preparation and the selected Transactional Email API class; complete sender/transport, access/configuration and failure/escalation approval remain pending. No accepted O1 clause is changed by that packet or the separately merged dependency security policy.
 
 **Coverage update:** 2026-10-12 — maintainer confirmed Monday–Friday 20:00–23:00 `Asia/Bangkok` in the current conversation; coverage clarification only, not final O1 approval
 
@@ -233,8 +233,13 @@ proof blocks activation; the unresolved O1-S4 decision keeps O1 blocked now.
 - ADR-025: **Proposed**; financial/provider prerequisites unchanged.
 - M4-GATE-001: **in_progress / BLOCKED**; M4-CONTRACT-001: **blocked**.
 - Receiver activation and implementation: **NOT AUTHORIZED**.
-- SECURITY_EXCEPTION-001: unchanged accepted temporary risk through
-  **2026-10-31**, not remediated or extended.
+- SECURITY_EXCEPTION-001: retired from the active audit policy after upstream
+  `GHSA-vfj7-8cjw-p6xm` withdrawal, per the merged
+  [retirement record](security-exception-001-braces.md). The policy has zero
+  active exceptions; `braces@3.0.3` remains in the graph. Withdrawal is not
+  package remediation; **2026-10-31** is the unchanged historical expiry.
+  O1-S2's separate accepted no-backup operating risk and review trigger remain
+  unchanged; this security retirement does not close any O1 decision.
 
 Next human action: close O1-S4 sender/transport, secure configuration,
 access-restricted private Incident Register and remaining escalation

@@ -6,7 +6,7 @@
 | Milestone                      | M4 — Price Data and Holding Projection                                    |
 | Plan                           | `M4-PRICE-HOLDING-PLAN-v1`                                                |
 | Status                         | `BLOCKED`                                                                 |
-| Protected-main base            | `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`                                |
+| Protected-main base            | `8c126ff0858ff9cb7c17435d6bfea42a951f3196`                                |
 | Evidence review date           | 2026-10-23                                                                |
 | Evidence owners                | Product / provider-account owner / operator / financial-policy maintainer |
 | Technical implementation owner | Engineering                                                               |
@@ -496,11 +496,19 @@ approvers are not re-used as approval for new M4 decisions.
 
 ## Security exception and scope assurance
 
-`SECURITY_EXCEPTION-001` remains exactly
-`GHSA-vfj7-8cjw-p6xm / braces@3.0.3 / accepted_temporary_risk / expires
-2026-10-31`. It is unchanged and is not called fixed, remediated, suppressed,
-or extended. The separate October security dependency/toolchain remediation
-does not alter this exception.
+The merged [security-exception retirement record](security-exception-001-braces.md)
+and [active audit policy](../../security/audit-exceptions.json) are the source
+of truth: GitHub withdrew `GHSA-vfj7-8cjw-p6xm` on 2026-10-23, and the audit
+policy now has **zero active exceptions**. `braces@3.0.3` remains in the
+dependency graph; advisory withdrawal is not package remediation. The original
+2026-10-31 expiry is preserved as historical evidence, not extended. PR #97,
+incorporating PR #98, merged this policy at protected main
+`8c126ff0858ff9cb7c17435d6bfea42a951f3196`.
+
+This retirement does not change the separately accepted O1-S2 no-backup
+operating risk, its review trigger, or any M4 approval. Historical exception
+metadata in the development queue is not an active audit allowance and remains
+unchanged; reconciling that metadata requires separate maintainer authorization.
 
 This task adds no runtime, OpenAPI, migration, sqlc, CI, credential,
 provider-adapter, Price, Holdings, worker-activation, or M4 implementation

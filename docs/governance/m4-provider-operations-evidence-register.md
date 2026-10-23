@@ -4,7 +4,7 @@
 
 **Status:** Phase A evidence requests and operating proposals; BLOCKED
 
-**Evidence base:** `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`
+**Evidence base:** `8c126ff0858ff9cb7c17435d6bfea42a951f3196` (PR #97, incorporating PR #98)
 
 **Reviewed:** 2026-10-23; dated public-source research below remains historical
 
@@ -81,4 +81,10 @@ For each OP row submit: named owner/role, source kind, controlled evidence refer
 
 Phase B activation record must link deployed versions and tests to these approved Phase A decisions. It cannot invent absent account rights. Until both their relevant approvals and activation evidence exist, live provider/receiver/private-beta delivery remains inactive. M4-CONTRACT-001 remains blocked on overall Phase A gate approval, merge and separate queue authorization.
 
-`SECURITY_EXCEPTION-001` remains `GHSA-vfj7-8cjw-p6xm / braces@3.0.3 / accepted_temporary_risk / expires 2026-10-31`, unchanged and not remediated.
+The merged [security-exception retirement record](security-exception-001-braces.md)
+records upstream `GHSA-vfj7-8cjw-p6xm` withdrawal and zero active audit
+exceptions. `braces@3.0.3` remains in the dependency graph; withdrawal is not
+package remediation. The original 2026-10-31 expiry is retained as history,
+not extended. This does not change O1-S2's separately accepted no-backup
+operating risk or its review trigger, establish any provider entitlement,
+approve operations, or authorize receiver activation.
