@@ -14,6 +14,8 @@
 
 **Record history:** Initial pending record dated 2026-10-11; coverage clarification dated 2026-10-12; O1-S4 proposal dated 2026-10-14; scoped Phase A decision recorded 2026-10-16. This scoped approval is not final O1 acceptance.
 
+**Evidence reconciliation:** 2026-10-23 at protected main `09f51569f9870c0e5c7271b2ae8aa55fcbe4cb8e`. The [O1-S4 review packet](m4-o1-s4-review-packet.md) links verified private register preparation and the selected Transactional Email API class; complete sender/transport, access/configuration and failure/escalation approval remain pending. No accepted O1 clause is changed by that packet.
+
 **Coverage update:** 2026-10-12 — maintainer confirmed Monday–Friday 20:00–23:00 `Asia/Bangkok` in the current conversation; coverage clarification only, not final O1 approval
 
 **Decision scope:** The linked maintainer comment approves only O1-S1, O1-S2, O1-S3, O1-S5, and the limited Phase A O1-S6 authority model. It expressly leaves O1-S4 pending and O1 overall blocked.
@@ -40,14 +42,14 @@ missing complete operating decision.
 
 ## Accepted O1-S1 ownership and O1-S2 risk boundary
 
-| Function           | Accepted Phase A assignment / direction   | Boundary |
-| ------------------ | ----------------------------------------- | -------- |
-| Architecture Owner | GitHub `Thanasak1412`                     | No additional financial-policy authority |
-| Platform Owner     | GitHub `Thanasak1412`                     | No additional financial-policy authority |
-| Holdings Owner     | GitHub `Thanasak1412`                     | No additional financial-policy authority |
+| Function           | Accepted Phase A assignment / direction   | Boundary                                                                               |
+| ------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| Architecture Owner | GitHub `Thanasak1412`                     | No additional financial-policy authority                                               |
+| Platform Owner     | GitHub `Thanasak1412`                     | No additional financial-policy authority                                               |
+| Holdings Owner     | GitHub `Thanasak1412`                     | No additional financial-policy authority                                               |
 | Primary Operator   | GitHub `Thanasak1412`                     | Phase A ownership only; execution depends on approved, implemented and tested controls |
-| Deputy / backup    | None for the initial limited private beta | Accepted temporary risk; no automatic extension |
-| Availability       | Coverage defined below; no 24/7 SLA        | No continuous-monitoring or uptime guarantee |
+| Deputy / backup    | None for the initial limited private beta | Accepted temporary risk; no automatic extension                                        |
+| Availability       | Coverage defined below; no 24/7 SLA       | No continuous-monitoring or uptime guarantee                                           |
 
 The maintainer accepts possible incident-response delay and service
 interruption. Data integrity takes precedence over availability. The risk
@@ -58,26 +60,29 @@ authority beyond the stated operating roles.
 
 ## Accepted O1-S3 coverage, O1-S5 acknowledgement, and alerting status
 
-| Field                        | Confirmed direction                                           | Remaining decision / evidence                                                               |
-| ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Timezone                     | `Asia/Bangkok` (UTC+07:00)                                    | No alternative timezone inferred                                                            |
-| Monday–Friday                | 20:00–23:00 `Asia/Bangkok`                                    | Weekday start/end confirmed; no overnight or immediate-response guarantee inferred          |
-| Saturday–Sunday              | All-day best-effort availability                              | NOT guaranteed 24-hour monitoring or continuously staffed coverage                          |
-| Public holidays              | All-day best-effort, same as weekends                         | No guaranteed continuous monitoring                                                       |
-| In-window response           | Best-effort; no SLA                                           | Acknowledge during the next applicable coverage window                                     |
-| Outside coverage             | Respond during the next applicable coverage window           | No immediate-response guarantee; unresolved incidents remain open                          |
-| Planned absence              | Documented coverage exception and safety assessment required | No backup is implied; follow separately approved safety controls                           |
-| Unplanned absence            | No backup coverage implied                                    | Incidents remain unresolved until the operator returns                                     |
-| Preferred alert channel      | Email; logical destination `private-beta-primary-alert-inbox` | Gmail setup owner-attested only; sender/transport approval and M4 delivery evidence pending |
-| Escalation / incident record | Access-restricted private Incident Register required           | O1-S4 pending; sender, secure configuration, register and remaining escalation details unresolved |
+| Field                        | Confirmed direction                                           | Remaining decision / evidence                                                                     |
+| ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Timezone                     | `Asia/Bangkok` (UTC+07:00)                                    | No alternative timezone inferred                                                                  |
+| Monday–Friday                | 20:00–23:00 `Asia/Bangkok`                                    | Weekday start/end confirmed; no overnight or immediate-response guarantee inferred                |
+| Saturday–Sunday              | All-day best-effort availability                              | NOT guaranteed 24-hour monitoring or continuously staffed coverage                                |
+| Public holidays              | All-day best-effort, same as weekends                         | No guaranteed continuous monitoring                                                               |
+| In-window response           | Best-effort; no SLA                                           | Acknowledge during the next applicable coverage window                                            |
+| Outside coverage             | Respond during the next applicable coverage window            | No immediate-response guarantee; unresolved incidents remain open                                 |
+| Planned absence              | Documented coverage exception and safety assessment required  | No backup is implied; follow separately approved safety controls                                  |
+| Unplanned absence            | No backup coverage implied                                    | Incidents remain unresolved until the operator returns                                            |
+| Preferred alert channel      | Email; logical destination `private-beta-primary-alert-inbox` | Gmail setup owner-attested only; sender/transport approval and M4 delivery evidence pending       |
+| Escalation / incident record | Access-restricted private Incident Register required          | O1-S4 pending; sender, secure configuration, register and remaining escalation details unresolved |
 
 Email preference is not evidence of a working mail pipeline. Do not infer the
 operational destination from the connected GitHub account or publish private
 contact information. Record only approved, appropriately controlled references.
-The repository is currently public, so its GitHub Issues do not meet the
-access-restricted private Incident Register requirement. Selecting a suitable
-private register remains part of O1-S4. No M4 alert transport is implemented,
-tested or operational by this document.
+The application repository is public, so its GitHub Issues do not meet the
+access-restricted private Incident Register requirement. The separate
+`Thanasak1412/incident-register` repository was verified private with Issues
+enabled on 2026-10-23; its [documentation package](https://github.com/Thanasak1412/incident-register/pull/1)
+is merged. Formal selection/access/workflow approval remains pending under
+O1-S4. Prepared private documentation does not establish an implemented,
+tested or operational M4 alert transport.
 
 ## O1-S4 — Proposed Email Alert and Escalation Design
 
@@ -99,8 +104,14 @@ or final operating-approval date.
 - Physical destination: maintainer-designated dedicated Gmail inbox, with
   forwarding to the primary inbox; physical addresses/targets are excluded.
 - Classification direction: `AI Portfolio / Alerts`.
-- Backup destination/operator: none; residual-risk approval still pending.
+- Backup destination/operator: none; the temporary no-backup risk is accepted
+  only within O1-S2's recorded scope and review trigger, not as a fallback route.
 - Sender/transport and restricted configuration approach: **PENDING APPROVAL**.
+
+The later [restricted transport proposal](https://github.com/Thanasak1412/incident-register/blob/c03c9c2a3ec6719bd2b238bf61e6024906ea02ca/docs/m4-transactional-email-transport-phase-a.md)
+records the maintainer-selected **Transactional Email API class**. Provider,
+sender identity, credential/configuration lifecycle and formal O1-S4 approval
+remain pending. This direction does not approve an email provider or deployment.
 
 No independent delivery verification, end-to-end M4 Monitoring test, approved
 sender/transport implementation, tested fallback escalation, operational
@@ -129,13 +140,14 @@ Classification cannot override ADR-022, ADR-023, ADR-024 or O3/O6 decisions.
 2. Send to the logical destination only when the approved alert mechanism
    is implemented. Neither transport nor integration exists by this record.
 3. Operator acknowledgement is best-effort during the next applicable
-   coverage window: Mon–Fri 20:00–23:00 `Asia/Bangkok`; weekends all-day
+   coverage window: Mon–Fri 20:00–23:00 `Asia/Bangkok`; weekends/public holidays all-day
    best effort, not continuous monitoring. No 24/7 response SLA is implied.
-4. Record acknowledgement, investigation, resolution or escalation in an
-   access-restricted private Incident Register after O1-S4 selects and approves
-   it. The current repository is public; its Issues must not be used for
-   private incident data. Register selection, access and delivery integration
-   remain pending.
+4. Record acknowledgement, investigation, resolution or escalation in the
+   prepared access-restricted private Incident Register only after O1-S4
+   approves its identity/access/manual workflow. The public application's
+   Issues must not be used for private incident data. The private package's
+   merge is preparation evidence; final operating approval remains pending.
+   No automatic Issues delivery integration is approved or implemented.
 5. If the operator is unavailable, retain the incident as unresolved.
    No nonexistent backup, immediate response or automatic fallback is implied.
 
@@ -143,7 +155,7 @@ The O1-S5 policy is accepted: acknowledge during the next applicable coverage
 window; an unacknowledged incident remains unresolved, and delivery failure is
 not acknowledgement. There is no automatic escalation to a backup. Sender /
 transport, bounce detection and response, secure configuration, private
-register workflow and remaining escalation details are O1-S4 blockers. This
+register workflow approval and remaining escalation details are O1-S4 blockers. This
 document does not claim an implemented mechanism or delivery guarantee.
 
 ### Phase A approval versus Phase B verification
@@ -192,15 +204,15 @@ preflight; process restart alone is never approval to reactivate.
 
 ## Pending approval and evidence register
 
-| Subdecision                     | Recorded partial direction                                         | Status / required completion                                                                                                   |
-| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| O1-S1 Staffing                  | `Thanasak1412` assigned all four roles; no financial-policy authority | ACCEPTED for the stated Phase A scope; no operational-control claim |
-| O1-S2 No-backup risk            | Temporary no-backup risk accepted for initial limited private beta | ACCEPTED; review within 30 days or before beta expansion, whichever comes first; no automatic extension |
-| O1-S3 Coverage                  | Weekdays 20:00–23:00; weekends/public holidays all-day best effort; Asia/Bangkok | ACCEPTED; planned absence requires documented safety assessment; unplanned absence implies no backup |
-| O1-S4 Alert route               | Proposed email design; Gmail forwarding/labels owner-attested only | PENDING; sender/transport, secure configuration, private register and remaining escalation details; Phase B delivery evidence still required |
-| O1-S5 Outside coverage          | Next applicable window; unacknowledged incidents remain unresolved; delivery failure is not acknowledgement | ACCEPTED; no backup escalation or response-time SLA |
-| O1-S6 Emergency pause / restart | Limited authority model for `Thanasak1412`; separate reactivation authorization and preflight | ACCEPTED as Phase A design only; operation prohibited until approved, implemented and tested pause mechanism exists |
-| O1-S7 Final sign-off            | Scoped decision evidence recorded above                          | BLOCKED; O1-S4 and consolidated final O1 closure remain outstanding |
+| Subdecision                     | Recorded partial direction                                                                                  | Status / required completion                                                                                                                 |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| O1-S1 Staffing                  | `Thanasak1412` assigned all four roles; no financial-policy authority                                       | ACCEPTED for the stated Phase A scope; no operational-control claim                                                                          |
+| O1-S2 No-backup risk            | Temporary no-backup risk accepted for initial limited private beta                                          | ACCEPTED; review within 30 days or before beta expansion, whichever comes first; no automatic extension                                      |
+| O1-S3 Coverage                  | Weekdays 20:00–23:00; weekends/public holidays all-day best effort; Asia/Bangkok                            | ACCEPTED; planned absence requires documented safety assessment; unplanned absence implies no backup                                         |
+| O1-S4 Alert route               | Proposed email design; Gmail forwarding/labels owner-attested only                                          | PENDING; sender/transport, secure configuration, private register and remaining escalation details; Phase B delivery evidence still required |
+| O1-S5 Outside coverage          | Next applicable window; unacknowledged incidents remain unresolved; delivery failure is not acknowledgement | ACCEPTED; no backup escalation or response-time SLA                                                                                          |
+| O1-S6 Emergency pause / restart | Limited authority model for `Thanasak1412`; separate reactivation authorization and preflight               | ACCEPTED as Phase A design only; operation prohibited until approved, implemented and tested pause mechanism exists                          |
+| O1-S7 Final sign-off            | Scoped decision evidence recorded above                                                                     | BLOCKED; O1-S4 and consolidated final O1 closure remain outstanding                                                                          |
 
 **Full O1 approval:** PENDING — O1-S4 remains unresolved. **Scoped approval
 timestamp:** `2026-10-16T16:29:21Z`. **Scoped GitHub reference:** [PR #90
