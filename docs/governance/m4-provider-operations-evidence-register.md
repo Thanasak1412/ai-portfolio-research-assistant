@@ -4,15 +4,22 @@
 
 **Status:** Phase A evidence requests and operating proposals; BLOCKED
 
-**Evidence base:** `4c212f3e139cd08745ec531779317852600bbf64`
+**Evidence base:** `8c126ff0858ff9cb7c17435d6bfea42a951f3196` (PR #97, incorporating PR #98)
 
-**Reviewed:** 2026-10-11
+**Reviewed:** 2026-10-23; dated public-source research below remains historical
 
 **Owners:** Product / provider-account owner / operator / security / Engineering
 
 This register preserves the [M3 permission decision](m3-price-provider-permission-gate.md): Twelve Data Venture, official unadjusted regular-session daily close, US-listed EQUITY/ETF, USD, owner and explicitly invited authenticated beta users. The existing owner-held written confirmation dated 2026-08-31 is the recorded permission evidence; it is not reinterpreted as account quota/calendar entitlement. No provider selection, commercial launch, export, AI forwarding or new source is proposed.
 
 `VERIFIED` applies only to the cited fact; `MISSING` means no evidence reference is supplied; `UNRESOLVED` means a specific choice or entitlement needs confirmation. Proposed designs are not implemented controls or owner approvals. Store only sanitized evidence references in Git; keep credentials, billing/account identifiers, contracts and raw provider responses in restricted owner-held records.
+
+The [Phase A closure register](m4-phase-a-closure-register.md) supplies current
+human routing/approval criteria for OP1–OP9 alongside O1–O8 and financial
+decisions. The [O1-S4 packet](m4-o1-s4-review-packet.md) distinguishes prepared
+private register/email-class evidence from missing operating approval.
+`PROPOSED` does not satisfy a required decision; missing account evidence keeps
+the relevant requirement `BLOCKED`.
 
 ## Public-source research — not legal approval
 
@@ -32,13 +39,13 @@ Provider/account owner must obtain written confirmation for the actual Venture s
 | OP6 Termination/deletion          | Approve procedure below, named termination monitor and deletion/backup owners, complete inventory, exact deadline escalation and completion evidence format                                                                                                                                                                                            | Operator / security                                      | UNRESOLVED; no invented retention extension; 30-day obligation preserved                                                               | Real purge/restore-sanitization drill and deadline/retry evidence before activation        |
 | OP7 Invite admission/revocation   | Product-approved invited-user population, server-authoritative invitation entitlement, who admits/revokes, effective revocation rule and reviewed deployment mechanism; public registration is not invitation                                                                                                                                          | Product / operator / Engineering                         | UNRESOLVED; deny licensed access unless current invite entitlement proven                                                              | Owner/invited/non-invited/removed-user direct HTTP + browser + SSR checks                  |
 | OP8 Cache/attribution boundary    | Approve no-store operating design below; preserve approved attribution wording/dofollow link and any later exchange requirement; named UI/cache owners                                                                                                                                                                                                 | Product / operator / Engineering                         | UNRESOLVED design approval; existing permission restrictions VERIFIED only as recorded in M3 gate                                      | Response/header/SSR/browser/CDN/service-worker/logout tests; attribution visible           |
-| OP9 Receiver/job operations       | Approved architecture recommendation, owners, backlog/lag incident thresholds, resource budgets, work retry/recovery/deactivation plan; no automatic outbox dead-letter replay                                                                                                                                                                         | Architecture maintainer / Platform / Holdings / operator | UNRESOLVED; ADR-024 Proposed, receiver inactive                                                                                        | Atomic handoff, restart/fences/backlog and deactivation evidence per architecture register |
+| OP9 Receiver/job operations       | Preserve accepted ADR-024 A1–A7 and scoped O1 decisions; obtain remaining O1-S4/final O1 and O2–O8 backlog/lag thresholds, resource budgets, work retry/recovery/deactivation decisions; no automatic outbox dead-letter replay                                                                                                                        | Architecture maintainer / Platform / Holdings / operator | BLOCKED; architecture and scoped O1 verified, remaining operations unapproved; receiver inactive                                       | Atomic handoff, restart/fences/backlog and deactivation evidence per architecture register |
 
 These owner requests preserve the gate's existing responsibilities. Delivery evidence is Phase B; OP1–OP9 choices/account references are Phase A and must not await deployed M4 code. No numeric quota or new operating policy is silently chosen by Engineering.
 
 ## Proposed server-side credential lifecycle
 
-Recommend dedicated environment-scoped secret references: synthetic CI adapter only; ignored local secret injection for an approved optional smoke; separately scoped private-beta server key. Operator/security chooses the actual supported secret mechanism and records only its controlled reference/access policy. No default key or fallback to another environment. Limit key access to provider infrastructure; never place it in browser bundles, SSR props, query errors, URLs in logs or diagnostics.
+Recommend dedicated environment-scoped secret references: synthetic CI adapter only; ignored local secret injection for an approved optional smoke; separately scoped private-beta server key. [ADR-015](../adr/ADR-015-ed25519-key-ring-and-secret-management.md) already authorizes Railway service-variable secrets for staging/production. Operator/security must approve the provider-specific references, access and lifecycle within existing policy; a different secret-store policy requires separate approval. No default key or fallback to another environment. Limit key access to provider infrastructure; never place it in browser bundles, SSR props, query errors, URLs in logs or diagnostics.
 
 Rotation sequence for owner approval: provision replacement with provider-supported overlap only if confirmed; inject/reload the approved worker; verify a bounded request without raw body/key artifacts; revoke old key; verify revocation and audit safe completion. For suspected compromise revoke immediately and suspend live ingestion; exact incident owner/restart procedure remains to be supplied. Invalid/missing key must fail closed for provider work, not prevent valid M3 ledger commands. Secret-store/infrastructure changes need their existing human authorization.
 
@@ -65,13 +72,19 @@ Recommend `Cache-Control: no-store` on licensed responses and SSR routes; no sha
 
 For each OP row submit: named owner/role, source kind, controlled evidence reference, scope/date/version, specific confirmed facts, unresolved restrictions, decision and approver/date/reference. Provider marketing/API examples are technical research, not permission. Keep account-specific documents restricted; sanitized references suffice in Git. `NOT_APPLICABLE` requires owner rationale; silence is UNRESOLVED, not unlimited entitlement.
 
-| Approval request                                                                           | Current state              |
-| ------------------------------------------------------------------------------------------ | -------------------------- |
-| Provider/account: OP1–OP4 actual limits, calendar and listing evidence                     | PENDING / evidence missing |
-| Operator/security: OP2/OP5/OP6 operating values, credentials, inventory/backup/deletion    | PENDING                    |
-| Product/operator/Engineering: OP7/OP8 invitation, revocation, cache and attribution design | PENDING                    |
-| Architecture/Platform/Holdings: OP9 work ownership/recovery                                | PENDING; ADR-024 Proposed  |
+| Approval request                                                                           | Current state                                                       |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Provider/account: OP1–OP4 actual limits, calendar and listing evidence                     | PENDING / evidence missing                                          |
+| Operator/security: OP2/OP5/OP6 operating values, credentials, inventory/backup/deletion    | PENDING                                                             |
+| Product/operator/Engineering: OP7/OP8 invitation, revocation, cache and attribution design | PENDING                                                             |
+| Architecture/Platform/Holdings: OP9 work ownership/recovery                                | ADR-024 A1–A7 and scoped O1 accepted; S4/final O1 and O2–O8 PENDING |
 
 Phase B activation record must link deployed versions and tests to these approved Phase A decisions. It cannot invent absent account rights. Until both their relevant approvals and activation evidence exist, live provider/receiver/private-beta delivery remains inactive. M4-CONTRACT-001 remains blocked on overall Phase A gate approval, merge and separate queue authorization.
 
-`SECURITY_EXCEPTION-001` remains `GHSA-vfj7-8cjw-p6xm / braces@3.0.3 / accepted_temporary_risk / expires 2026-10-31`, unchanged and not remediated.
+The merged [security-exception retirement record](security-exception-001-braces.md)
+records upstream `GHSA-vfj7-8cjw-p6xm` withdrawal and zero active audit
+exceptions. `braces@3.0.3` remains in the dependency graph; withdrawal is not
+package remediation. The original 2026-10-31 expiry is retained as history,
+not extended. This does not change O1-S2's separately accepted no-backup
+operating risk or its review trigger, establish any provider entitlement,
+approve operations, or authorize receiver activation.
