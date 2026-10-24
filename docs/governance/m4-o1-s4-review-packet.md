@@ -12,6 +12,17 @@
 
 This packet organizes decisions for review; it approves no sender, credentials, infrastructure, integration or receiver. The [Phase A closure register](m4-phase-a-closure-register.md) tracks the remaining gate requirements. Only the explicitly approved O1 clauses in the existing decision record are accepted.
 
+### Provider-specific proposal — not an approval
+
+The [Resend formal decision review](m4-o1-s4-resend-formal-decision-review.md)
+adapts the maintainer-supplied review draft dated 2026-10-24. Resend is the
+preferred provider for that proposal, **not** a formally accepted S4-1 choice.
+Its state is **PROPOSED / HUMAN DECISION PENDING**; account/plan entitlement,
+sender/domain/configuration evidence and human approval remain **MISSING**.
+Public technical references do not supply those decisions. This packet's
+S4-1 through S4-8 criteria remain authoritative and unchanged; the linked
+proposal neither approves a provider account nor closes O1-S4 or final O1.
+
 ## Evidence and its limits
 
 `VERIFIED` qualifies the cited fact only. `PROPOSED` is a review candidate, `MISSING` is an absent required decision/reference, and `BLOCKED` is the resulting closure state. Verified preparation does not turn an unapproved design into an accepted control.
