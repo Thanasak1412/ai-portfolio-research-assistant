@@ -8,7 +8,7 @@
 
 **Status:** `PROPOSED / HUMAN DECISION PENDING` — not an accepted O1-S4 decision
 
-**Repository evidence base:** protected `main` at `793a61a9eb74ee06d0a29feba6d19409f65a60c4`, after merged [PR #96](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/96)
+**Repository evidence base:** protected `main` at `c844b45125bf8501015ef53781c4ec156c89dbf7`, after merged [PR #100](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/100). The original proposal followed [PR #96](https://github.com/Thanasak1412/ai-portfolio-research-assistant/pull/96); this synchronization inherits the Zod security remediation without changing any human decision, approval date or S4 acceptance criterion.
 
 **Human decision owner:** repository maintainer in the already accepted Platform/Holdings/Primary Operator roles; provider-account/security evidence belongs to the respective responsible owner. No additional financial-policy or Product authority is inferred.
 
