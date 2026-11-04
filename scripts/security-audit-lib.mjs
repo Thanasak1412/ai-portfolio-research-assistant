@@ -58,6 +58,7 @@ function advisoriesFrom(report) {
     throw new Error("pnpm audit must not contain muted advisories");
   }
   const actualCounts = { info: 0, low: 0, moderate: 0, high: 0, critical: 0 };
+  const findingCounts = { ...actualCounts };
   const parsed = Object.values(advisories).map((item) => {
     const advisory = record(item, "pnpm audit advisory");
     if (!Object.hasOwn(actualCounts, advisory.severity)) {
@@ -90,12 +91,24 @@ function advisoriesFrom(report) {
       }
       return finding;
     });
+    findingCounts[advisory.severity] += findings.length;
     return { advisory, findings };
   });
+  // The legacy registry can group multiple findings under one advisory ID.
+  // Require one consistent counting unit across the whole report.
+  let byAdvisory = true;
+  let byFinding = true;
   for (const severity of Object.keys(actualCounts)) {
-    if (actualCounts[severity] !== counts[severity]) {
+    const matchesAdvisories = actualCounts[severity] === counts[severity];
+    const matchesFindings = findingCounts[severity] === counts[severity];
+    if (!matchesAdvisories && !matchesFindings) {
       throw new Error(`pnpm audit ${severity} count does not match advisories`);
     }
+    byAdvisory &&= matchesAdvisories;
+    byFinding &&= matchesFindings;
+  }
+  if (!byAdvisory && !byFinding) {
+    throw new Error("pnpm audit uses inconsistent severity counting units");
   }
   return parsed;
 }
@@ -111,6 +124,18 @@ export function evaluateAudit({ report, policy }) {
       ({ advisory }) =>
         `${advisory.severity} advisory ${advisory.github_advisory_id} is not exempted`,
     ),
-    expectedExitCode: highOrCritical.length > 0 ? 1 : 0,
+    nonBlockingAdvisories: parsed
+      .filter(
+        ({ advisory }) => !["high", "critical"].includes(advisory.severity),
+      )
+      .map(({ advisory, findings }) => ({
+        id: advisory.github_advisory_id,
+        package: advisory.module_name,
+        severity: advisory.severity,
+        findings: findings.map(({ version, paths }) => ({ version, paths })),
+      })),
+    // pnpm 10.18.3 JSON mode exits 1 for findings at any severity;
+    // the repository still applies its own High/Critical policy.
+    expectedExitCode: parsed.length > 0 ? 1 : 0,
   };
 }
