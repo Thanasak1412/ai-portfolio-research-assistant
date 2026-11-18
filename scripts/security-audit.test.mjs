@@ -49,6 +49,7 @@ function addAdvisory(input, severity, id = "GHSA-new-finding") {
 test("accepts a clean scan without requiring a withdrawn advisory", () => {
   assert.deepEqual(evaluateAudit(fixture()), {
     failures: [],
+    nonBlockingAdvisories: [],
     expectedExitCode: 0,
   });
 });
@@ -56,8 +57,68 @@ test("accepts a clean scan without requiring a withdrawn advisory", () => {
 test("preserves the High threshold for reported Moderate findings", () => {
   const input = fixture();
   addAdvisory(input, "moderate");
-  assert.deepEqual(evaluateAudit(input), { failures: [], expectedExitCode: 0 });
+  const result = evaluateAudit(input);
+  assert.deepEqual(result.failures, []);
+  assert.equal(result.nonBlockingAdvisories.length, 1);
+  assert.equal(result.expectedExitCode, 1);
 });
+
+function groupedFixture(severity = "moderate") {
+  const input = fixture();
+  addAdvisory(input, severity);
+  const entry = input.report.advisories["GHSA-new-finding"];
+  entry.findings.push(
+    { version: "1.1.0", paths: ["second>example-package"] },
+    { version: "1.1.0", paths: ["third>example-package"] },
+  );
+  input.report.metadata.vulnerabilities[severity] = 3;
+  return input;
+}
+
+test("reconciles one advisory with three findings without losing paths", () => {
+  const input = groupedFixture();
+  const result = evaluateAudit(input);
+  assert.deepEqual(result.failures, []);
+  assert.deepEqual(
+    result.nonBlockingAdvisories[0].findings,
+    input.report.advisories["GHSA-new-finding"].findings,
+  );
+  assert.equal(result.expectedExitCode, 1);
+});
+
+test("retains support for advisory-count reports with grouped findings", () => {
+  const input = groupedFixture();
+  input.report.metadata.vulnerabilities.moderate = 1;
+  assert.equal(
+    evaluateAudit(input).nonBlockingAdvisories[0].findings.length,
+    3,
+  );
+});
+
+test("rejects a count that matches neither advisories nor findings", () => {
+  const input = groupedFixture();
+  input.report.metadata.vulnerabilities.moderate = 2;
+  assert.throws(() => evaluateAudit(input), /moderate count does not match/);
+});
+
+test("rejects mixed counting units across severities", () => {
+  const input = groupedFixture();
+  addAdvisory(input, "high", "GHSA-high");
+  input.report.advisories["GHSA-high"].findings.push({
+    version: "1.1.0",
+    paths: ["second>example-package"],
+  });
+  assert.throws(() => evaluateAudit(input), /inconsistent severity counting/);
+});
+
+for (const severity of ["high", "critical"]) {
+  test(`blocks grouped ${severity} advisories and fails closed on missing entries`, () => {
+    const input = groupedFixture(severity);
+    assert.equal(evaluateAudit(input).failures.length, 1);
+    delete input.report.advisories["GHSA-new-finding"];
+    assert.throws(() => evaluateAudit(input), /count does not match/);
+  });
+}
 
 for (const severity of ["high", "critical"]) {
   test(`rejects every ${severity} finding`, () => {
@@ -252,6 +313,20 @@ test("CLI rejects false scanner success for a High finding", () => {
 
 test("CLI rejects scanner failure with a clean report", () => {
   const result = runCLI({ status: 1 });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /exit status does not match/);
+});
+
+test("CLI reports grouped Moderate findings and honors the existing threshold", () => {
+  const result = runCLI({ report: groupedFixture().report, status: 1 });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /GHSA-new-finding/);
+  assert.match(result.stdout, /third>example-package/);
+  assert.match(result.stdout, /no High\/Critical advisories/);
+});
+
+test("CLI rejects a false zero exit for a nonempty JSON report", () => {
+  const result = runCLI({ report: groupedFixture().report });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /exit status does not match/);
 });

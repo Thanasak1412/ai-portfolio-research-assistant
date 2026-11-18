@@ -19,7 +19,7 @@ try {
       maxBuffer: 16 * 1024 * 1024,
     },
   );
-  // Both clean and failing scans must agree with the parsed High/Critical count.
+  // The scanner exit must agree with the complete parsed JSON report.
   // Diagnostics, signals and unexpected process results always fail closed.
   if (
     audit.error ||
@@ -33,6 +33,11 @@ try {
   const result = evaluateAudit({ report, policy });
   if (audit.status !== result.expectedExitCode) {
     throw new Error("pnpm audit exit status does not match advisory counts");
+  }
+  for (const advisory of result.nonBlockingAdvisories) {
+    console.log(
+      `pnpm audit advisory below policy threshold: ${JSON.stringify(advisory)}`,
+    );
   }
   if (result.failures.length > 0) {
     throw new Error(result.failures.join("; "));
